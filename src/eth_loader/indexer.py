@@ -1,5 +1,7 @@
 import os.path
+import sqlite3
 
+import traceback
 import requests as rq
 from lxml import etree
 from lxml.etree import _Element
@@ -144,7 +146,22 @@ class ConcurrentETHIndexer:
         self.to_download_queue = mp.Queue()
         self.found_url_queue = mp.Queue(maxsize=100)
         self.threads = []
-        self.index_video_eth()
+
+    def val_uri(self, url: str) -> bool:
+        # it is a valid site
+        if ".html" not in url:
+            return False
+
+        # it is a child
+        if len(url.split("/")) > 2:
+            return False
+
+        # it is a desired url
+        for pref in self.prefixes:
+            if pref in url:
+                return True
+
+        return False
 
     def init_db(self):
         self.sq_cur.execute("CREATE TABLE sites "
@@ -153,7 +170,7 @@ class ConcurrentETHIndexer:
                             "URL TEXT UNIQUE , "
                             "IS_VIDEO INTEGER CHECK (IS_VIDEO >= 0 AND IS_VIDEO <= 1));")
         self.sq_cur.execute("INSERT INTO sites (key, parent, URL, IS_VIDEO) VALUES (0, -1, 'https://www.video.ethz.ch', 0)")
-
+        print("Table Created")
 
     def index_video_eth(self):
         """
@@ -170,6 +187,8 @@ class ConcurrentETHIndexer:
         tree = etree.HTML(html)
         x = tree.xpath("//a")
 
+        uris = []
+
         # find all <a> elements
         for a in x:
             a: _Element
@@ -178,13 +197,16 @@ class ConcurrentETHIndexer:
             if "href" in a.keys():
                 uri = a.attrib["href"]
 
-                if self.val_uri(uri):
+                if self.val_uri(uri) and uri not in uris:
+                    uris.append(uri)
+                    print(f"uri {uri}")
                     self.sub_index(f"https://www.video.ethz.ch{uri}", uri)
 
         self.spawn()
         self.dequeue()
         print("Cleanup")
         self.cleanup()
+        self.sq_con.commit()
 
     def __sub_index(self, url: str, prefix: str):
         """
@@ -197,7 +219,6 @@ class ConcurrentETHIndexer:
         """
         # load main site
         resp = rq.get(url, headers={"user-agent": "Mozilla Firefox"})
-
         # get the html
         html = resp.content.decode("utf-8")
 
@@ -209,11 +230,12 @@ class ConcurrentETHIndexer:
         # dump the site to the list of video urls if it matches
         if is_video(tree):
             print(f"put {url}")
-            self.found_url_queue.put({"url": url, "is_video": True})
+            self.found_url_queue.put({"url": url, "is_video": 1})
             return
 
         else:
-            self.found_url_queue.get({"url": url, "is_video": False})
+            print(f"put {url}")
+            self.found_url_queue.put({"url": url, "is_video": 0})
 
         # find all <a> elements
         for a in x:
@@ -236,7 +258,7 @@ class ConcurrentETHIndexer:
         """
         for worker in self.threads:
             worker: Thread
-            worker.join()
+            worker.join(10)
 
     def spawn(self, threads: int = 100):
         """
@@ -279,7 +301,7 @@ class ConcurrentETHIndexer:
                 counter += 1
                 sleep(1)
 
-    def sub_index(self, url: str, prefix: str, parent: int = 0):
+    def sub_index(self, url: str, prefix: str):
         """
         Wrapper for __sub_index function.
 
@@ -295,27 +317,52 @@ class ConcurrentETHIndexer:
         Function exits after 10s of an empty queue or when all workers are done.
         :return:
         """
-        parent_ids = {}
-
         # Timeout to prevent endless loop if a subprocesses crash
         counter = 0
         while counter < 10 and self.workers_alive():
             if not self.found_url_queue.empty():
                 while not self.found_url_queue.empty():
                     arguments = self.found_url_queue.get()
-                    parent_id = parent_ids.get(arguments["url"])
+                    url = arguments["url"]
+                    a_video = arguments["is_video"]
 
-                    f.write("\n")
-                counter = 0
+                    try:
+                        self.sq_cur.execute("INSERT INTO sites (URL, IS_VIDEO) VALUES "
+                                            f"('{url}', {a_video})")
+                        self.sq_con.commit()
+
+                    except sqlite3.IntegrityError:
+                        print(traceback.format_exc())
+                        print(arguments)
+                    counter = 0
             else:
                 counter += 1
                 sleep(1)
+
+    def gen_parent(self):
+        parent_ids = {}
+
+        self.sq_cur.execute("SELECT key, URL FROM sites WHERE parent IS NULL")
+        one = self.sq_cur.fetchone()
+
+        while one is not None:
+            key = one[0]
+            url = one[1]
+            parent_id = parent_ids.get(url)
+
+            if parent_id is None:
+                parent_id = self.get_parent(url)
+                parent_ids[url] = parent_id
+            print(f"UPDATE sites SET parent = {parent_id} WHERE key IS {key}")
+            self.sq_cur.execute(f"UPDATE sites SET parent = {parent_id} WHERE key IS {key}")
+
+            self.sq_cur.execute("SELECT key, URL FROM sites WHERE parent IS NULL")
+            one = self.sq_cur.fetchone()
 
     def get_parent(self, url: str):
         self.sq_cur.execute(f"SELECT (key) FROM sites WHERE URL IS '{url}'")
         query_result = self.sq_cur.fetchall()
         return query_result[0][0]
-
 
     def workers_alive(self):
         """
