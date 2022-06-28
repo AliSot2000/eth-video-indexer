@@ -8,9 +8,16 @@ import time
 import pickle
 from threading import Thread
 import json
+from dataclasses import dataclass
+from typing import List
+from sqlite3 import *
+import datetime
+
+# gro-21w
+# fG9LdsA
 
 
-def get_stream(website_url: str, identifier: str, headers: dict, cookies: bytes) -> dict:
+def get_stream(website_url: str, identifier: str, headers: dict, cookies: bytes, parent_id: int) -> dict:
     """
     Function to download a single metadata file for a given video_site and video entry. The website_url needs to be of type:
 
@@ -41,14 +48,8 @@ def get_stream(website_url: str, identifier: str, headers: dict, cookies: bytes)
     else:
         print(f"{identifier} error {result.status_code}")
 
-    # only everything after .com or something
-    path = url.split("/", 3)[3]
 
-    # remove get arguments
-    path = path.split("?")[0]
-    print(f"{identifier} Done {url}")
-
-    return {"url": url, "path": path, "status": result.status_code, "content": content}
+    return {"url": url,  "status": result.status_code, "content": content, "parent_id": parent_id}
 
 
 def handler(worker_nr: int, command_queue: mp.Queue, result_queue: mp.Queue):
@@ -74,7 +75,8 @@ def handler(worker_nr: int, command_queue: mp.Queue, result_queue: mp.Queue):
 
         result = get_stream(arguments["url"], str(worker_nr),
                             headers={"user-agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:100.0) "
-                                                   "Gecko/20100101 Firefox/100.0"}, cookies=arguments["cookie-jar"])
+                                                   "Gecko/20100101 Firefox/100.0"}, cookies=arguments["cookie-jar"],
+                            parent_id=arguments["parent_id"])
 
         result_queue.put(result)
     print(f"{worker_nr} Terminated")
@@ -101,19 +103,40 @@ def folder_builder(root_folder: str) -> list:
     return files
 
 
+@dataclass
+class SpecLogin:
+    """
+    Url needs to be a match for a series like: https://videos.ethz.ch/lectures/d-infk/2022/spring/NUMBER, no .html or
+    .series-metadata. It may also be a specific episode of a series.
+    """
+    url: str
+    username: str
+    password: str
+
+
+@dataclass
+class EpisodeEntry:
+    episode_url: str
+    series_url: str
+    parent_id: int
+
+
 class BetterStreamLoader:
-    def __init__(self, file_list: list, prefix_path: str, user_name: str = None, password: str = None,
-                 spec_login: list = None):
+    def __init__(self, db: str, user_name: str = None, password: str = None,
+                 spec_login: List[SpecLogin] = None):
 
-        self.file_list = file_list
-        self.path_prefix = prefix_path
+        self.db_path = os.path.abspath(db)
+        self.download_list = []
 
-        if self.path_prefix[-1] != "/":
-            self.path_prefix += "/"
+        self.sq_con = Connection(self.db_path)
+        self.sq_cur = self.sq_con.cursor()
+
+        self.get_episode_urls()
+        self.check_results_table()
 
         if spec_login is not None:
-            self.specific_urls = [entry["url"] for entry in spec_login]
-            self.specific_auth = [{"username": entry["username"], "password": entry["password"]} for entry in spec_login]
+            self.specific_urls = [entry.url for entry in spec_login]
+            self.specific_auth = spec_login
         else:
             self.specific_urls = []
             self.specific_auth = []
@@ -130,12 +153,93 @@ class BetterStreamLoader:
 
         self.workers = []
 
-        self.result_queue = mp.Queue(maxsize=1000)
-        self.command_queue = mp.Queue(maxsize=1000)
-        self.nod = len(self.file_list)
+        self.result_queue = mp.Queue()
+        self.command_queue = mp.Queue()
+        self.nod = len(self.download_list)
+        print(f"TODO: {self.nod}")
+        time.sleep(10)
 
         self.general_cookie = None
         self.login(user_name, password)
+
+    def get_episode_urls(self):
+        self.verify_args_table()
+        self.sq_cur.execute("SELECT key, json, URL FROM metadata WHERE deprecated = 0")
+
+        row = self.sq_cur.fetchone()
+        while row is not None:
+            content = row[1]
+            parent_id = row[0]
+            parent_url = row[2]
+            content_default = content.replace("''", "'")
+            if "<!DOCTYPE html>" in content_default:
+                print(f"Found an html site: {parent_url}")
+                row = self.sq_cur.fetchone()
+                continue
+
+            try:
+                result = json.loads(content_default)
+            except json.JSONDecodeError:
+                print(traceback.format_exc())
+                print(content_default)
+                print(parent_url)
+                row = self.sq_cur.fetchone()
+                continue
+
+            result: dict
+            if result.get("episodes") is not None:
+                episodes = result.get("episodes")
+
+                for ep in episodes:
+                    ep_id = ep.get("id")
+
+                    if ep_id is None:
+                        print(f"Failed to generate id with Content:\n{content_default}")
+                        continue
+
+                    # parent url without file extension
+                    strip_url = parent_url.replace(".html", "").replace(".series-metadata.json", "")
+
+                    # episode url with file extension
+                    ep_url = f"{strip_url}/{ep_id}.series-metadata.json"
+
+                    self.download_list.append(EpisodeEntry(parent_id=parent_id, series_url=parent_url, episode_url=ep_url))
+
+            else:
+                print(f"No episodes found {parent_url}")
+
+            row = self.sq_cur.fetchone()
+
+    def verify_args_table(self):
+        self.sq_cur.execute("SELECT name FROM main.sqlite_master WHERE type='table' AND name='metadata'")
+
+        if self.sq_cur.fetchone() is None:
+            raise ValueError("didn't find the 'sites' table inside the given database.")
+
+    def check_results_table(self):
+        self.sq_cur.execute("SELECT name FROM main.sqlite_master WHERE type='table' AND name='episodes'")
+
+        if self.sq_cur.fetchone() is None:
+            self.sq_cur.execute("CREATE TABLE episodes "
+                                "(key INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                "parent INTEGER, "
+                                "URL TEXT , "
+                                "json TEXT,"
+                                "deprecated INTEGER DEFAULT 0 CHECK (episodes.deprecated >= 0 AND episodes.deprecated <= 1),"
+                                "found TEXT,"
+                                "streams TEXT)")
+
+        self.sq_cur.execute("SELECT name FROM main.sqlite_master WHERE type='table' AND name='streams'")
+
+        if self.sq_cur.fetchone() is None:
+            self.sq_cur.execute("CREATE TABLE streams "
+                                "(key INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                "URL TEXT , "
+                                "resolution TEXT,"
+                                "deprecated INTEGER DEFAULT 0 CHECK (deprecated >= 0 AND deprecated <= 1),"
+                                "found TEXT)")
+
+            self.sq_cur.execute("INSERT INTO streams (key, URL, resolution, found) VALUES (-1, 'dummy', 'dummy', 'dummy')")
 
     def spawn(self, threads: int = 100):
         """
@@ -155,26 +259,19 @@ class BetterStreamLoader:
 
         print("Workers Spawned")
 
-    def initiator(self, workers: int = 100, beautify: bool = False, target_path: str = None):
-        if target_path is None:
-            target_path = self.path_prefix
-
+    def initiator(self, workers: int = 100):
         self.spawn(workers)
-        dequeue = Thread(target=self.dequeue_job, args=(target_path, beautify,))
-        dequeue.start()
         self.enqueue_job()
-
-        while dequeue.is_alive():
-            time.sleep(30)
-            print("Initiator Thread Sleeping Dequeue")
-
-        dequeue.join()
+        self.dequeue_job()
 
         while self.workers_alive():
             time.sleep(30)
             print("Initiator Thread Sleeping Workers")
 
         self.cleanup()
+        self.sq_con.commit()
+        self.deprecate_streams()
+        self.sq_con.commit()
         print("DONE")
 
     def cleanup(self):
@@ -184,7 +281,7 @@ class BetterStreamLoader:
         """
         for worker in self.workers:
             worker: Thread
-            worker.join()
+            worker.join(10)
 
     def workers_alive(self):
         """
@@ -226,7 +323,7 @@ class BetterStreamLoader:
             print(login.status_code)
             print(vars(login))
 
-    def spec_login(self, strip_url: str, usr: str, pw: str, other_cookies = None):
+    def spec_login(self, strip_url: str, usr: str, pw: str, other_cookies=None):
         """
         Provide the url as the series-metadata or html for the course site
 
@@ -236,6 +333,7 @@ class BetterStreamLoader:
         :param strip_url:
         :return:
         """
+        strip_url = strip_url.replace("www.", "")
         login = rq.post(url=f"{strip_url}.series-login.json",
                         headers={"user-agent": "lol herre"},
                         data={"_charset_": "utf-8", "username": usr, "password": pw},
@@ -254,87 +352,42 @@ class BetterStreamLoader:
             return self.general_cookie
 
     def enqueue_job(self):
-        general_cookie_jar = pickle.dumps(self.general_cookie)
-
-        for file in self.file_list:
+        for dl in self.download_list:
+            dl: EpisodeEntry
             cookie = self.general_cookie
-            cookie_jar = general_cookie_jar
-
-            # url from file path
-            base_url = file.replace(self.path_prefix, "https://video.ethz.ch/")
 
             # url without file extension
-            strip_url = base_url.replace(".html", "").replace(".series-metadata.json", "")
+            strip_url = dl.series_url.replace(".html", "").replace(".series-metadata.json", "")
+            episode_striped_url = dl.episode_url.replace(".html", "").replace(".series-metadata.json", "")
 
             # if the stripped url is a specified url, get login of that url as well
             if strip_url in self.specific_urls:
                 index = self.specific_urls.index(strip_url)
 
+                cookie = self.spec_login(strip_url, self.specific_auth[index].username,
+                                         self.specific_auth[index].password)
+
+            # get specific login for specific episode if necessary
+            if episode_striped_url in self.specific_urls:
+                index = self.specific_urls.index(strip_url)
+
                 cookie = self.spec_login(strip_url, self.specific_auth[index]["username"],
-                                                 self.specific_auth[index]["password"])
-                cookie_jar = pickle.dumps(cookie)
+                                                 self.specific_auth[index]["password"], other_cookies=cookie)
+            cookie_jar = pickle.dumps(cookie)
 
-            # initialise file content
-            content = ""
+            print(f"Enqueueing: {dl.episode_url}")
+            self.command_queue.put({"url": dl.episode_url, "cookie-jar": cookie_jar, "parent_id": dl.parent_id})
 
-            # load file content with json
-            with open(file, "r") as f:
-                content = json.load(f)
-
-            # get a list of all episodes
-            episode_list = content["episodes"]
-
-            # iterate over all episode ids
-            for episode in episode_list:
-                episode_cookie_jar = cookie_jar
-                episode_id = episode["id"]
-
-                episode_striped_url = f"{strip_url}/{episode_id}"
-                episode_url = f"{strip_url}/{episode_id}.series-metadata.json"
-
-                # get specific login for specific episode if necessary
-                if episode_striped_url in self.specific_urls:
-                    index = self.specific_urls.index(strip_url)
-
-                    episode_cookie = self.spec_login(strip_url, self.specific_auth[index]["username"],
-                                             self.specific_auth[index]["password"], other_cookies=cookie)
-                    episode_cookie_jar = pickle.dumps(episode_cookie)
-
-                print(f"Enqueueing: {episode_url}")
-                self.command_queue.put({"url": episode_url, "cookie-jar": episode_cookie_jar})
-
-    def dequeue_job(self, target_folder: str = None, beautify: bool = False):
-        if beautify:
-            def write_file(f_path: str, data: str):
-                # create valid directory
-                f_dir = os.path.join(target_folder, os.path.dirname(f_path))
-                f_dir += "/"
-
-                if not os.path.exists(f_dir):
-                    os.makedirs(f_dir)
-
-                with open(os.path.join(target_folder, f_path), "w") as f:
-                    f.write(json.dumps(json.loads(data), indent=2))
-        else:
-            def write_file(f_path: str, data: str):
-                # create valid directory
-                f_dir = os.path.join(target_folder, os.path.dirname(f_path))
-                f_dir += "/"
-
-                if not os.path.exists(f_dir):
-                    os.makedirs(f_dir)
-
-                with open(os.path.join(target_folder, f_path), "w") as f:
-                    f.write(data)
-
+    def dequeue_job(self):
         ctr = 0
         while ctr < 20:
             if not self.result_queue.empty():
                 try:
                     res = self.result_queue.get()
-                    path = res["path"]
                     if res["status"] == 200:
-                        write_file(path, res["content"])
+                        content = res["content"].replace("'", "''")
+
+                        self.insert_update_episodes(parent_id=res["parent_id"], url=res["url"], json_str=content, raw_content=res["content"])
                     else:
                         print(f"url {res['url']} with status code {res['status']}")
                     ctr = 0
@@ -345,4 +398,128 @@ class BetterStreamLoader:
                 time.sleep(1)
                 ctr += 1
 
+    def insert_update_episodes(self, parent_id: int, url: str, json_str: str, raw_content: str):
+        try:
+            # parse json content
+            episode = json.loads(raw_content)
+        except json.JSONDecodeError:
+            print(f"Failed to load raw content of {url},\n{raw_content}")
+            return -1
+        sel_ep = episode.get("selectedEpisode")
 
+        episode_stream_ids = []
+
+        if sel_ep is not None:
+            media = sel_ep.get("media")
+            if media is not None:
+                presentations = media.get("presentations")
+                if presentations is not None:
+                    for i in range(len(presentations)):
+                        p = presentations[i]
+                        width = p.get("width")
+                        if width is None:
+                            print(f"Failed to retrieve WIDTH {width}")
+                            continue
+                        height = p.get("height")
+                        if height is None:
+                            print(f"Failed to retrieve HEIGHT {height}")
+                            continue
+
+                        resolution_string = f"{width} x {height}"
+                        url = p.get("url")
+                        if p.get("url") is None:
+                            print(f"Failed to retrieve URL {p}")
+                            continue
+                        episode_stream_ids.append(self.insert_update_streams(url=url, resolution=resolution_string))
+
+        stream_string = json.dumps(episode_stream_ids)
+
+        # exists:
+        self.sq_cur.execute(
+            f"SELECT key FROM episodes WHERE "
+            f"parent = {parent_id} AND "
+            f"URL = '{url}' AND "
+            f"json = '{json_str}' AND "
+            f"deprecated = 0 AND "
+            f"streams = '{stream_string}'")
+
+        # it exists, abort
+        if self.sq_cur.fetchone() is not None:
+            print("Found active in db")
+            return
+
+        # exists but is deprecated
+        self.sq_cur.execute(
+            f"SELECT key FROM episodes WHERE "
+            f"parent = {parent_id} AND "
+            f"URL = '{url}' AND "
+            f"json = '{json_str}' AND "
+            f"deprecated = 1 AND "
+            f"streams = '{stream_string}'")
+
+        result = self.sq_cur.fetchone()
+        if result is not None:
+            print(
+                "Found inactive in db, reacivate and set everything else matching parent, url and series to deprecated")
+
+            # update all entries, to deprecated, unset deprecated where it is here
+            self.sq_cur.execute(
+                f"UPDATE episodes SET deprecated = 1 WHERE parent = {parent_id} AND URL = '{url}'")
+            self.sq_cur.execute(f"UPDATE episodes SET deprecated = 0 WHERE key = {result}")
+            return
+
+        # doesn't exist -> insert
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print("Inserting")
+        self.sq_cur.execute(
+            f"INSERT INTO episodes (parent, URL, json, found, streams) VALUES ({parent_id}, '{url}', '{json_str}', '{now}', '{stream_string}')")
+
+    def insert_update_streams(self, url: str, resolution: str):
+        # exists:
+        self.sq_cur.execute(
+            f"SELECT key FROM streams WHERE URL = '{url}' AND resolution = '{resolution}' AND deprecated = 0")
+
+        # it exists, abort
+        key = self.sq_cur.fetchone()
+        if key is not None:
+            print("Found active in db")
+            return key
+
+        # exists but is deprecated
+        self.sq_cur.execute(
+             f"SELECT key FROM streams WHERE URL = '{url}' AND resolution = '{resolution}' AND deprecated = 1")
+
+        result = self.sq_cur.fetchone()
+        if result is not None:
+            print(
+                "Found inactive in db, reacivate and set everything else matching parent, url and series to deprecated")
+
+            # update all entries, to deprecated, unset deprecated where it is here
+            self.sq_cur.execute(f"UPDATE streams SET deprecated = 0 WHERE key = {result}")
+            return result
+
+        # doesn't exist -> insert
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print("Inserting")
+        self.sq_cur.execute(
+            f"INSERT INTO streams (URL, resolution, found) VALUES ('{url}', '{resolution}', '{now}')")
+
+        self.sq_cur.execute(
+            f"SELECT key FROM streams WHERE URL IS '{url}' AND  resolution IS '{resolution}' AND found IS '{now}'")
+        return self.sq_cur.fetchone()
+
+    def deprecate_streams(self):
+        self.sq_cur.execute("SELECT key FROM streams WHERE deprecated = 0")
+
+        row = self.sq_cur.fetchone()
+        while row is not None:
+            key = row[0]
+
+            self.sq_cur.execute(f"SELECT key FROM episodes WHERE streams LIKE '%{key}%'")
+
+            if self.sq_cur.fetchone() is None:
+                print(f"Deprecating entry: {key}")
+                self.sq_cur.execute(f"UPDATE streams SET deprecated = 1 WHERE key = {key}")
+
+            self.sq_cur.execute("SELECT key FROM streams WHERE deprecated = 0")
+            row = self.sq_cur.fetchone()
