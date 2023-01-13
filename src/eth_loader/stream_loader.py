@@ -75,6 +75,10 @@ def handler(worker_nr: int, command_queue: mp.Queue, result_queue: mp.Queue):
             time.sleep(1)
             continue
 
+        if arguments is None:
+            ctr = 200
+            break
+
         result = get_stream(arguments["url"], str(worker_nr),
                             headers={"user-agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:100.0) "
                                                    "Gecko/20100101 Firefox/100.0"}, cookies=arguments["cookie-jar"],
@@ -160,6 +164,9 @@ class BetterStreamLoader:
 
         self.general_cookie = None
         self.login(user_name, password)
+
+        self.__processed_episodes = 0
+        self.__processed_streams = 0
 
     def get_episode_urls(self):
         """
@@ -320,6 +327,9 @@ class BetterStreamLoader:
 
         self.cleanup()
         self.sq_con.commit()
+        print(f"Processed episode {self.__processed_episodes}")
+        print(f"Processed streams {self.__processed_streams}")
+
         self.deprecate_streams()
         self.sq_con.commit()
         print("DONE")
@@ -441,6 +451,9 @@ class BetterStreamLoader:
             print(f"Enqueueing: {dl.episode_url}")
             self.command_queue.put({"url": dl.episode_url, "cookie-jar": cookie_jar, "parent_id": dl.parent_id})
 
+        for i in range(len(self.workers)):
+            self.command_queue.put(None)
+
     def dequeue_job(self):
         """
         Dequeues the results from the results queue. It then stores the results in the results table.
@@ -448,7 +461,19 @@ class BetterStreamLoader:
         """
         # counter to prevent infinite loop
         ctr = 0
+        self.__processed_streams = 0
+        self.__processed_episodes = 0
+
         while ctr < 20:
+            if self.__processed_episodes % 100 == 0:
+                print(f"                    Processed Episodes: {self.__processed_episodes}")
+
+            if self.__processed_streams % 100 == 0:
+                print(f"                    Processed Streams: {self.__processed_streams}")
+
+            if self.result_queue.qsize() % 100 == 0:
+                print(f"                    Queue Size: {self.result_queue.qsize()}")
+
             # dequeue
             if not self.result_queue.empty():
                 try:
@@ -487,6 +512,8 @@ class BetterStreamLoader:
         :param raw_content: json content that was the response for the series.
         :return:
         """
+        self.__processed_episodes += 1
+
         try:
             # parse json content
             episode = json.loads(raw_content)
@@ -614,6 +641,7 @@ class BetterStreamLoader:
         :param resolution: resolution of the stream
         :return:
         """
+        self.__processed_streams += 1
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         # exists:
