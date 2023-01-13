@@ -70,6 +70,10 @@ def handler(worker_nr: int, command_queue: mp.Queue, result_queue: mp.Queue):
             time.sleep(1)
             continue
 
+        if arguments is None:
+            ctr = 200
+            break
+
         result = retrieve_metadata(arguments["url"], str(worker_nr),
                                    headers={"user-agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:100.0) "
                                                           "Gecko/20100101 Firefox/100.0"},
@@ -196,6 +200,9 @@ class EpisodeLoader:
                 self.command_queue.put({"url": url[1], "parent_id": url[0]})
         else:
             raise ValueError("Database apparently doesn't have any urls, get_urls retrieved None")
+
+        for i in range(workers):
+            self.command_queue.put(None)
 
     def check_result(self):
         """
