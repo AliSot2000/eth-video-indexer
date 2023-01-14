@@ -692,17 +692,20 @@ class BetterStreamLoader:
         storing them.
         :return:
         """
-        self.sq_cur.execute("SELECT key FROM streams WHERE deprecated = 0")
+        self.sq_cur.execute("SELECT key FROM streams WHERE deprecated = 0 ORDER BY key DESC")
 
-        row = self.sq_cur.fetchone()
-        while row is not None:
-            key = row[0]
+        rows = self.sq_cur.fetchmany(1000)
+        while len(rows) > 0:
+            for row in rows:
+                key = row[0]
 
-            self.sq_cur.execute(f"SELECT key FROM episodes WHERE streams LIKE '%{key}%'")
+                self.sq_cur.execute(f"SELECT key FROM episodes WHERE streams LIKE '%{key}%'")
 
-            if self.sq_cur.fetchone() is None:
-                print(f"Deprecating entry: {key}")
-                self.sq_cur.execute(f"UPDATE streams SET deprecated = 1 WHERE key = {key}")
+                if self.sq_cur.fetchone() is None:
+                    print(f"Deprecating entry: {key}")
+                    self.sq_cur.execute(f"UPDATE streams SET deprecated = 1 WHERE key = {key}")
 
-            self.sq_cur.execute("SELECT key FROM streams WHERE deprecated = 0")
-            row = self.sq_cur.fetchone()
+            self.sq_cur.execute(f"SELECT key FROM streams WHERE deprecated = 0 AND key < {rows[-1][0]} ORDER BY key DESC")
+            rows = self.sq_cur.fetchmany(1000)
+
+            print(f"Processing key: {key}", end="\r", flush=True)
