@@ -223,9 +223,9 @@ class EpisodeLoader:
                     res = self.result_queue.get()
                     parent_id = res["parent_id"]
                     url = res["url"]
-                    content = res["content"].replace("'", "''")
 
                     if res["status"] == 200:
+                        content = res["content"].replace("'", "''")
                         self.insert_update_db(parent_id=parent_id, url=url, json=content)
                     else:
                         print(f"Failed to download {url} with status code {res['status']}")
@@ -274,8 +274,8 @@ class EpisodeLoader:
             print(f"Found {url} inactive in db, reacivate and set everything else matching parent, "
                   f"url and series to deprecated")
             # update all entries, to deprecated, unset deprecated where it is here
-            self.sq_cur.execute(f"UPDATE metadata SET deprecated = 1 WHERE parent = {parent_id} AND URL = {url}")
-            self.sq_cur.execute(f"UPDATE metadata SET deprecated = 0, last_seen = '{now}' WHERE key = {result}")
+            self.sq_cur.execute(f"UPDATE metadata SET deprecated = 1 WHERE parent = {parent_id} AND URL = '{url}'")
+            self.sq_cur.execute(f"UPDATE metadata SET deprecated = 0, last_seen = '{now}' WHERE key = {result[0]}")
             return
 
         # doesn't exist -> insert
