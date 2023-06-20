@@ -696,6 +696,7 @@ class BetterStreamLoader:
 
         rows = self.sq_cur.fetchmany(1000)
         while len(rows) > 0:
+            key = 0
             for row in rows:
                 key = row[0]
 
