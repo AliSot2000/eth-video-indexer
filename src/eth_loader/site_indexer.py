@@ -135,9 +135,11 @@ class ConcurrentETHSiteIndexer:
             f"INSERT INTO sites (key, parent, URL, IS_VIDEO, found, last_seen) VALUES (0, -1, 'https://www.video.ethz.ch', 0, '{now}', '{now}')")
         print("Table Created")
 
-    def index_video_eth(self):
+    def index_video_eth(self, threads : int = 100):
         """
         Starts the indexing of the site.
+
+        :param threads: number of concurrent threads to spawn.
         :return:
         """
         # load main site
@@ -165,7 +167,7 @@ class ConcurrentETHSiteIndexer:
                     print(f"uri {uri}")
                     self.sub_index(f"https://www.video.ethz.ch{uri}", uri)
 
-        self.spawn()
+        self.spawn(threads=threads)
         self.dequeue()
 
         # TODO: logger and debug shit
