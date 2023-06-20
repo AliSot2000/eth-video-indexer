@@ -299,7 +299,7 @@ class ConcurrentETHSiteIndexer:
         # Timeout to prevent endless loop if a subprocesses crash
         insert_counter = 0
         counter = 0
-        while counter < 10 and self.workers_alive():
+        while counter < 10 and self.one_workers_alive():
             if not self.found_url_queue.empty():
                 while not self.found_url_queue.empty():
                     arguments = self.found_url_queue.get()
@@ -398,7 +398,7 @@ class ConcurrentETHSiteIndexer:
 
         return query_result[0][0]
 
-    def workers_alive(self):
+    def one_workers_alive(self):
         """
         Function to verify that at least one of the workers hasn't exited.
         :return:
