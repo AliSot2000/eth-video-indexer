@@ -304,7 +304,7 @@ class ConcurrentETHSiteIndexer:
         insert_counter = 0
         counter = 0
         while counter < 10 and self.one_workers_alive():
-            if not self.found_url_queue.empty():
+            if not self.found_url_queue.empty():  # Todo better while loop here.
                 while not self.found_url_queue.empty():
                     arguments = self.found_url_queue.get()
                     url = arguments["url"]
