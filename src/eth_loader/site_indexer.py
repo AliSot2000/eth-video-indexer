@@ -75,12 +75,14 @@ class ConcurrentETHSiteIndexer:
         """
         Initializer for concurrent indexing of entire video.ethz.ch site.
 
-        The time permitted indexes are: campus, conferences, events, speakers, lectures
+        The at the time permitted indexes are: campus, conferences, events, speakers, lectures
 
         :param file: output where the video-series urls are stored. (at the time 6460 urls)
         :param prefixes: provide custom prefixes, main_header [campus, lectures, ...]
         """
         self.prefixes = ["/campus", "/conferences", "/events", "/speakers", "/lectures"]
+        if prefixes is not None:
+            self.prefixes = prefixes
         self.file = file
         make_db = not os.path.exists(file)
 
