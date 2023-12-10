@@ -175,7 +175,7 @@ class EpisodeLoader(BaseSQliteDB):
         self.check_result()
         self.cleanup()
         self.sq_con.commit()
-        print("DOWNLOAD DONE")
+        self.logger.info("DOWNLOAD DONE")
 
     def spawn(self, workers: int):
         """
@@ -240,21 +240,18 @@ class EpisodeLoader(BaseSQliteDB):
                         content = res["content"].replace("'", "''")
                         self.insert_update_db(parent_id=parent_id, url=url, json=content)
                     else:
-                        print(f"Failed to download {url} with status code {res['status']}")
+                        self.logger.error(f"Failed to download {url} with status code {res['status']}")
                         e_counter += 1
                     ctr = 0
                 except Exception as e:
-                    print(traceback.format_exc())
-                    print(f"\n\n\n FUCKING EXCEPTION {e}\n\n\n")
-                    print(res["url"])
-                    print(res["content"])
+                    self.logger.exception("Exception dequeue from result queue}", e, res)
                     e_counter += 1
                 g_counter += 1
             else:
                 time.sleep(1)
                 ctr += 1
 
-        print(f"Downloaded {g_counter} with {e_counter} errors.")
+        self.logger.info(f"Downloaded {g_counter} with {e_counter} errors.")
 
     def insert_update_db(self, parent_id: int, url: str, json: str):
         """
@@ -272,7 +269,7 @@ class EpisodeLoader(BaseSQliteDB):
         # it exists, abort
         result = self.sq_cur.fetchone()
         if result is not None:
-            print(f"Found {url} active in db")
+            self.logger.debug(f"Found {url} active in db")
 
             self.debug_execute(f"UPDATE metadata SET last_seen = '{now}' WHERE key = {result[0]}")
             return
@@ -283,7 +280,7 @@ class EpisodeLoader(BaseSQliteDB):
         result = self.sq_cur.fetchone()
         if result is not None:
 
-            print(f"Found {url} inactive in db, reacivate and set everything else matching parent, "
+            self.logger.debug(f"Found {url} inactive in db, reacivate and set everything else matching parent, "
                   f"url and series to deprecated")
             # update all entries, to deprecated, unset deprecated where it is here
             self.debug_execute(f"SELECT key FROM metadata WHERE parent = {parent_id} AND URL = '{url}'")
@@ -295,8 +292,7 @@ class EpisodeLoader(BaseSQliteDB):
             return
 
         # doesn't exist -> insert
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print("Inserting")
+        self.logger.info("Inserting")
         self.debug_execute(
             f"INSERT INTO metadata (parent, URL, json, found, last_seen) VALUES "
             f"({parent_id}, '{url}', '{json}', '{now}', '{now}')")
@@ -315,17 +311,19 @@ class EpisodeLoader(BaseSQliteDB):
 
         # key empty, nothing to see.
         if row is None:
-            print("Nothing in metadata table")
+            self.logger.error("Nothing in metadata table")
             return
 
+        count = 0
         while row is not None:
             self.debug_execute(f"SELECT last_seen FROM sites WHERE key = {row[1]}")
             par = self.sq_cur.fetchone()
 
             # Parent doesn't exist?!?
             if par is None:
-                print(f"Parent {row[1]} doesn't exist")
                 self.debug_execute(f"UPDATE metadata SET deprecated = 1 WHERE key = {row[0]}")
+                self.logger.debug(f"Parent {row[1]} doesn't exist")
+                count += 1
 
                 # update the row and continue the loop.
                 self.debug_execute(f"SELECT key, parent FROM metadata WHERE key > {row[0]}")
@@ -337,11 +335,13 @@ class EpisodeLoader(BaseSQliteDB):
 
             # par_dt before dt, update the deprecation
             if (par_dt - dt).total_seconds() < 0:
-                print(f"Deprecated {row[0]}")
                 self.debug_execute(f"UPDATE metadata SET deprecated = 1 WHERE key = {row[0]}")
+                self.logger.debug(f"Deprecated {row[0]}")
+                count += 1
 
             # update the row and continue the loop.
             self.debug_execute(f"SELECT key, parent FROM metadata WHERE key > {row[0]}")
             row = self.sq_cur.fetchone()
 
         self.sq_con.commit()
+        self.logger.info(f"Deprecated {count} entries")
