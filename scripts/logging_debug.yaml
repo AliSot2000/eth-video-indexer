@@ -19,7 +19,7 @@ handlers:
 
     debug_file_handler:
         class: logging.FileHandler
-        level: ERROR
+        level: DEBUG
         formatter: standard
         filename: /home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/logs/debug.log
         encoding: utf8
