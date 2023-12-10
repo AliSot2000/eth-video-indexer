@@ -60,7 +60,9 @@ def handler(worker_nr: int, command_queue: mp.Queue, result_queue: mp.Queue):
     :param result_queue: Queue to put the results in. Handled in main thread.
     :return:
     """
-    print("Starting")
+    logger = logging.getLogger("metadata_loader")
+    logger.info(f"Starting worker {worker_nr}")
+
     ctr = 0
     while ctr < 20:
         try:
@@ -81,7 +83,7 @@ def handler(worker_nr: int, command_queue: mp.Queue, result_queue: mp.Queue):
                                    parent_id=arguments["parent_id"])
 
         result_queue.put(result)
-    print(f"{worker_nr} Terminated")
+    logger.info(f"{worker_nr} Terminated")
 
 
 class EpisodeLoader:
