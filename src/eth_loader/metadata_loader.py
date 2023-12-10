@@ -27,7 +27,7 @@ def retrieve_metadata(website_url: str, identifier: str, headers: dict, parent_i
     :param identifier: str for thread to give information where the download was executed in case of an error.
     :param headers: dict to be passed to the request library. Download will fail if no user-agent is provided.
     """
-
+    logger = logging.getLogger("metadata_loader")
     url = website_url.replace(".html", ".series-metadata.json").replace("\n", "")
 
     result = rq.get(url=url, headers=headers)
@@ -37,14 +37,14 @@ def retrieve_metadata(website_url: str, identifier: str, headers: dict, parent_i
     if result.ok:
         content = result.content.decode("utf-8")
     else:
-        print(f"{identifier:.02} error {result.status_code}")
+        logger.error(f"{identifier:.02} error {result.status_code}")
 
     # only everything after .com or something
     path = url.split("/", 3)[3]
 
     # remove get arguments
     path = path.split("?")[0]
-    print(f"{identifier} Done {url}")
+    logger.info(f"{identifier} Done {url}")
 
     return {"url": url, "parent_id": parent_id, "status": result.status_code, "content": content}
 
