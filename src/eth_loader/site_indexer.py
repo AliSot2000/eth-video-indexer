@@ -76,6 +76,7 @@ class ConcurrentETHSiteIndexer:
         :param db_file: Database where the results are stored. (at the time 6460 urls)
         :param prefixes: provide custom prefixes, main_header [campus, lectures, ...]
         """
+        self.logger = logging.getLogger("site_indexer")
         self.prefixes = ["/campus", "/conferences", "/events", "/speakers", "/lectures"]
         if prefixes is not None:
             self.prefixes = prefixes
