@@ -121,7 +121,7 @@ class EpisodeLoader(BaseSQliteDB):
         :return:
         """
         self.verify_args_table()
-        self.sq_cur.execute("SELECT key, url FROM sites WHERE IS_VIDEO=1")
+        self.debug_execute("SELECT key, url FROM sites WHERE IS_VIDEO=1")
         self.urls = self.sq_cur.fetchall()
 
     def verify_args_table(self):
@@ -129,7 +129,7 @@ class EpisodeLoader(BaseSQliteDB):
         Verify that the sites table exists
         :return:
         """
-        self.sq_cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='sites'")
+        self.debug_execute("SELECT name FROM sqlite_master WHERE type='table' AND name='sites'")
 
         if self.sq_cur.fetchone() is None:
             raise ValueError("didn't find the 'sites' table inside the given database.")
@@ -139,10 +139,10 @@ class EpisodeLoader(BaseSQliteDB):
         Check if the results table exists and create it if necessary.
         :return:
         """
-        self.sq_cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='metadata'")
+        self.debug_execute("SELECT name FROM sqlite_master WHERE type='table' AND name='metadata'")
 
         if self.sq_cur.fetchone() is None:
-            self.sq_cur.execute("CREATE TABLE metadata "
+            self.debug_execute("CREATE TABLE metadata "
                                 "(key INTEGER PRIMARY KEY AUTOINCREMENT, "
                                 "parent INTEGER, "
                                 "URL TEXT , "
@@ -266,7 +266,7 @@ class EpisodeLoader(BaseSQliteDB):
         :return:
         """
         # exists:
-        self.sq_cur.execute(f"SELECT key FROM metadata WHERE parent = {parent_id} AND URL = '{url}' AND json = '{json}' AND deprecated = 0")
+        self.debug_execute(f"SELECT key FROM metadata WHERE parent = {parent_id} AND URL = '{url}' AND json = '{json}' AND deprecated = 0")
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         # it exists, abort
@@ -274,11 +274,11 @@ class EpisodeLoader(BaseSQliteDB):
         if result is not None:
             print(f"Found {url} active in db")
 
-            self.sq_cur.execute(f"UPDATE metadata SET last_seen = '{now}' WHERE key = {result[0]}")
+            self.debug_execute(f"UPDATE metadata SET last_seen = '{now}' WHERE key = {result[0]}")
             return
 
         # exists but is deprecated
-        self.sq_cur.execute(f"SELECT key FROM metadata WHERE parent = {parent_id} AND URL = '{url}' AND json = '{json}' AND deprecated = 1")
+        self.debug_execute(f"SELECT key FROM metadata WHERE parent = {parent_id} AND URL = '{url}' AND json = '{json}' AND deprecated = 1")
 
         result = self.sq_cur.fetchone()
         if result is not None:
@@ -286,14 +286,18 @@ class EpisodeLoader(BaseSQliteDB):
             print(f"Found {url} inactive in db, reacivate and set everything else matching parent, "
                   f"url and series to deprecated")
             # update all entries, to deprecated, unset deprecated where it is here
-            self.sq_cur.execute(f"UPDATE metadata SET deprecated = 1 WHERE parent = {parent_id} AND URL = '{url}'")
-            self.sq_cur.execute(f"UPDATE metadata SET deprecated = 0, last_seen = '{now}' WHERE key = {result[0]}")
+            self.debug_execute(f"SELECT key FROM metadata WHERE parent = {parent_id} AND URL = '{url}'")
+            keys = [k[0] for k in self.sq_cur.fetchall()]
+            if len(keys) > 1:
+                self.logger.info(f"Found {len(keys)} entries for {url} in and parent {parent_id}: {keys}")
+            self.debug_execute(f"UPDATE metadata SET deprecated = 1 WHERE parent = {parent_id} AND URL = '{url}'")
+            self.debug_execute(f"UPDATE metadata SET deprecated = 0, last_seen = '{now}' WHERE key = {result[0]}")
             return
 
         # doesn't exist -> insert
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         print("Inserting")
-        self.sq_cur.execute(
+        self.debug_execute(
             f"INSERT INTO metadata (parent, URL, json, found, last_seen) VALUES "
             f"({parent_id}, '{url}', '{json}', '{now}', '{now}')")
 
@@ -306,7 +310,7 @@ class EpisodeLoader(BaseSQliteDB):
         :return:
         """
 
-        self.sq_cur.execute("SELECT key, parent FROM metadata ORDER BY key ASC")
+        self.debug_execute("SELECT key, parent FROM metadata ORDER BY key ASC")
         row = self.sq_cur.fetchone()
 
         # key empty, nothing to see.
@@ -315,16 +319,16 @@ class EpisodeLoader(BaseSQliteDB):
             return
 
         while row is not None:
-            self.sq_cur.execute(f"SELECT last_seen FROM sites WHERE key = {row[1]}")
+            self.debug_execute(f"SELECT last_seen FROM sites WHERE key = {row[1]}")
             par = self.sq_cur.fetchone()
 
             # Parent doesn't exist?!?
             if par is None:
-                self.sq_cur.execute(f"UPDATE metadata SET deprecated = 1 WHERE key = {row[0]}")
                 print(f"Parent {row[1]} doesn't exist")
+                self.debug_execute(f"UPDATE metadata SET deprecated = 1 WHERE key = {row[0]}")
 
                 # update the row and continue the loop.
-                self.sq_cur.execute(f"SELECT key, parent FROM metadata WHERE key > {row[0]}")
+                self.debug_execute(f"SELECT key, parent FROM metadata WHERE key > {row[0]}")
                 row = self.sq_cur.fetchone()
                 continue
 
@@ -333,11 +337,11 @@ class EpisodeLoader(BaseSQliteDB):
 
             # par_dt before dt, update the deprecation
             if (par_dt - dt).total_seconds() < 0:
-                self.sq_cur.execute(f"UPDATE metadata SET deprecated = 1 WHERE key = {row[0]}")
                 print(f"Deprecated {row[0]}")
+                self.debug_execute(f"UPDATE metadata SET deprecated = 1 WHERE key = {row[0]}")
 
             # update the row and continue the loop.
-            self.sq_cur.execute(f"SELECT key, parent FROM metadata WHERE key > {row[0]}")
+            self.debug_execute(f"SELECT key, parent FROM metadata WHERE key > {row[0]}")
             row = self.sq_cur.fetchone()
 
         self.sq_con.commit()
