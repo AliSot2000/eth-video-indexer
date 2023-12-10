@@ -67,22 +67,22 @@ class ConcurrentETHSiteIndexer:
     It also has a found tag which stores the date the site was found.
     """
 
-    def __init__(self, file: str, prefixes: list = None):
+    def __init__(self, db_file: str, prefixes: list = None):
         """
         Initializer for concurrent indexing of entire video.ethz.ch site.
 
         The at the time permitted indexes are: campus, conferences, events, speakers, lectures
 
-        :param file: output where the video-series urls are stored. (at the time 6460 urls)
+        :param db_file: Database where the results are stored. (at the time 6460 urls)
         :param prefixes: provide custom prefixes, main_header [campus, lectures, ...]
         """
         self.prefixes = ["/campus", "/conferences", "/events", "/speakers", "/lectures"]
         if prefixes is not None:
             self.prefixes = prefixes
-        self.file = file
-        make_db = not os.path.exists(file)
+        self.file = db_file
+        make_db = not os.path.exists(db_file)
 
-        self.sq_con = Connection(file)
+        self.sq_con = Connection(db_file)
         self.sq_cur = self.sq_con.cursor()
 
         if make_db:
