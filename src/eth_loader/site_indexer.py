@@ -119,7 +119,7 @@ class ConcurrentETHSiteIndexer:
         Initialises the database.
         :return:
         """
-        self.sq_cur.execute("CREATE TABLE sites "
+        self.debug_execute("CREATE TABLE sites "
                             "(key INTEGER PRIMARY KEY AUTOINCREMENT, "
                             "parent INTEGER, "
                             "URL TEXT UNIQUE , "
@@ -130,7 +130,7 @@ class ConcurrentETHSiteIndexer:
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         # Dummy entry to have a root.
-        self.sq_cur.execute(
+        self.debug_execute(
             f"INSERT INTO sites (key, parent, URL, IS_VIDEO, found, last_seen) VALUES (0, -1, 'https://www.video.ethz.ch', 0, '{now}', '{now}')")
         print("Table Created")
 
@@ -310,7 +310,7 @@ class ConcurrentETHSiteIndexer:
                     try:
                         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         if self.not_in_db(url):
-                            self.sq_cur.execute("INSERT INTO sites (URL, IS_VIDEO, found, last_seen) VALUES "
+                            self.debug_execute("INSERT INTO sites (URL, IS_VIDEO, found, last_seen) VALUES "
                                                 f"('{url}', {a_video}, '{now}', '{now}')")
                             self.sq_con.commit()
                             insert_counter += 1
@@ -335,7 +335,7 @@ class ConcurrentETHSiteIndexer:
         :param url:
         :return:
         """
-        self.sq_cur.execute(f"SELECT key FROM sites WHERE URL = '{url}'")
+        self.debug_execute(f"SELECT key FROM sites WHERE URL = '{url}'")
         return self.sq_cur.fetchone() is None
 
     def update_found(self, url: str):
@@ -346,7 +346,7 @@ class ConcurrentETHSiteIndexer:
         :return:
         """
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.sq_cur.execute(f"UPDATE sites SET last_seen = '{now}' WHERE URL IS '{url}'")
+        self.debug_execute(f"UPDATE sites SET last_seen = '{now}' WHERE URL IS '{url}'")
 
     def gen_parent(self):
         """
@@ -356,7 +356,7 @@ class ConcurrentETHSiteIndexer:
         # temporary storage of parent url:key to parent_id:value.
         parent_ids = {}
 
-        self.sq_cur.execute("SELECT key, URL FROM sites WHERE parent IS NULL")
+        self.debug_execute("SELECT key, URL FROM sites WHERE parent IS NULL")
         one = self.sq_cur.fetchone()
 
         # perform the parent linking while there are entries that have no parent.
@@ -377,10 +377,10 @@ class ConcurrentETHSiteIndexer:
 
             # TODO: logging and debug shit
             print(f"UPDATE sites SET parent = {parent_id} WHERE key IS {key}")
-            self.sq_cur.execute(f"UPDATE sites SET parent = {parent_id} WHERE key IS {key}")
+            self.debug_execute(f"UPDATE sites SET parent = {parent_id} WHERE key IS {key}")
 
             # Fetch the next entry which has no parent.
-            self.sq_cur.execute("SELECT key, URL FROM sites WHERE parent IS NULL")
+            self.debug_execute("SELECT key, URL FROM sites WHERE parent IS NULL")
             one = self.sq_cur.fetchone()
         self.sq_con.commit()
 
@@ -391,7 +391,7 @@ class ConcurrentETHSiteIndexer:
         :param url: url to retrieve the key from.
         :return: key or -1 if no key found.
         """
-        self.sq_cur.execute(f"SELECT (key) FROM sites WHERE URL IS '{url}'")
+        self.debug_execute(f"SELECT (key) FROM sites WHERE URL IS '{url}'")
         query_result = self.sq_cur.fetchall()
 
         if len(query_result) == 0 or len(query_result[0]) == 0:
@@ -410,3 +410,15 @@ class ConcurrentETHSiteIndexer:
                 return True
 
         return False
+
+    def debug_execute(self, stmt: str):
+        """
+        Function executes statement in database and in case of an exception prints the offending statement.
+        :param stmt: Statement to execute
+        :return:
+        """
+        try:
+            self.sq_cur.execute(stmt)
+        except Exception as e:
+            print(f"Failed to execute:\n{stmt}")
+            raise e
