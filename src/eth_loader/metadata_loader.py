@@ -86,7 +86,7 @@ def handler(worker_nr: int, command_queue: mp.Queue, result_queue: mp.Queue):
     logger.info(f"{worker_nr} Terminated")
 
 
-class EpisodeLoader:
+class EpisodeLoader(BaseSQliteDB):
     def __init__(self, index_db: str):
         """
         Initialise downloader function. Provide the function either with a file containing valid urls or a list of urls.
@@ -100,11 +100,8 @@ class EpisodeLoader:
 
         :param index_db: Database result of the indexer.
         """
-
-        self.db_path = os.path.abspath(index_db)
-
-        self.sq_con = Connection(self.db_path)
-        self.sq_cur = self.sq_con.cursor()
+        self.logger = logging.getLogger("metadata_loader")
+        super().__init__(index_db)
 
         self.result_queue = mp.Queue()
         self.command_queue = mp.Queue()
