@@ -1,12 +1,13 @@
 import multiprocessing as mp
-import os.path
 import queue
 import time
 import traceback
 import datetime
 import requests as rq
 import threading
-from sqlite3 import *
+import eth_loader.aux as aux
+import logging
+from eth_loader.base_sql import BaseSQliteDB
 
 
 def retrieve_metadata(website_url: str, identifier: str, headers: dict, parent_id: int = -1) -> dict:
