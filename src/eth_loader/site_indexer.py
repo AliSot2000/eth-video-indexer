@@ -8,8 +8,8 @@ import multiprocessing as mp
 from threading import Thread
 from time import sleep
 from queue import Empty
-from sqlite3 import *
 import logging
+from eth_loader.base_sql import BaseSQliteDB
 
 """
 # Functionality of Class:
@@ -60,7 +60,7 @@ def is_video(root: _Element) -> bool:
     return False
 
 
-class ConcurrentETHSiteIndexer:
+class ConcurrentETHSiteIndexer(BaseSQliteDB):
     """
     Creates a Database of the hierarchy of the video sites of video.ethz.ch
     It tracks the parent site which contained the link to the current site.
@@ -76,15 +76,15 @@ class ConcurrentETHSiteIndexer:
         :param db_file: Database where the results are stored. (at the time 6460 urls)
         :param prefixes: provide custom prefixes, main_header [campus, lectures, ...]
         """
+        make_db = not os.path.exists(db_file)
+
         self.logger = logging.getLogger("site_indexer")
+
         self.prefixes = ["/campus", "/conferences", "/events", "/speakers", "/lectures"]
         if prefixes is not None:
             self.prefixes = prefixes
-        self.file = db_file
-        make_db = not os.path.exists(db_file)
 
-        self.sq_con = Connection(db_file)
-        self.sq_cur = self.sq_con.cursor()
+        super().__init__(db_file)
 
         if make_db:
             self.init_db()
@@ -406,15 +406,3 @@ class ConcurrentETHSiteIndexer:
                 return True
 
         return False
-
-    def debug_execute(self, stmt: str):
-        """
-        Function executes statement in database and in case of an exception prints the offending statement.
-        :param stmt: Statement to execute
-        :return:
-        """
-        try:
-            self.sq_cur.execute(stmt)
-        except Exception as e:
-            print(f"Failed to execute:\n{stmt}")
-            raise e
