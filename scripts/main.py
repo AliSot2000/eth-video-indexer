@@ -3,8 +3,11 @@ from eth_loader.site_indexer import ConcurrentETHSiteIndexer
 from eth_loader.metadata_loader import EpisodeLoader
 from eth_loader.stream_loader import BetterStreamLoader, SpecLogin
 from secrets import user_name, password, spec_login
+from logs import setup_logging
+
 
 if __name__ == "__main__":
+    setup_logging(default_path="logging_production.yaml")
     global_start = datetime.datetime.now()
     path = "/home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/scripts/seq_sites.db"
     index_start = datetime.datetime.now()
