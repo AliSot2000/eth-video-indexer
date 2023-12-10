@@ -1,0 +1,50 @@
+version: 1
+disable_existing_loggers: true
+
+
+
+formatters:
+    standard:
+        format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    error:
+        format: "%(asctime)s - %(levelname)s <PID %(process)d:%(processName)s> %(name)s.%(funcName)s(): %(message)s"
+
+
+handlers:
+    console_info:
+        class: logging.StreamHandler
+        level: INFO
+        formatter: standard
+        stream: ext://sys.stdout
+
+    error_file_handler:
+        class: logging.handlers.RotatingFileHandler
+        level: ERROR
+        formatter: error
+        filename: /home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/logs/errors.log
+        maxBytes: 10485760 # 10MB
+        backupCount: 20
+        encoding: utf8
+
+
+root:
+    level: DEBUG
+    handlers: [console_info]
+    propagate: yes
+
+
+loggers:
+    site_indexer:
+        level: DEBUG
+        handlers: [console_info, error_file_handler]
+        propagate: no
+
+    metadata_loader:
+        level: DEBUG
+        handlers: [ console_info, error_file_handler ]
+        propagate: no
+
+    stream_loader:
+        level: DEBUG
+        handlers: [ console_info, error_file_handler ]
+        propagate: no

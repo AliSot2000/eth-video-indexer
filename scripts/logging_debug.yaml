@@ -1,0 +1,65 @@
+version: 1
+disable_existing_loggers: true
+
+
+
+formatters:
+    standard:
+        format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    error:
+        format: "%(asctime)s - %(levelname)s <PID %(process)d:%(processName)s> %(name)s.%(funcName)s(): %(message)s"
+
+
+handlers:
+    console_info:
+        class: logging.StreamHandler
+        level: INFO
+        formatter: standard
+        stream: ext://sys.stdout
+
+    debug_file_handler:
+        class: logging.FileHandler
+        level: ERROR
+        formatter: standard
+        filename: /home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/logs/debug.log
+        encoding: utf8
+        mode: w
+
+    error_file_handler:
+        class: logging.FileHandler
+        level: ERROR
+        formatter: error
+        filename: /home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/logs/errors.log
+        encoding: utf8
+        mode: a
+
+root:
+    level: DEBUG
+    handlers: [console_info]
+    propagate: yes
+
+
+loggers:
+    site_indexer:
+        level: DEBUG
+        handlers:
+            - console_info
+            - debug_file_handler
+            # - error_file_handler
+        propagate: no
+
+    metadata_loader:
+        level: DEBUG
+        handlers:
+            - console_info
+            - debug_file_handler
+            # - error_file_handler
+        propagate: no
+
+    stream_loader:
+        level: DEBUG
+        handlers:
+            - console_info
+            - debug_file_handler
+            # - error_file_handler
+        propagate: no
