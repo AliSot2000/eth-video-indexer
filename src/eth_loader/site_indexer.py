@@ -132,7 +132,7 @@ class ConcurrentETHSiteIndexer:
         # Dummy entry to have a root.
         self.debug_execute(
             f"INSERT INTO sites (key, parent, URL, IS_VIDEO, found, last_seen) VALUES (0, -1, 'https://www.video.ethz.ch', 0, '{now}', '{now}')")
-        print("Table Created")
+        self.logger.info("Table Created")
 
     def index_video_eth(self, threads : int = 100):
         """
@@ -163,14 +163,13 @@ class ConcurrentETHSiteIndexer:
 
                 if self.val_uri(uri) and uri not in uris:
                     uris.append(uri)
-                    print(f"uri {uri}")
+                    self.logger.debug(f"uri {uri}")
                     self.sub_index(f"https://www.video.ethz.ch{uri}", uri)
 
         self.spawn(threads=threads)
         self.dequeue()
 
-        # TODO: logger and debug shit
-        print("Cleanup")
+        self.logger.info("Cleanup")
         self.cleanup()
         self.sq_con.commit()
 
@@ -201,14 +200,12 @@ class ConcurrentETHSiteIndexer:
         # dump the site to the list of video urls if it matches
         if is_video(tree):
 
-            # TODO: logger and debug shit
-            print(f"put {url}")
+            self.logger.debug(f"put {url}")
             self.found_url_queue.put({"url": url, "is_video": 1})
             return
 
         else:
-            # TODO: logger and debug shit
-            print(f"put {url}")
+            self.logger.debug(f"put {url}")
             self.found_url_queue.put({"url": url, "is_video": 0})
 
         # find all <a> elements
@@ -223,8 +220,7 @@ class ConcurrentETHSiteIndexer:
                 if (prefix.split(".")[0] in uri) and (prefix != uri):
                     self.sub_index(f"https://www.video.ethz.ch{uri}", uri)
 
-        # TODO: logger and debug shit
-        print(f"Done {url}")
+        self.logger.info(f"Done {url}")
 
     def cleanup(self):
         """
@@ -250,7 +246,7 @@ class ConcurrentETHSiteIndexer:
             t.start()
             self.threads.append(t)
 
-        print("Workers Spawned")
+        self.logger.info("Workers Spawned")
 
     def __indexer(self):
         """
@@ -314,20 +310,18 @@ class ConcurrentETHSiteIndexer:
                                                 f"('{url}', {a_video}, '{now}', '{now}')")
                             self.sq_con.commit()
                             insert_counter += 1
-                            print(f"Found new: {url}")
+                            self.logger.info(f"Found new: {url}")
                         else:
                             self.update_found(url=url)
-                            print(f"Already in DB: {url}")
-                    except sqlite3.IntegrityError:
-                        # TODO: logger and debug shit
-                        print(traceback.format_exc())
-                        print(arguments)
+                            self.logger.info(f"Already in DB: {url}")
+                    except sqlite3.IntegrityError as e:
+                        self.logger.exception(f"Error while insert updating url {url}", e)
                     counter = 0
             else:
                 counter += 1
                 sleep(1)
-        # TODO: logger and debug shit
-        print(f"Inserted {insert_counter} entries in sites table")
+
+        self.logger.info(f"Inserted {insert_counter} entries in sites table")
 
     def not_in_db(self, url):
         """
@@ -376,7 +370,7 @@ class ConcurrentETHSiteIndexer:
                 parent_ids[parent_url] = parent_id
 
             # TODO: logging and debug shit
-            print(f"UPDATE sites SET parent = {parent_id} WHERE key IS {key}")
+            self.logger.debug(f"UPDATE sites SET parent = {parent_id} WHERE key IS {key}")
             self.debug_execute(f"UPDATE sites SET parent = {parent_id} WHERE key IS {key}")
 
             # Fetch the next entry which has no parent.
