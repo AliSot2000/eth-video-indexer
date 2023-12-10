@@ -1,8 +1,6 @@
 import datetime
 import os.path
 import sqlite3
-
-import traceback
 import requests as rq
 from lxml import etree
 from lxml.etree import _Element
@@ -11,6 +9,7 @@ from threading import Thread
 from time import sleep
 from queue import Empty
 from sqlite3 import *
+import logging
 
 """
 # Functionality of Class:
