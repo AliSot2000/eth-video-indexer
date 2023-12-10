@@ -22,9 +22,9 @@ def retrieve_metadata(website_url: str, identifier: str, headers: dict, parent_i
     The function **expects** to receive a valid lecture url. If an url is provided, that doesn't contain a video,
     it will try to download it anyway. The function shouldn't fail except if the site doesn't exist.
 
+    :param parent_id: id of parent in sites table
     :param website_url: url to download eg. /category/subcategory/year/season/lecture_id.html
-    :param identifier: str for thread to give i/home/alisot2000/Documents/01 ReposNCode/ETH-Lecture-Loadernformation
-    where the download was executed in case of an error.
+    :param identifier: str for thread to give information where the download was executed in case of an error.
     :param headers: dict to be passed to the request library. Download will fail if no user-agent is provided.
     """
 
