@@ -352,9 +352,11 @@ class ConcurrentETHSiteIndexer:
 
         self.debug_execute("SELECT key, URL FROM sites WHERE parent IS NULL")
         one = self.sq_cur.fetchone()
+        x = 0
 
         # perform the parent linking while there are entries that have no parent.
         while one is not None:
+            x += 1
             key = one[0]
             url = one[1]
 
@@ -377,6 +379,7 @@ class ConcurrentETHSiteIndexer:
             self.debug_execute("SELECT key, URL FROM sites WHERE parent IS NULL")
             one = self.sq_cur.fetchone()
         self.sq_con.commit()
+        self.logger.info(f"Updated parents of: {x} entries")
 
     def get_url_id(self, url: str):
         """
