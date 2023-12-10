@@ -41,10 +41,7 @@ def parent_site(url: str) -> str:
     snippets = url.split("/")
     del snippets[-1]
 
-    url = snippets[0]
-    for i in range(1, len(snippets)):
-        url += "/" + snippets[i]
-
+    url = "/".join(snippets)
     url += ".html"
     return url
 
