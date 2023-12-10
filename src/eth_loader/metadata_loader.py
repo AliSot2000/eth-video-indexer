@@ -116,17 +116,29 @@ class EpisodeLoader:
         self.check_results_table()
 
     def get_video_urls(self):
+        """
+        Get all sites where a video is present from sites table.
+        :return:
+        """
         self.verify_args_table()
         self.sq_cur.execute("SELECT key, url FROM sites WHERE IS_VIDEO=1")
         self.urls = self.sq_cur.fetchall()
 
     def verify_args_table(self):
+        """
+        Verify that the sites table exists
+        :return:
+        """
         self.sq_cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='sites'")
 
         if self.sq_cur.fetchone() is None:
             raise ValueError("didn't find the 'sites' table inside the given database.")
 
     def check_results_table(self):
+        """
+        Check if the results table exists and create it if necessary.
+        :return:
+        """
         self.sq_cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='metadata'")
 
         if self.sq_cur.fetchone() is None:
