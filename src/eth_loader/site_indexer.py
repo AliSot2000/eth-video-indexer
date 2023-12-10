@@ -371,7 +371,6 @@ class ConcurrentETHSiteIndexer:
                 parent_id = self.get_url_id(parent_url)
                 parent_ids[parent_url] = parent_id
 
-            # TODO: logging and debug shit
             self.logger.debug(f"UPDATE sites SET parent = {parent_id} WHERE key IS {key}")
             self.debug_execute(f"UPDATE sites SET parent = {parent_id} WHERE key IS {key}")
 
