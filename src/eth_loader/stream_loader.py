@@ -110,7 +110,7 @@ class BetterStreamLoader(BaseSQliteDB):
     """
 
     def __init__(self, db: str, user_name: str = None, password: str = None,
-                 spec_login: List[SpecLogin] = None):
+                 spec_login: List[SpecLogin] = None, verify_tbl: bool = True):
 
         """
         Perform initialisation and acquire the login cookie for the indexing.
@@ -118,6 +118,7 @@ class BetterStreamLoader(BaseSQliteDB):
         :param db: path to the database to use.
         :param user_name: ETHZ-LDAP username
         :param password: LDAP password
+        :param verify_tbl: If the table should be verified on init
         :param spec_login: list of SpecLogin Dataclass objects. Containing an url for which the login is intended,
             the username and the password
         """
