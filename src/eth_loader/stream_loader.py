@@ -271,7 +271,7 @@ class BetterStreamLoader(BaseSQliteDB):
                                 "found TEXT, "
                                 "last_seen TEXT)")
 
-            self.sq_cur.execute(
+            self.debug_execute(
                 "INSERT INTO streams (key, URL, resolution, found) VALUES (-1, 'dummy', 'dummy', 'dummy')")
 
     def spawn(self, threads: int = 100):
