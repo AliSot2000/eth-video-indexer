@@ -255,8 +255,7 @@ class BetterStreamLoader(BaseSQliteDB):
                                 "json TEXT,"
                                 "deprecated INTEGER DEFAULT 0 CHECK (episodes.deprecated >= 0 AND episodes.deprecated <= 1),"
                                 "found TEXT,"
-                                "last_seen TEXT, "
-                                "streams TEXT)")
+                                "last_seen TEXT)")
 
         # check that the streams table exists
         self.debug_execute("SELECT name FROM sqlite_master WHERE type='table' AND name='streams'")
