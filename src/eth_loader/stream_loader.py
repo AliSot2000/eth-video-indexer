@@ -658,7 +658,7 @@ class BetterStreamLoader(BaseSQliteDB):
             f"INSERT INTO streams (URL, resolution, found, last_seen) "
             f"VALUES ('{url}', '{resolution}', '{now}', '{now}')")
 
-        self.sq_cur.execute(
+        self.debug_execute(
             f"SELECT key FROM streams WHERE URL IS '{url}' AND  resolution IS '{resolution}' AND found IS '{now}'")
 
         # return the key
