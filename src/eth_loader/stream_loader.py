@@ -46,8 +46,7 @@ def get_stream(website_url: str, identifier: str, headers: dict, cookies: bytes,
     if result.ok:
         content = result.content.decode("utf-8")
     else:
-        # TODO: logging and debug shit
-        print(f"{identifier} error {result.status_code}")
+        logging.getLogger("stream_loader").error(f"{identifier} error {result.status_code}")
 
     return {"url": url, "status": result.status_code, "content": content, "parent_id": parent_id}
 
@@ -62,8 +61,7 @@ def handler(worker_nr: int, command_queue: mp.Queue, result_queue: mp.Queue):
     :param result_queue: Queue to put the results in. Handled in main thread.
     :return:
     """
-    # TODO: logging and debug shit
-    print("Starting")
+    logging.getLogger("stream_loader").info(f"{worker_nr}: Starting")
     ctr = 0
     while ctr < 20:
         try:
@@ -84,8 +82,7 @@ def handler(worker_nr: int, command_queue: mp.Queue, result_queue: mp.Queue):
                             parent_id=arguments["parent_id"])
 
         result_queue.put(result)
-    # TODO: logging and debug shit
-    print(f"{worker_nr} Terminated")
+    logging.getLogger("stream_loader").info(f"{worker_nr} Terminated")
 
 
 @dataclass
