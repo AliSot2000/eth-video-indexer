@@ -501,20 +501,11 @@ class BetterStreamLoader(BaseSQliteDB):
         :param parent_id: key of the parent entry. (Series in XXX table) # TODO look up table
         :param url: url of the episode that was downloaded
         :param json_str: json string of the series site???
-        :param raw_content: json content that was the response for the series.
         :return:
         """
         self.__processed_episodes += 1
 
-        try:
-            # parse json content
-            episode = json.loads(raw_content)
-        except json.JSONDecodeError:
-            self.logger.error(f"Failed to load raw content of {url}", raw_content)
-            return -1
-
         # list of ids in streams table associated with current episode.
-        streams = self.retrieve_streams(json_obj=episode, parent_id=parent_id)
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         # exists:
