@@ -60,8 +60,8 @@ def convert_streams(p: str):
     obj.debug_execute("SELECT * FROM sqlite_master WHERE type='table' AND name='temp'")
     if obj.sq_cur.fetchone() is None:
         obj.debug_execute("ALTER TABLE episodes RENAME TO temp")
-    obj.debug_execute("CREATE TABLE IF NOT EXISTS episodes AS SELECT key, parent, URL, json, deprecated, found, last_seen FROM temp")
     obj.check_results_table()
+    obj.debug_execute("INSERT INTO  episodes (key, parent, URL, json, deprecated, found, last_seen) SELECT key, parent, URL, json, deprecated, found, last_seen FROM temp")
     obj.sq_cur.execute("SELECT key FROM episodes")
     ok = [k[0] for k in obj.sq_cur.fetchall()]
 
