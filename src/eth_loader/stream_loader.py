@@ -479,8 +479,10 @@ class BetterStreamLoader(BaseSQliteDB):
                         content = aux.to_b64(res["content"])
 
                         # why is res['content'] read twice?
-                        self.insert_update_episodes(parent_id=res["parent_id"], url=res["url"],
-                                                    json_str=content, raw_content=res["content"])
+                        ep_id = self.insert_update_episodes(parent_id=res["parent_id"], url=res["url"],
+                                                    json_str=res["content"])
+                        streams = self.retrieve_streams(json_obj=content, parent_id=res["parent_id"])
+                        self.link_episode_streams(episode_id=ep_id, streams=streams)
                     else:
                         self.logger.error(f"url {res['url']} with status code {res['status']}")
                     ctr = 0
@@ -662,27 +664,3 @@ class BetterStreamLoader(BaseSQliteDB):
         # return the key
         return self.sq_cur.fetchone()[0]
 
-    def deprecate_streams(self):
-        """
-        Iterate over all episodes that aren't deprecated and make them deprecated if there is no episode entry
-        storing them.
-        :return:
-        """
-        self.debug_execute("SELECT key FROM streams WHERE deprecated = 0 ORDER BY key DESC")
-
-        rows = self.sq_cur.fetchmany(1000)
-        while len(rows) > 0:
-            key = 0
-            for row in rows:
-                key = row[0]
-
-                self.debug_execute(f"SELECT key FROM episodes WHERE streams LIKE '%{key}%'")
-
-                if self.sq_cur.fetchone() is None:
-                    self.logger.debug(f"Deprecating entry: {key}")
-                    self.debug_execute(f"UPDATE streams SET deprecated = 1 WHERE key = {key}")
-
-            self.debug_execute(f"SELECT key FROM streams WHERE deprecated = 0 AND key < {rows[-1][0]} ORDER BY key DESC")
-            rows = self.sq_cur.fetchmany(1000)
-
-            self.logger.debug(f"Processing key: {key}")
