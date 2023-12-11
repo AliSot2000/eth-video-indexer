@@ -43,8 +43,9 @@ def convert_episodes(p: str):
     ok = [k[0] for k in obj.sq_cur.fetchall()]
 
     for k in ok:
-        if k % 100 == 0:
+        if k % 1000 == 0:
             print(k)
+            obj.sq_con.commit()
         obj.sq_cur.execute(f"SELECT json from episodes WHERE key = {k}")
         json = obj.sq_cur.fetchone()[0]
         json = json.replace("''", "'")
@@ -67,6 +68,7 @@ def convert_streams(p: str):
     for k in ok:
         if k % 100 == 0:
             print(k)
+            obj.sq_con.commit()
         obj.sq_cur.execute(f"SELECT streams from temp WHERE key = {k}")
         streams = obj.sq_cur.fetchone()[0]
 
