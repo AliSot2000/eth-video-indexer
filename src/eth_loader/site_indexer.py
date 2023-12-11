@@ -170,7 +170,7 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
         self.dequeue()
 
         self.logger.info("Cleanup")
-        self.cleanup()
+        self.cleanup_workers()
         self.sq_con.commit()
 
     def __sub_index(self, url: str, prefix: str):
@@ -222,7 +222,7 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
 
         self.logger.info(f"Done {url}")
 
-    def cleanup(self):
+    def cleanup_workers(self):
         """
         Waits for all worker processes to terminate and then joins them.
         :return:
