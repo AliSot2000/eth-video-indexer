@@ -152,7 +152,7 @@ class EpisodeLoader(BaseSQliteDB):
                                 "found TEXT,"
                                 "last_seen TEXT)")
 
-    def cleanup(self):
+    def cleanup_workers(self):
         """
         Waits for all worker processes to terminate and then joins them.
         :return:
@@ -176,7 +176,7 @@ class EpisodeLoader(BaseSQliteDB):
         self.get_video_urls(dt)
         self.enqueue_th(workers)
         self.check_result()
-        self.cleanup()
+        self.cleanup_workers()
         self.sq_con.commit()
         self.logger.info("DOWNLOAD DONE")
 
