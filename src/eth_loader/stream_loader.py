@@ -476,8 +476,6 @@ class BetterStreamLoader(BaseSQliteDB):
 
                     # verify the correct download of the episode metadata
                     if res["status"] == 200:
-                        content = aux.to_b64(res["content"])
-
                         # why is res['content'] read twice?
                         ep_id = self.insert_update_episodes(parent_id=res["parent_id"], url=res["url"],
                                                     json_str=res["content"])
