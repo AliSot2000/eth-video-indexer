@@ -512,7 +512,7 @@ class BetterStreamLoader(BaseSQliteDB):
             return -1
 
         # list of ids in streams table associated with current episode.
-        stream_string = json.dumps(self.retrieve_streams(json_obj=episode, parent_id=parent_id))
+        streams = self.retrieve_streams(json_obj=episode, parent_id=parent_id)
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         # exists:
@@ -520,9 +520,8 @@ class BetterStreamLoader(BaseSQliteDB):
             f"SELECT key FROM episodes WHERE "
             f"parent = {parent_id} AND "
             f"URL = '{url}' AND "
-            f"json = '{json_str}' AND "
-            f"deprecated = 0 AND "
-            f"streams = '{stream_string}'")
+            f"json = '{aux.to_b64(json_str)}' AND "
+            f"deprecated = 0")
 
         # it exists, abort
         result = self.sq_cur.fetchone()
