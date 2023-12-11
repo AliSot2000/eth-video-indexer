@@ -641,7 +641,7 @@ class BetterStreamLoader(BaseSQliteDB):
         result = self.sq_cur.fetchone()
         if result is not None:
             self.logger.debug(
-                "Found inactive in db, reacivate and set everything else matching parent, url and series to deprecated")
+                "Found inactive in db, reactivate and set everything else matching parent, url and series to deprecated")
 
             # update all entries, to deprecated, unset deprecated where it is here (???)
             # update to not deprecated where the key matches.
