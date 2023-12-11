@@ -45,7 +45,7 @@ loggers:
         handlers:
             - console_info
             - debug_file_handler
-            # - error_file_handler
+            - error_file_handler
         propagate: no
 
     metadata_loader:
@@ -53,7 +53,7 @@ loggers:
         handlers:
             - console_info
             - debug_file_handler
-            # - error_file_handler
+            - error_file_handler
         propagate: no
 
     stream_loader:
@@ -61,5 +61,5 @@ loggers:
         handlers:
             - console_info
             - debug_file_handler
-            # - error_file_handler
+            - error_file_handler
         propagate: no
