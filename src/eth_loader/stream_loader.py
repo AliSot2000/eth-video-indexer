@@ -106,7 +106,7 @@ class EpisodeEntry:
     parent_id: int
 
 
-class BetterStreamLoader:
+class BetterStreamLoader(BaseSQliteDB):
     """
     Class loads all stream file urls for the given database.
     """
