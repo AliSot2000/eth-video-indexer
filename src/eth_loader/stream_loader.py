@@ -514,12 +514,14 @@ class BetterStreamLoader(BaseSQliteDB):
         # list of ids in streams table associated with current episode.
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+        json_dump_b64 = aux.to_b64(json.dumps(json_str))
+
         # exists:
         self.debug_execute(
             f"SELECT key FROM episodes WHERE "
             f"parent = {parent_id} AND "
             f"URL = '{url}' AND "
-            f"json = '{aux.to_b64(json_str)}' AND "
+            f"json = '{json_dump_b64}' AND "
             f"deprecated = 0")
 
         # it exists, abort
@@ -534,13 +536,13 @@ class BetterStreamLoader(BaseSQliteDB):
             f"SELECT key FROM episodes WHERE "
             f"parent = {parent_id} AND "
             f"URL = '{url}' AND "
-            f"json = '{aux.to_b64(json_str)}' AND "
+            f"json = '{json_dump_b64}' AND "
             f"deprecated = 1")
 
         result = self.sq_cur.fetchone()
         if result is not None:
             self.logger.debug(
-                "Found inactive in db, reactivate and set everything else matching parent, url and series to deprecated")
+               f"Found inactive in db, reactivate and set everything else matching parent, url and series to deprecated")
 
             # deprecate any entry matching only parent and url (i.e. not matching json)
             # then update the one with the matching json
@@ -555,12 +557,12 @@ class BetterStreamLoader(BaseSQliteDB):
         self.logger.debug("Inserting")
         self.debug_execute(
             f"INSERT INTO episodes (parent, URL, json, found, last_seen) "
-            f"VALUES ({parent_id}, '{url}', '{aux.to_b64(json_str)}', '{now}', '{now}')")
+            f"VALUES ({parent_id}, '{url}', '{json_dump_b64}', '{now}', '{now}')")
 
         self.debug_execute(f"SELECT key FROM streams "
                            f"WHERE parent = {parent_id} "
                            f"AND URL = '{url}' "
-                           f"AND json = '{aux.to_b64(json_str)}'"
+                           f"AND json = '{json_dump_b64}'"
                            f"AND found = '{now}'")
 
         result = self.sq_cur.fetchone()
