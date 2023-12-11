@@ -87,7 +87,7 @@ if __name__ == "__main__":
     print("PASS")
     # UPDATE TO B64 for one
     path = "/home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/scripts/seq_sites.db"
-    # convert_metadata(path)
-    # convert_episodes(path)
+    convert_metadata(path)
+    convert_episodes(path)
     convert_streams(path)
     print("Done")
