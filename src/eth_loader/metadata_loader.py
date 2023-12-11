@@ -305,43 +305,11 @@ class EpisodeLoader(BaseSQliteDB):
         :param dt: limit before which a site is deemed to be deprecated.
         :return:
         """
+        dts = dt.strftime("%Y-%m-%d %H:%M:%S")
+        self.debug_execute("SELECT COUNT(key) FROM metadata WHERE date(last_seen) < date('{dts}') AND deprecated = 0")
+        count = self.sq_cur.fetchone()[0]
 
-        self.debug_execute("SELECT key, parent FROM metadata ORDER BY key ASC")
-        row = self.sq_cur.fetchone()
-
-        # key empty, nothing to see.
-        if row is None:
-            self.logger.error("Nothing in metadata table")
-            return
-
-        count = 0
-        while row is not None:
-            self.debug_execute(f"SELECT last_seen FROM sites WHERE key = {row[1]}")
-            par = self.sq_cur.fetchone()
-
-            # Parent doesn't exist?!?
-            if par is None:
-                self.debug_execute(f"UPDATE metadata SET deprecated = 1 WHERE key = {row[0]}")
-                self.logger.debug(f"Parent {row[1]} doesn't exist")
-                count += 1
-
-                # update the row and continue the loop.
-                self.debug_execute(f"SELECT key, parent FROM metadata WHERE key > {row[0]}")
-                row = self.sq_cur.fetchone()
-                continue
-
-            assert type(par[0]) is str, f"Type of last_seen not string but {type(par[0]).__name__}"
-            par_dt = datetime.datetime.strptime(par[0], "%Y-%m-%d %H:%M:%S")
-
-            # par_dt before dt, update the deprecation
-            if (par_dt - dt).total_seconds() < 0:
-                self.debug_execute(f"UPDATE metadata SET deprecated = 1 WHERE key = {row[0]}")
-                self.logger.debug(f"Deprecated {row[0]}")
-                count += 1
-
-            # update the row and continue the loop.
-            self.debug_execute(f"SELECT key, parent FROM metadata WHERE key > {row[0]}")
-            row = self.sq_cur.fetchone()
+        self.debug_execute(f"UPDATE metadata SET deprecated = 1 WHERE date(last_seen) < date('{dts}') AND deprecated = 0")
 
         self.sq_con.commit()
         self.logger.info(f"Deprecated {count} entries")
