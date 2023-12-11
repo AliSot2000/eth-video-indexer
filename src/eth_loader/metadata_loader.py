@@ -64,7 +64,7 @@ def handler(worker_nr: int, command_queue: mp.Queue, result_queue: mp.Queue):
     logger.info(f"Starting worker {worker_nr}")
 
     ctr = 0
-    while ctr < 20:
+    while ctr < 60:
         try:
             arguments = command_queue.get(block=False)
             ctr = 0
