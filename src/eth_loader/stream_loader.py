@@ -127,7 +127,8 @@ class BetterStreamLoader(BaseSQliteDB):
         self.logger = logging.getLogger("stream_loader")
         self.download_list = []
 
-        self.check_results_table()
+        if verify_tbl:
+            self.check_results_table()
 
         if spec_login is not None:
             self.specific_urls = [entry.url for entry in spec_login]
