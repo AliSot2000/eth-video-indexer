@@ -479,9 +479,15 @@ class BetterStreamLoader(BaseSQliteDB):
                     # verify the correct download of the episode metadata
                     if res["status"] == 200:
                         # why is res['content'] read twice?
+                        try:
+                            json_obj = json.loads(res["content"])
+                        except json.JSONDecodeError as e:
+                            self.logger.error(f"Json Decode error with key: {res['parent_id']}, url: {res['url']}")
+                            continue
+
                         ep_id = self.insert_update_episodes(parent_id=res["parent_id"], url=res["url"],
-                                                    json_str=res["content"])
-                        streams = self.retrieve_streams(json_obj=content, parent_id=res["parent_id"])
+                                                    json_str=json_obj)
+                        streams = self.retrieve_streams(json_obj=json_obj, parent_id=res["parent_id"])
                         self.link_episode_streams(episode_id=ep_id, streams=streams)
                     else:
                         self.logger.error(f"url {res['url']} with status code {res['status']}")
