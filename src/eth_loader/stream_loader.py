@@ -168,7 +168,7 @@ class BetterStreamLoader(BaseSQliteDB):
         self.verify_args_table()
 
         # select first entry
-        self.sq_cur.execute("SELECT key, json, URL FROM metadata WHERE deprecated = 0")
+        self.debug_execute("SELECT key, json, URL FROM metadata WHERE deprecated = 0")
         row = self.sq_cur.fetchone()
 
         while row is not None:
@@ -231,7 +231,7 @@ class BetterStreamLoader(BaseSQliteDB):
         :return:
         """
         # TODO: Verify columns and type match
-        self.sq_cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='metadata'")
+        self.debug_execute("SELECT name FROM sqlite_master WHERE type='table' AND name='metadata'")
 
         if self.sq_cur.fetchone() is None:
             raise ValueError("didn't find the 'metadata' table inside the given database.")
@@ -242,11 +242,11 @@ class BetterStreamLoader(BaseSQliteDB):
         :return:
         """
         # check if the episodes table exists already.
-        self.sq_cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='episodes'")
+        self.debug_execute("SELECT name FROM sqlite_master WHERE type='table' AND name='episodes'")
 
         # if it doesn't exist, create a results table.
         if self.sq_cur.fetchone() is None:
-            self.sq_cur.execute("CREATE TABLE episodes "
+            self.debug_execute("CREATE TABLE episodes "
                                 "(key INTEGER PRIMARY KEY AUTOINCREMENT, "
                                 "parent INTEGER, "
                                 "URL TEXT , "
@@ -257,11 +257,11 @@ class BetterStreamLoader(BaseSQliteDB):
                                 "streams TEXT)")
 
         # check that the streams table exists
-        self.sq_cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='streams'")
+        self.debug_execute("SELECT name FROM sqlite_master WHERE type='table' AND name='streams'")
 
         # create the table if it doesn't exist.
         if self.sq_cur.fetchone() is None:
-            self.sq_cur.execute("CREATE TABLE streams "
+            self.debug_execute("CREATE TABLE streams "
                                 "(key INTEGER PRIMARY KEY AUTOINCREMENT, "
                                 "URL TEXT , "
                                 "resolution TEXT,"
@@ -505,7 +505,7 @@ class BetterStreamLoader(BaseSQliteDB):
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         # exists:
-        self.sq_cur.execute(
+        self.debug_execute(
             f"SELECT key FROM episodes WHERE "
             f"parent = {parent_id} AND "
             f"URL = '{url}' AND "
@@ -516,12 +516,12 @@ class BetterStreamLoader(BaseSQliteDB):
         # it exists, abort
         result = self.sq_cur.fetchone()
         if result is not None:
-            self.sq_cur.execute(f"UPDATE episodes SET last_seen = '{now}' WHERE key = {result[0]}")
+            self.debug_execute(f"UPDATE episodes SET last_seen = '{now}' WHERE key = {result[0]}")
             self.logger.debug("Found active in db")
             return result[0]
 
         # exists but is deprecated
-        self.sq_cur.execute(
+        self.debug_execute(
             f"SELECT key FROM episodes WHERE "
             f"parent = {parent_id} AND "
             f"URL = '{url}' AND "
@@ -536,16 +536,16 @@ class BetterStreamLoader(BaseSQliteDB):
 
             # deprecate any entry matching only parent and url (i.e. not matching json)
             # then update the one with the matching json
-            self.sq_cur.execute(
+            self.debug_execute(
                 f"UPDATE episodes SET deprecated = 1 WHERE parent = {parent_id} AND URL = '{url}'")
-            self.sq_cur.execute(f"UPDATE episodes SET deprecated = 0, last_seen = '{now}' WHERE key = {result[0]}")
+            self.debug_execute(f"UPDATE episodes SET deprecated = 0, last_seen = '{now}' WHERE key = {result[0]}")
             return result[0]
 
         # doesn't exist -> insert
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         self.logger.debug("Inserting")
-        self.sq_cur.execute(
+        self.debug_execute(
             f"INSERT INTO episodes (parent, URL, json, found, streams, last_seen) "
             f"VALUES ({parent_id}, '{url}', '{json_str}', '{now}', '{stream_string}', '{now}')")
 
@@ -615,18 +615,18 @@ class BetterStreamLoader(BaseSQliteDB):
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         # exists:
-        self.sq_cur.execute(
+        self.debug_execute(
             f"SELECT key FROM streams WHERE URL = '{url}' AND resolution = '{resolution}' AND deprecated = 0")
 
         # it exists, abort
         key = self.sq_cur.fetchone()
         if key is not None:
             self.logger.debug("Found active in db")
-            self.sq_cur.execute(f"UPDATE streams SET last_seen = '{now}' WHERE key = {key[0]}")
+            self.debug_execute(f"UPDATE streams SET last_seen = '{now}' WHERE key = {key[0]}")
             return key[0]
 
         # exists but is deprecated
-        self.sq_cur.execute(
+        self.debug_execute(
             f"SELECT key FROM streams WHERE URL = '{url}' AND resolution = '{resolution}' AND deprecated = 1")
 
         result = self.sq_cur.fetchone()
@@ -636,14 +636,14 @@ class BetterStreamLoader(BaseSQliteDB):
 
             # update all entries, to deprecated, unset deprecated where it is here (???)
             # update to not deprecated where the key matches.
-            self.sq_cur.execute(f"UPDATE streams SET deprecated = 0, last_seen = '{now}' WHERE key = {result[0]}")
+            self.debug_execute(f"UPDATE streams SET deprecated = 0, last_seen = '{now}' WHERE key = {result[0]}")
             return result[0]
 
         # doesn't exist -> insert
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         self.logger.debug("Inserting")
-        self.sq_cur.execute(
+        self.debug_execute(
             f"INSERT INTO streams (URL, resolution, found, last_seen) "
             f"VALUES ('{url}', '{resolution}', '{now}', '{now}')")
 
@@ -659,7 +659,7 @@ class BetterStreamLoader(BaseSQliteDB):
         storing them.
         :return:
         """
-        self.sq_cur.execute("SELECT key FROM streams WHERE deprecated = 0 ORDER BY key DESC")
+        self.debug_execute("SELECT key FROM streams WHERE deprecated = 0 ORDER BY key DESC")
 
         rows = self.sq_cur.fetchmany(1000)
         while len(rows) > 0:
@@ -667,13 +667,13 @@ class BetterStreamLoader(BaseSQliteDB):
             for row in rows:
                 key = row[0]
 
-                self.sq_cur.execute(f"SELECT key FROM episodes WHERE streams LIKE '%{key}%'")
+                self.debug_execute(f"SELECT key FROM episodes WHERE streams LIKE '%{key}%'")
 
                 if self.sq_cur.fetchone() is None:
                     self.logger.debug(f"Deprecating entry: {key}")
-                    self.sq_cur.execute(f"UPDATE streams SET deprecated = 1 WHERE key = {key}")
+                    self.debug_execute(f"UPDATE streams SET deprecated = 1 WHERE key = {key}")
 
-            self.sq_cur.execute(f"SELECT key FROM streams WHERE deprecated = 0 AND key < {rows[-1][0]} ORDER BY key DESC")
+            self.debug_execute(f"SELECT key FROM streams WHERE deprecated = 0 AND key < {rows[-1][0]} ORDER BY key DESC")
             rows = self.sq_cur.fetchmany(1000)
 
             self.logger.debug(f"Processing key: {key}")
