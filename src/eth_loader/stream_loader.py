@@ -274,6 +274,17 @@ class BetterStreamLoader(BaseSQliteDB):
             self.debug_execute(
                 "INSERT INTO streams (key, URL, resolution, found) VALUES (-1, 'dummy', 'dummy', 'dummy')")
 
+        # Check if the assoz table exists
+        self.debug_execute("SELECT name FROM sqlite_master WHERE type='table' AND name='episode_stream_assoz'")
+
+        if self.sq_cur.fetchone() is None:
+            self.logger.info("Creating assoz table")
+            self.debug_execute("CREATE TABLE episode_stream_assoz "
+                                "(key INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                "episode_key INTEGER REFERENCES episodes(key), "
+                                "stream_key INTEGER REFERENCES streams(key))")
+
+
     def spawn(self, threads: int = 100):
         """
         Spawns worker threads.
