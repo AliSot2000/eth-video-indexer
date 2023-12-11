@@ -330,7 +330,7 @@ class BetterStreamLoader(BaseSQliteDB):
         self.logger.info(f"Processed episode {self.__processed_episodes}")
         self.logger.info(f"Processed streams {self.__processed_streams}")
 
-        self.deprecate_streams()
+        # self.deprecate_streams()
         self.sq_con.commit()
         self.logger.info("DONE")
 
