@@ -549,6 +549,32 @@ class BetterStreamLoader(BaseSQliteDB):
             f"INSERT INTO episodes (parent, URL, json, found, last_seen) "
             f"VALUES ({parent_id}, '{url}', '{aux.to_b64(json_str)}', '{now}', '{now}')")
 
+        self.debug_execute(f"SELECT key FROM streams "
+                           f"WHERE parent = {parent_id} "
+                           f"AND URL = '{url}' "
+                           f"AND json = '{aux.to_b64(json_str)}'"
+                           f"AND found = '{now}'")
+
+        result = self.sq_cur.fetchone()
+        assert result is not None, "Just inserted the bloody thing"
+        return result[0]
+
+    def link_episode_streams(self, episode_id: int, streams: List[int]):
+        """
+        Link the episode with the streams
+
+        :param episode_id: id of episode in episodes table
+        :param streams: id of streams in streams table
+        :return:
+        """
+        for stream in streams:
+            self.debug_execute(f"SELECT key FROM episode_stream_assoz "
+                               f"WHERE episode_key = {episode_id} "
+                               f"AND stream_key = {stream}")
+            if self.sq_cur.fetchone() is None:
+                self.debug_execute(f"INSERT INTO episode_stream_assoz (episode_key, stream_key) "
+                                   f"VALUES ({episode_id}, {stream})")
+
     def retrieve_streams(self, json_obj: dict, parent_id: int):
         """
         Given the .series_metadata.json of a given episode, retrieve the streams and store them in the db.
