@@ -45,7 +45,7 @@ def retrieve_metadata(website_url: str, identifier: str, headers: dict, parent_i
 
     # remove get arguments
     path = path.split("?")[0]
-    logger.info(f"{identifier} Done {url}")
+    logger.debug(f"{identifier} Done {url}")
 
     return {"url": url, "parent_id": parent_id, "status": result.status_code, "content": content}
 
@@ -289,13 +289,13 @@ class EpisodeLoader(BaseSQliteDB):
             self.debug_execute(f"SELECT key FROM metadata WHERE parent = {parent_id} AND URL = '{url}'")
             keys = [k[0] for k in self.sq_cur.fetchall()]
             if len(keys) > 1:
-                self.logger.info(f"Found {len(keys)} entries for {url} in and parent {parent_id}: {keys}")
+                self.logger.debug(f"Found {len(keys)} entries for {url} in and parent {parent_id}: {keys}")
             self.debug_execute(f"UPDATE metadata SET deprecated = 1 WHERE parent = {parent_id} AND URL = '{url}'")
             self.debug_execute(f"UPDATE metadata SET deprecated = 0, last_seen = '{now}' WHERE key = {result[0]}")
             return
 
         # doesn't exist -> insert
-        self.logger.info("Inserting")
+        self.logger.debug("Inserting")
         self.debug_execute(
             f"INSERT INTO metadata (parent, URL, json, found, last_seen) VALUES "
             f"({parent_id}, '{url}', '{json}', '{now}', '{now}')")
