@@ -100,8 +100,8 @@ class EpisodeLoader(BaseSQliteDB):
 
         :param index_db: Database result of the indexer.
         """
-        self.logger = logging.getLogger("metadata_loader")
         super().__init__(index_db)
+        self.logger = logging.getLogger("metadata_loader")
 
         self.result_queue = mp.Queue()
         self.command_queue = mp.Queue()
