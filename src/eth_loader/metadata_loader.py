@@ -112,7 +112,6 @@ class EpisodeLoader(BaseSQliteDB):
 
         self.genera_cookie = None
 
-        self.get_video_urls()
         self.check_results_table()
 
     def get_video_urls(self, dt: datetime.datetime):
@@ -162,7 +161,7 @@ class EpisodeLoader(BaseSQliteDB):
             worker: threading.Thread
             worker.join(10)
 
-    def download(self, workers: int = 100):
+    def download(self, dt: datetime.datetime, workers: int = 100):
         """
         Initiate main Download of the urls provided in the init method.
         Calls the enqueue function and then the check_result function.
@@ -170,9 +169,11 @@ class EpisodeLoader(BaseSQliteDB):
         Either choose multi_file, then the target_dir is also evaluated and the site structure is stored inside the dir
         or the entire metadata is stored inside the target file. **WARNING the target file WILL be overwritten**
 
+        :param dt: datetime of last site indexing
         :param workers: number of worker threads to run concurrently
         :return:series
         """
+        self.get_video_urls(dt)
         self.enqueue_th(workers)
         self.check_result()
         self.cleanup()
