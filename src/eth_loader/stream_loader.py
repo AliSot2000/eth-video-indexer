@@ -30,6 +30,7 @@ def get_stream(website_url: str, identifier: str, headers: dict, cookies: bytes,
     it will try to download it anyway. The function shouldn't fail except if the site doesn't exist.
 
     :param cookies:
+    :param parent_id: Id of parent entry in metadata table
     :param website_url: url to download eg. /category/subcategory/year/season/lecture_id.html
     :param identifier: str for thread to give information where the download was executed in case of an error.
     :param headers: dict to be passed to the request library. Download will fail if no user-agent is provided.
