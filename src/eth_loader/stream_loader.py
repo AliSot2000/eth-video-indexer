@@ -556,7 +556,7 @@ class BetterStreamLoader(BaseSQliteDB):
         Given the .series_metadata.json of a given episode, retrieve the streams and store them in the db.
 
         :param json_obj: content of the series_metadata.json
-        :param parent_id: key of parent in db for identification if error occures
+        :param parent_id: key of parent in db for identification if error occurs
         :return:
         """
         episode_stream_ids = []
