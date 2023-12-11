@@ -490,7 +490,7 @@ class BetterStreamLoader(BaseSQliteDB):
                 time.sleep(1)
                 ctr += 1
 
-    def insert_update_episodes(self, parent_id: int, url: str, json_str: str, raw_content: str):
+    def insert_update_episodes(self, parent_id: int, url: str, json_str: str):
         """
         Given the parent_id (key), the url of the episode, the json_string associated with the episode and the content
         of the episode site, it updates the stream and episodes table. Updating or inserting depending on presence and
