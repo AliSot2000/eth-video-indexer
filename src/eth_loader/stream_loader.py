@@ -125,7 +125,6 @@ class BetterStreamLoader(BaseSQliteDB):
         self.logger = logging.getLogger("stream_loader")
         self.download_list = []
 
-        self.get_episode_urls()
         self.check_results_table()
 
         if spec_login is not None:
@@ -150,11 +149,7 @@ class BetterStreamLoader(BaseSQliteDB):
         self.result_queue = mp.Queue()
         self.command_queue = mp.Queue()
 
-        self.nod = len(self.download_list)
-
-        # TODO: logger and debug shit
-        self.logger.info(f"TODO: {self.nod}")
-        time.sleep(10)
+        self.nod = 0
 
         self.general_cookie = None
         self.login(user_name, password)
@@ -303,6 +298,12 @@ class BetterStreamLoader(BaseSQliteDB):
         :param workers: number of workers in parallel.
         :return:
         """
+        self.get_episode_urls()
+        self.nod = len(self.download_list)
+
+        self.logger.info(f"TODO: {self.nod}")
+        time.sleep(10)
+
         self.spawn(workers)
         self.enqueue_job()
         self.dequeue_job()
