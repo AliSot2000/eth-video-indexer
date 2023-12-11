@@ -314,7 +314,7 @@ class BetterStreamLoader(BaseSQliteDB):
             time.sleep(30)
             self.logger.info("Initiator Thread Sleeping Workers")
 
-        self.cleanup()
+        self.cleanup_workers()
         self.sq_con.commit()
         self.logger.info(f"Processed episode {self.__processed_episodes}")
         self.logger.info(f"Processed streams {self.__processed_streams}")
@@ -323,7 +323,7 @@ class BetterStreamLoader(BaseSQliteDB):
         self.sq_con.commit()
         self.logger.info("DONE")
 
-    def cleanup(self):
+    def cleanup_workers(self):
         """
         Waits for all worker processes to terminate and then joins them.
         :return:
