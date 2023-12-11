@@ -115,13 +115,15 @@ class EpisodeLoader(BaseSQliteDB):
         self.get_video_urls()
         self.check_results_table()
 
-    def get_video_urls(self):
+    def get_video_urls(self, dt: datetime.datetime):
         """
         Get all sites where a video is present from sites table.
         :return:
         """
+        dts = dt.strftime("%Y-%m-%d %H:%M:%S")
+
         self.verify_args_table()
-        self.debug_execute("SELECT key, url FROM sites WHERE IS_VIDEO=1")
+        self.debug_execute(f"SELECT key, url FROM sites WHERE IS_VIDEO=1 AND date(last_seen) > date('{dts}')")
         self.urls = self.sq_cur.fetchall()
 
     def verify_args_table(self):
