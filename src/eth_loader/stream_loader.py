@@ -710,9 +710,9 @@ class BetterStreamLoader(BaseSQliteDB):
         # create temporary table with all not deprecated episode entries
         self.debug_execute(f"CREATE TABLE temp AS "
                            f"SELECT episodes.key FROM episodes JOIN metadata ON episodes.parent = metadata.key "
-                           f"WHERE date(metadata.last_seen) > date('{dts}') "
+                           f"WHERE datetime(metadata.last_seen) > datetime('{dts}') "
                            f"AND episodes.deprecated = 0 "
-                           f"AND date(episodes.last_seen) > date ('{dts}')")
+                           f"AND datetime(episodes.last_seen) > datetime('{dts}')")
 
         self.debug_execute(f"SELECT COUNT(key) FROM episodes WHERE key NOT IN temp AND deprecated = 0")
         count = self.sq_cur.fetchone()[0]
