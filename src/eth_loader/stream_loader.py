@@ -535,9 +535,8 @@ class BetterStreamLoader(BaseSQliteDB):
             f"SELECT key FROM episodes WHERE "
             f"parent = {parent_id} AND "
             f"URL = '{url}' AND "
-            f"json = '{json_str}' AND "
-            f"deprecated = 1 AND "
-            f"streams = '{stream_string}'")
+            f"json = '{aux.to_b64(json_str)}' AND "
+            f"deprecated = 1")
 
         result = self.sq_cur.fetchone()
         if result is not None:
@@ -556,8 +555,8 @@ class BetterStreamLoader(BaseSQliteDB):
 
         self.logger.debug("Inserting")
         self.debug_execute(
-            f"INSERT INTO episodes (parent, URL, json, found, streams, last_seen) "
-            f"VALUES ({parent_id}, '{url}', '{json_str}', '{now}', '{stream_string}', '{now}')")
+            f"INSERT INTO episodes (parent, URL, json, found, last_seen) "
+            f"VALUES ({parent_id}, '{url}', '{aux.to_b64(json_str)}', '{now}', '{now}')")
 
     def retrieve_streams(self, json_obj: dict, parent_id: int):
         """
