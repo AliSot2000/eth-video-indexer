@@ -310,10 +310,10 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
                                                 f"('{url}', {a_video}, '{now}', '{now}')")
                             self.sq_con.commit()
                             insert_counter += 1
-                            self.logger.info(f"Found new: {url}")
+                            self.logger.debug(f"Found new: {url}")
                         else:
                             self.update_found(url=url)
-                            self.logger.info(f"Already in DB: {url}")
+                            self.logger.debug(f"Already in DB: {url}")
                     except sqlite3.IntegrityError as e:
                         self.logger.exception(f"Error while insert updating url {url}", e)
                     counter = 0
