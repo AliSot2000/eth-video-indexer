@@ -180,7 +180,7 @@ class BetterStreamLoader(BaseSQliteDB):
             strip_url = parent_url.replace(".html", "").replace(".series-metadata.json", "")
 
             # why was this again important?
-            content_default = content.replace("''", "'")
+            content_default = aux.from_b64(content)
 
             # cannot process a html site. We skip this entry.
             if "<!DOCTYPE html>" in content_default:
@@ -246,6 +246,7 @@ class BetterStreamLoader(BaseSQliteDB):
 
         # if it doesn't exist, create a results table.
         if self.sq_cur.fetchone() is None:
+            self.logger.info("Creating episodes table")
             self.debug_execute("CREATE TABLE episodes "
                                 "(key INTEGER PRIMARY KEY AUTOINCREMENT, "
                                 "parent INTEGER, "
@@ -261,6 +262,7 @@ class BetterStreamLoader(BaseSQliteDB):
 
         # create the table if it doesn't exist.
         if self.sq_cur.fetchone() is None:
+            self.logger.info("Creating streams table")
             self.debug_execute("CREATE TABLE streams "
                                 "(key INTEGER PRIMARY KEY AUTOINCREMENT, "
                                 "URL TEXT , "
@@ -463,9 +465,7 @@ class BetterStreamLoader(BaseSQliteDB):
 
                     # verify the correct download of the episode metadata
                     if res["status"] == 200:
-
-                        # TODO NEEDS TO BE STORED IN b64
-                        content = res["content"].replace("'", "''")
+                        content = aux.to_b64(res["content"])
 
                         # why is res['content'] read twice?
                         self.insert_update_episodes(parent_id=res["parent_id"], url=res["url"],
