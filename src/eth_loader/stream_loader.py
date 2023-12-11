@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from typing import List
 import datetime
 from eth_loader.base_sql import BaseSQliteDB
+import eth_loader.aux as aux
 
 
 # gro-21w
