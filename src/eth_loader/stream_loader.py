@@ -559,7 +559,7 @@ class BetterStreamLoader(BaseSQliteDB):
             f"INSERT INTO episodes (parent, URL, json, found, last_seen) "
             f"VALUES ({parent_id}, '{url}', '{json_dump_b64}', '{now}', '{now}')")
 
-        self.debug_execute(f"SELECT key FROM streams "
+        self.debug_execute(f"SELECT key FROM episodes "
                            f"WHERE parent = {parent_id} "
                            f"AND URL = '{url}' "
                            f"AND json = '{json_dump_b64}'"
