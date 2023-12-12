@@ -220,7 +220,7 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
                 if (prefix.split(".")[0] in uri) and (prefix != uri):
                     self.sub_index(f"https://www.video.ethz.ch{uri}", uri)
 
-        self.logger.info(f"Done {url}")
+        self.logger.debug(f"Done {url}")
 
     def cleanup_workers(self):
         """
