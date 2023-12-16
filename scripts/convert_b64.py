@@ -44,7 +44,7 @@ def convert_episodes(p: str):
 
     for k in ok:
         if k % 1000 == 0:
-            print(k)
+            print(k, flush=True, end="\r")
             obj.sq_con.commit()
         obj.sq_cur.execute(f"SELECT json from episodes WHERE key = {k}")
         json = obj.sq_cur.fetchone()[0]
@@ -54,6 +54,8 @@ def convert_episodes(p: str):
         obj.sq_cur.execute(f"UPDATE episodes SET json = '{b64_json}' WHERE key = {k}")
 
     obj.sq_con.commit()
+
+
 def convert_streams(p: str):
     obj = BetterStreamLoader(p, verify_tbl=False)
     obj.debug_execute("DROP TABLE IF EXISTS episode_stream_assoz")
@@ -66,8 +68,8 @@ def convert_streams(p: str):
     ok = [k[0] for k in obj.sq_cur.fetchall()]
 
     for k in ok:
-        if k % 100 == 0:
-            print(k)
+        if k % 1000 == 0:
+            print(k, flush=True, end="\r")
             obj.sq_con.commit()
         obj.sq_cur.execute(f"SELECT streams from temp WHERE key = {k}")
         streams = obj.sq_cur.fetchone()[0]
@@ -78,6 +80,7 @@ def convert_streams(p: str):
                 assert type(stream) is int, "type of element not int"
                 obj.debug_execute(f"INSERT OR IGNORE INTO episode_stream_assoz (episode_key, stream_key) VALUES ({k}, {stream})")
             else:
+                assert len(stream) == 1, "length of element not 2"
                 obj.debug_execute(f"INSERT OR IGNORE INTO episode_stream_assoz (episode_key, stream_key) VALUES ({k}, {stream[0]})")
 
     obj.debug_execute("DROP TABLE temp")
@@ -87,7 +90,12 @@ if __name__ == "__main__":
     print("PASS")
     # UPDATE TO B64 for one
     path = "/home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/scripts/seq_sites.db"
+    print("Converting Metadata...")
     convert_metadata(path)
+    print("Done Converting Metadata")
+    print("Converting Episodes...")
     convert_episodes(path)
+    print("Done Converting Episodes")
+    print("Converting Streams...")
     convert_streams(path)
     print("Done")
