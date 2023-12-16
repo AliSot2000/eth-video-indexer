@@ -583,12 +583,8 @@ class BetterStreamLoader(BaseSQliteDB):
         :return:
         """
         for stream in streams:
-            self.debug_execute(f"SELECT key FROM episode_stream_assoz "
-                               f"WHERE episode_key = {episode_id} "
-                               f"AND stream_key = {stream}")
-            if self.sq_cur.fetchone() is None:
-                self.debug_execute(f"INSERT INTO episode_stream_assoz (episode_key, stream_key) "
-                                   f"VALUES ({episode_id}, {stream})")
+            self.debug_execute(f"INSERT OR IGNORE INTO episode_stream_assoz (episode_key, stream_key) "
+                               f"VALUES ({episode_id}, {stream})")
 
     def retrieve_streams(self, json_obj: dict, parent_id: int):
         """
