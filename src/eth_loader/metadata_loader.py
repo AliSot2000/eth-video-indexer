@@ -256,13 +256,13 @@ class EpisodeLoader(BaseSQliteDB):
 
         self.logger.info(f"Downloaded {g_counter} with {e_counter} errors.")
 
-    def insert_update_db(self, parent_id: int, url: str, json: str):
+    def insert_update_db(self, parent_id: int, url: str, json_arg: str):
         """
         Insert into db if new, update if exists and check deprecation status.
 
         :param parent_id: id of the parent site in the sites table
         :param url: url of the metadata
-        :param json: json stored at metadata url
+        :param json_arg: json stored at metadata url
         :return:
         """
         # exists:
