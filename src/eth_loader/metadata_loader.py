@@ -241,7 +241,7 @@ class EpisodeLoader(BaseSQliteDB):
 
                     if res["status"] == 200:
                         content = aux.to_b64(res["content"])
-                        self.insert_update_db(parent_id=parent_id, url=url, json=content)
+                        self.insert_update_db(parent_id=parent_id, url=url, json_arg=content)
                     else:
                         self.logger.error(f"Failed to download {url} with status code {res['status']}")
                         e_counter += 1
@@ -273,10 +273,10 @@ class EpisodeLoader(BaseSQliteDB):
         results = self.sq_cur.fetchall()
         key = None
         dep = None
-        for key, json_res, deprecated in results:
+        for key_res, json_res, deprecated in results:
             if json_arg == json_res:
                 dep = deprecated == 1
-                key = key
+                key = key_res
                 break
 
         # doesn't exist -> insert
