@@ -651,42 +651,40 @@ class BetterStreamLoader(BaseSQliteDB):
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         # exists:
-        self.debug_execute(
-            f"SELECT key FROM streams WHERE URL = '{url}' AND resolution = '{resolution}' AND deprecated = 0")
+        self.debug_execute(f"SELECT key, deprecated FROM streams WHERE URL = '{url}' AND resolution = '{resolution}'")
+        results = self.sq_cur.fetchall()
+
+        assert len(results) <= 1, "Multiple entries with same url and resolution"
+
+        # Doesn't exist, inserting
+        if len(results) == 0:
+            self.logger.debug("Inserting")
+            self.debug_execute(
+                f"INSERT INTO streams (URL, resolution, found, last_seen) "
+                f"VALUES ('{url}', '{resolution}', '{now}', '{now}')")
+
+            self.debug_execute(
+                f"SELECT key FROM streams WHERE URL IS '{url}' AND  resolution IS '{resolution}' AND found IS '{now}'")
+
+            # return the key
+            return self.sq_cur.fetchone()[0]
+
+        # results length is 1
+        key, deprecated = results[0]
 
         # it exists, abort
-        key = self.sq_cur.fetchone()
-        if key is not None:
+        if deprecated == 0:
             self.logger.debug("Found active in db")
             self.debug_execute(f"UPDATE streams SET last_seen = '{now}' WHERE key = {key[0]}")
             return key[0]
 
-        # exists but is deprecated
-        self.debug_execute(
-            f"SELECT key FROM streams WHERE URL = '{url}' AND resolution = '{resolution}' AND deprecated = 1")
-
-        result = self.sq_cur.fetchone()
-        if result is not None:
+        else:
             self.logger.debug(
                 "Found inactive in db, reactivate and set everything else matching parent, url and series to deprecated")
 
             # update to not deprecated where the key matches.
-            self.debug_execute(f"UPDATE streams SET deprecated = 0, last_seen = '{now}' WHERE key = {result[0]}")
-            return result[0]
-
-        # doesn't exist -> insert
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        self.logger.debug("Inserting")
-        self.debug_execute(
-            f"INSERT INTO streams (URL, resolution, found, last_seen) "
-            f"VALUES ('{url}', '{resolution}', '{now}', '{now}')")
-
-        self.debug_execute(
-            f"SELECT key FROM streams WHERE URL IS '{url}' AND  resolution IS '{resolution}' AND found IS '{now}'")
-
-        # return the key
-        return self.sq_cur.fetchone()[0]
+            self.debug_execute(f"UPDATE streams SET deprecated = 0, last_seen = '{now}' WHERE key = {key}")
+            return key
 
     def deprecate(self, dt: datetime.datetime):
         """
