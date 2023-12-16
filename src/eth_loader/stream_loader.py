@@ -184,8 +184,6 @@ class BetterStreamLoader(BaseSQliteDB):
 
             # why was this again important?
             # content_default = aux.from_b64(content)
-            if "''" in content:
-                print(content)
             content_default = content.replace("''", "'")
 
             # cannot process a html site. We skip this entry.
