@@ -44,7 +44,8 @@ def convert_episodes(p: str):
 
     for k in ok:
         if k % 1000 == 0:
-            print(k, flush=True, end="\r")
+            # print(k, flush=True, end="\r")
+            print(k)
             obj.sq_con.commit()
         obj.sq_cur.execute(f"SELECT json from episodes WHERE key = {k}")
         json = obj.sq_cur.fetchone()[0]
@@ -69,7 +70,8 @@ def convert_streams(p: str):
 
     for k in ok:
         if k % 1000 == 0:
-            print(k, flush=True, end="\r")
+            # print(k, flush=True, end="\r")
+            print(k)
             obj.sq_con.commit()
         obj.sq_cur.execute(f"SELECT streams from temp WHERE key = {k}")
         streams = obj.sq_cur.fetchone()[0]
@@ -90,12 +92,12 @@ if __name__ == "__main__":
     print("PASS")
     # UPDATE TO B64 for one
     path = "/home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/scripts/seq_sites.db"
-    print("Converting Metadata...")
-    convert_metadata(path)
-    print("Done Converting Metadata")
-    print("Converting Episodes...")
-    convert_episodes(path)
-    print("Done Converting Episodes")
+    # print("Converting Metadata...")
+    # convert_metadata(path)
+    # print("Done Converting Metadata")
+    # print("Converting Episodes...")
+    # convert_episodes(path)
+    # print("Done Converting Episodes")
     print("Converting Streams...")
     convert_streams(path)
     print("Done")
