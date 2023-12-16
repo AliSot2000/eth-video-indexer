@@ -705,15 +705,16 @@ class BetterStreamLoader(BaseSQliteDB):
         dts = dt.strftime("%Y-%m-%d %H:%M:%S")
 
         # create temporary table with all not deprecated episode entries
-        self.debug_execute(f"CREATE TABLE temp AS "
-                           f"SELECT episodes.key FROM episodes JOIN metadata ON episodes.parent = metadata.key "
-                           f"WHERE datetime(metadata.last_seen) > datetime('{dts}') "
-                           f"AND episodes.deprecated = 0 "
+        self.debug_execute(f"CREATE TABLE temp AS SELECT episodes.key AS key "
+                           f"FROM metadata JOIN episodes ON metadata.key = episodes.parent "
+                           f"WHERE metadata.deprecated = 0 AND datetime(metadata.last_seen) > datetime('{dts}') "
                            f"AND datetime(episodes.last_seen) > datetime('{dts}')")
 
-        self.debug_execute(f"SELECT COUNT(key) FROM episodes WHERE key NOT IN temp AND deprecated = 0")
+        self.debug_execute(f"SELECT COUNT(key) FROM episodes "
+                           f"WHERE key NOT IN (SELECT temp.key FROM temp) AND deprecated = 0")
         count = self.sq_cur.fetchone()[0]
-        self.debug_execute("UPDATE episodes SET deprecated = 1 WHERE key NOT IN temp AND deprecated = 0")
+        self.debug_execute("UPDATE episodes SET deprecated = 1 "
+                           "WHERE key NOT IN (SELECT temp.key FROM temp) AND deprecated = 0")
         self.logger.info(f"Deprecated {count} episodes")
         self.debug_execute("DROP TABLE temp")
         self.sq_con.commit()
@@ -727,16 +728,18 @@ class BetterStreamLoader(BaseSQliteDB):
         """
         dts = dt.strftime("%Y-%m-%d %H:%M:%S")
 
-        self.debug_execute(f"CREATE TABLE temp AS SELECT streams.key "
+        self.debug_execute(f"CREATE TABLE temp AS SELECT streams.key AS key "
                            f"FROM episodes JOIN episode_stream_assoz ON episodes.key = episode_stream_assoz.episode_key "
                            f"JOIN streams ON episode_stream_assoz.stream_key = streams.key "
-                           f"WHERE date(episodes.last_seen) > date('{dts}') "
-                           f"AND date(streams.last_seen) > date('{dts}') "
-                           f"AND streams.deprecated = 0")
+                           f"WHERE episodes.deprecated = 0 "
+                           f"AND datetime(episodes.last_seen) > datetime('{dts}') "
+                           f"AND datetime(streams.last_seen) > datetime('{dts}')")
 
-        self.debug_execute(f"SELECT COUNT(key) FROM streams WHERE key NOT IN temp AND deprecated = 0")
+        self.debug_execute(f"SELECT COUNT(DISTINCT streams.key) FROM streams "
+                           f"WHERE streams.key NOT IN (SELECT key FROM temp) AND deprecated = 0;")
         count = self.sq_cur.fetchone()[0]
-        self.debug_execute("UPDATE streams SET deprecated = 1 WHERE key NOT IN temp AND deprecated = 0")
+        self.debug_execute("UPDATE streams SET deprecated = 1 "
+                           "WHERE streams.key NOT IN (SELECT key FROM temp) AND deprecated = 0")
         self.logger.info(f"Deprecated {count} streams")
         self.debug_execute("DROP TABLE temp")
         self.sq_con.commit()
