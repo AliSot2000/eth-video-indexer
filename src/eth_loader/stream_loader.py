@@ -517,7 +517,8 @@ class BetterStreamLoader(BaseSQliteDB):
         # list of ids in streams table associated with current episode.
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        json_dump_b64 = aux.to_b64(json.dumps(json_str))
+        # json_dump_b64 = aux.to_b64(json.dumps(json_str))
+        json_dump_b64 = json.dumps(json_str).replace("'", "''")
 
         # exists:
         self.debug_execute(
