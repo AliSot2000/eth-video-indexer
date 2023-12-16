@@ -240,7 +240,10 @@ class EpisodeLoader(BaseSQliteDB):
                     url = res["url"]
 
                     if res["status"] == 200:
-                        content = aux.to_b64(res["content"])
+                        # content = aux.to_b64(res["content"])
+                        if "'" in res["content"]:
+                            print(res["content"])
+                        content = res["content"].replace("'", "''")
                         self.insert_update_db(parent_id=parent_id, url=url, json_arg=content)
                     else:
                         self.logger.error(f"Failed to download {url} with status code {res['status']}")
