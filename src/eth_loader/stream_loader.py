@@ -674,8 +674,8 @@ class BetterStreamLoader(BaseSQliteDB):
         # it exists, abort
         if deprecated == 0:
             self.logger.debug("Found active in db")
-            self.debug_execute(f"UPDATE streams SET last_seen = '{now}' WHERE key = {key[0]}")
-            return key[0]
+            self.debug_execute(f"UPDATE streams SET last_seen = '{now}' WHERE key = {key}")
+            return key
 
         else:
             self.logger.debug(
