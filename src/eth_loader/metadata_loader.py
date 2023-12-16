@@ -321,7 +321,7 @@ class EpisodeLoader(BaseSQliteDB):
         :return:
         """
         dts = dt.strftime("%Y-%m-%d %H:%M:%S")
-        self.debug_execute("SELECT COUNT(key) FROM metadata WHERE datetime(last_seen) < datetime('{dts}') AND deprecated = 0")
+        self.debug_execute(f"SELECT COUNT(key) FROM metadata WHERE datetime(last_seen) < datetime('{dts}') AND deprecated = 0")
         count = self.sq_cur.fetchone()[0]
 
         self.debug_execute(f"UPDATE metadata SET deprecated = 1 WHERE datetime(last_seen) < datetime('{dts}') AND deprecated = 0")
