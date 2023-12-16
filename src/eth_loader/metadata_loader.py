@@ -266,39 +266,50 @@ class EpisodeLoader(BaseSQliteDB):
         :return:
         """
         # exists:
-        self.debug_execute(f"SELECT key FROM metadata WHERE parent = {parent_id} AND URL = '{url}' AND json = '{json}' AND deprecated = 0")
+        self.debug_execute(f"SELECT key, json, deprecated FROM metadata WHERE parent = {parent_id} AND URL = '{url}'")
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         # it exists, abort
-        result = self.sq_cur.fetchone()
-        if result is not None:
-            self.logger.debug(f"Found {url} active in db")
-
-            self.debug_execute(f"UPDATE metadata SET last_seen = '{now}' WHERE key = {result[0]}")
-            return
-
-        # exists but is deprecated
-        self.debug_execute(f"SELECT key FROM metadata WHERE parent = {parent_id} AND URL = '{url}' AND json = '{json}' AND deprecated = 1")
-
-        result = self.sq_cur.fetchone()
-        if result is not None:
-
-            self.logger.debug(f"Found {url} inactive in db, reacivate and set everything else matching parent, "
-                  f"url and series to deprecated")
-            # update all entries, to deprecated, unset deprecated where it is here
-            self.debug_execute(f"SELECT key FROM metadata WHERE parent = {parent_id} AND URL = '{url}'")
-            keys = [k[0] for k in self.sq_cur.fetchall()]
-            if len(keys) > 1:
-                self.logger.debug(f"Found {len(keys)} entries for {url} in and parent {parent_id}: {keys}")
-            self.debug_execute(f"UPDATE metadata SET deprecated = 1 WHERE parent = {parent_id} AND URL = '{url}'")
-            self.debug_execute(f"UPDATE metadata SET deprecated = 0, last_seen = '{now}' WHERE key = {result[0]}")
-            return
+        results = self.sq_cur.fetchall()
+        key = None
+        dep = None
+        for key, json_res, deprecated in results:
+            if json_arg == json_res:
+                dep = deprecated == 1
+                key = key
+                break
 
         # doesn't exist -> insert
-        self.logger.debug("Inserting")
-        self.debug_execute(
-            f"INSERT INTO metadata (parent, URL, json, found, last_seen) VALUES "
-            f"({parent_id}, '{url}', '{json}', '{now}', '{now}')")
+        if key is None:
+            assert dep is None, "key is None but dep is not"
+
+            self.logger.debug("Inserting")
+            self.debug_execute(
+                f"INSERT INTO metadata (parent, URL, json, found, last_seen) VALUES "
+                f"({parent_id}, '{url}', '{json_arg}', '{now}', '{now}')")
+
+        if key is not None:
+            assert dep is not None, "key is not None but dep is"
+
+            # deprecated entry found
+            if dep:
+                self.logger.debug(f"Found {url} inactive in db, reactivate and set everything else matching parent, "
+                                  f"url and series to deprecated")
+                # update all entries, to deprecated, unset deprecated where it is here
+                keys = [k[0] for k in results]
+                if len(results) > 1:
+                    self.logger.debug(f"Found {len(keys)} entries for {url} in and parent {parent_id}: {keys}")
+                self.debug_execute(f"UPDATE metadata SET deprecated = 1 WHERE parent = {parent_id} AND URL = '{url}'")
+                self.debug_execute(f"UPDATE metadata SET deprecated = 0, last_seen = '{now}' WHERE key = {key}")
+                return
+
+            # active entry found
+            else:
+                self.logger.debug(f"Found {url} active in db")
+
+                self.debug_execute(f"UPDATE metadata SET last_seen = '{now}' WHERE key = {key}")
+                return
+
 
     def deprecate(self, dt: datetime.datetime):
         """
