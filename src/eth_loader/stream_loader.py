@@ -522,56 +522,57 @@ class BetterStreamLoader(BaseSQliteDB):
 
         # exists:
         self.debug_execute(
-            f"SELECT key FROM episodes WHERE "
+            f"SELECT key, json, deprecated FROM episodes WHERE "
             f"parent = {parent_id} AND "
-            f"URL = '{url}' AND "
-            f"json = '{json_dump_b64}' AND "
-            f"deprecated = 0")
+            f"URL = '{url}'")
 
-        # it exists, abort
-        result = self.sq_cur.fetchone()
-        if result is not None:
-            self.debug_execute(f"UPDATE episodes SET last_seen = '{now}' WHERE key = {result[0]}")
-            self.logger.debug("Found active in db")
-            return result[0]
+        results = self.sq_cur.fetchall()
+        key = dep = None
+        for key_res, json_res, deprecated in results:
+            if json_res == json_dump_b64:
+                key = key_res
+                dep = deprecated == 1
+                break
 
-        # exists but is deprecated
-        self.debug_execute(
-            f"SELECT key FROM episodes WHERE "
-            f"parent = {parent_id} AND "
-            f"URL = '{url}' AND "
-            f"json = '{json_dump_b64}' AND "
-            f"deprecated = 1")
+        # Doesn't exist, inserting
+        if key is None:
+            assert dep is None, "key is None but dep is not"
 
-        result = self.sq_cur.fetchone()
-        if result is not None:
-            self.logger.debug(
-               f"Found inactive in db, reactivate and set everything else matching parent, url and series to deprecated")
-
-            # deprecate any entry matching only parent and url (i.e. not matching json)
-            # then update the one with the matching json
+            self.logger.debug("Inserting")
             self.debug_execute(
-                f"UPDATE episodes SET deprecated = 1 WHERE parent = {parent_id} AND URL = '{url}'")
-            self.debug_execute(f"UPDATE episodes SET deprecated = 0, last_seen = '{now}' WHERE key = {result[0]}")
+                f"INSERT INTO episodes (parent, URL, json, found, last_seen) "
+                f"VALUES ({parent_id}, '{url}', '{json_dump_b64}', '{now}', '{now}')")
+
+            self.debug_execute(f"SELECT key FROM episodes "
+                               f"WHERE parent = {parent_id} "
+                               f"AND URL = '{url}' "
+                               f"AND json = '{json_dump_b64}'"
+                               f"AND found = '{now}'")
+
+            result = self.sq_cur.fetchone()
+            assert result is not None, "Just inserted the bloody thing"
             return result[0]
 
-        # doesn't exist -> insert
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        if key is not None:
+            assert dep is not None, "key is not None but dep is"
 
-        self.logger.debug("Inserting")
-        self.debug_execute(
-            f"INSERT INTO episodes (parent, URL, json, found, last_seen) "
-            f"VALUES ({parent_id}, '{url}', '{json_dump_b64}', '{now}', '{now}')")
+            if dep:
+                # Deprecate everything and activate only selected row
+                self.logger.debug(
+                    f"Found inactive in db, reactivate and set everything else matching parent, url and series to deprecated")
 
-        self.debug_execute(f"SELECT key FROM episodes "
-                           f"WHERE parent = {parent_id} "
-                           f"AND URL = '{url}' "
-                           f"AND json = '{json_dump_b64}'"
-                           f"AND found = '{now}'")
+                # deprecate any entry matching only parent and url (i.e. not matching json)
+                # then update the one with the matching json
+                self.debug_execute(
+                    f"UPDATE episodes SET deprecated = 1 WHERE parent = {parent_id} AND URL = '{url}'")
+                self.debug_execute(f"UPDATE episodes SET deprecated = 0, last_seen = '{now}' WHERE key = {key}")
+                return key
 
-        result = self.sq_cur.fetchone()
-        assert result is not None, "Just inserted the bloody thing"
-        return result[0]
+            # Found active in database
+            else:
+                self.debug_execute(f"UPDATE episodes SET last_seen = '{now}' WHERE key = {key}")
+                self.logger.debug("Found active in db")
+                return key
 
     def link_episode_streams(self, episode_id: int, streams: List[int]):
         """
