@@ -287,7 +287,7 @@ class BetterStreamLoader(BaseSQliteDB):
             self.debug_execute("CREATE TABLE episode_stream_assoz "
                                 "(key INTEGER PRIMARY KEY AUTOINCREMENT, "
                                 "episode_key INTEGER REFERENCES episodes(key), "
-                                "stream_key INTEGER REFERENCES streams(key))")
+                                "stream_key INTEGER REFERENCES streams(key), UNIQUE (episode_key, stream_key))")
 
 
     def spawn(self, threads: int = 100):
