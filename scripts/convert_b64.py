@@ -3,6 +3,7 @@ from eth_loader.stream_loader import BetterStreamLoader
 import base64 as b64
 import json as js
 
+
 def to_b64(s: str):
     """
     Convert string to base64
