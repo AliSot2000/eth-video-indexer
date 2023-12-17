@@ -183,8 +183,8 @@ class BetterStreamLoader(BaseSQliteDB):
             strip_url = parent_url.replace(".html", "").replace(".series-metadata.json", "")
 
             # why was this again important?
-            # content_default = aux.from_b64(content)
-            content_default = content.replace("''", "'")
+            content_default = aux.from_b64(content)
+            # content_default = content.replace("''", "'")
 
             # cannot process a html site. We skip this entry.
             if "<!DOCTYPE html>" in content_default:
@@ -515,8 +515,8 @@ class BetterStreamLoader(BaseSQliteDB):
         # list of ids in streams table associated with current episode.
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        # json_dump_b64 = aux.to_b64(json.dumps(json_str))
-        json_dump_b64 = json.dumps(json_str).replace("'", "''")
+        json_dump_b64 = aux.to_b64(json.dumps(json_str))
+        # json_dump_b64 = json.dumps(json_str).replace("'", "''")
 
         # exists:
         self.debug_execute(
