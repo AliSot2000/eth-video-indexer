@@ -505,7 +505,7 @@ class BetterStreamLoader(BaseSQliteDB):
         of the episode site, it updates the stream and episodes table. Updating or inserting depending on presence and
         deprecated state.
 
-        :param parent_id: key of the parent entry. (Series in XXX table) # TODO look up table
+        :param parent_id: key of the parent entry. (Series in XXX table)
         :param url: url of the episode that was downloaded
         :param json_str: json string of the series site???
         :return:
