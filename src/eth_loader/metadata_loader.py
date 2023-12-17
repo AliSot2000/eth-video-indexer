@@ -1,7 +1,6 @@
 import multiprocessing as mp
 import queue
 import time
-import traceback
 import datetime
 import requests as rq
 import threading
