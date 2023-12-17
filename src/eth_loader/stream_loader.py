@@ -469,8 +469,8 @@ class BetterStreamLoader(BaseSQliteDB):
             if self.__processed_streams % 1000 == 0:
                 self.logger.info(f"                    Processed Streams: {self.__processed_streams}")
 
-            if self.result_queue.qsize() % 1000 == 0:
-                self.logger.info(f"                    Queue Size: {self.result_queue.qsize()}")
+            # if self.result_queue.qsize() % 1000 == 0:
+            #     self.logger.info(f"                    Queue Size: {self.result_queue.qsize()}")
 
             # dequeue
             if not self.result_queue.empty():
