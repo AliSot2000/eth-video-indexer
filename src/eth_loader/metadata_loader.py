@@ -287,6 +287,7 @@ class EpisodeLoader(BaseSQliteDB):
             self.debug_execute(
                 f"INSERT INTO metadata (parent, URL, json, found, last_seen) VALUES "
                 f"({parent_id}, '{url}', '{json_arg}', '{now}', '{now}')")
+            return
 
         if key is not None:
             assert dep is not None, "key is not None but dep is"
