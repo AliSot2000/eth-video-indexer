@@ -297,30 +297,31 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
         insert_counter = 0
         counter = 0
         while counter < 10 and self.one_workers_alive():
-            if not self.found_url_queue.empty():  # Todo better while loop here.
-                while not self.found_url_queue.empty():
-                    arguments = self.found_url_queue.get()
-                    url = arguments["url"]
-                    a_video = arguments["is_video"]
-
-                    try:
-                        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                        if self.not_in_db(url):
-                            self.debug_execute("INSERT INTO sites (URL, IS_VIDEO, found, last_seen) VALUES "
-                                                f"('{url}', {a_video}, '{now}', '{now}')")
-                            self.sq_con.commit()
-                            insert_counter += 1
-                            self.logger.debug(f"Found new: {url}")
-                        else:
-                            self.update_found(url=url)
-                            self.logger.debug(f"Already in DB: {url}")
-                    except sqlite3.IntegrityError as e:
-                        self.logger.exception(f"Error while insert updating url {url}", e)
-                    counter = 0
-            else:
+            try:
+                arguments = self.found_url_queue.get(block=False)
+            except Empty:
                 counter += 1
                 sleep(1)
+                continue
 
+            url = arguments["url"]
+            a_video = arguments["is_video"]
+
+            try:
+                now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                if self.not_in_db(url):
+                    self.debug_execute("INSERT INTO sites (URL, IS_VIDEO, found, last_seen) VALUES "
+                                        f"('{url}', {a_video}, '{now}', '{now}')")
+                    insert_counter += 1
+                    self.logger.info(f"Found new: {url}")
+                else:
+                    self.update_found(url=url)
+                    self.logger.debug(f"Already in DB: {url}")
+            except sqlite3.IntegrityError as e:
+                self.logger.exception(f"Error while insert updating url {url}", e)
+            counter = 0
+
+        self.sq_con.commit()
         self.logger.info(f"Inserted {insert_counter} entries in sites table")
 
     def not_in_db(self, url):
