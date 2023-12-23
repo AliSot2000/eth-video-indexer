@@ -41,11 +41,11 @@ if __name__ == "__main__":
     # setup_logging(default_path="logging_debug.yaml")
     setup_logging(default_path="logging_production.yaml")
     global_start = datetime.datetime.now()
-    # path = "/home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/scripts/seq_sites_b64.db"
-    path = "/home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/scripts/seq_sites.db"
+    path = "/home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/scripts/seq_sites_b64.db"
+    # path = "/home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/scripts/seq_sites.db"
     perform_index_of_sites(path)
-    download_all_metadata(path, global_start, b64=False)
-    download_all_stream_data(path, global_start, b64=False)
+    download_all_metadata(path, global_start, b64=True)
+    download_all_stream_data(path, global_start, b64=True)
 
     global_end = datetime.datetime.now()
     print(f"Overall Time for complete indexing: {(global_end - global_start).total_seconds():.02f}")
