@@ -110,7 +110,8 @@ class BetterStreamLoader(BaseSQliteDB):
     """
 
     def __init__(self, db: str, user_name: str = None, password: str = None,
-                 spec_login: List[SpecLogin] = None, verify_tbl: bool = True):
+                 spec_login: List[SpecLogin] = None, verify_tbl: bool = True,
+                 use_base64: bool = False):
 
         """
         Perform initialisation and acquire the login cookie for the indexing.
@@ -159,6 +160,7 @@ class BetterStreamLoader(BaseSQliteDB):
 
         self.__processed_episodes = 0
         self.__processed_streams = 0
+        self.ub64 = use_base64
 
     def get_episode_urls(self):
         """
@@ -183,8 +185,10 @@ class BetterStreamLoader(BaseSQliteDB):
             strip_url = parent_url.replace(".html", "").replace(".series-metadata.json", "")
 
             # why was this again important?
-            content_default = aux.from_b64(content)
-            # content_default = content.replace("''", "'")
+            if self.ub64:
+                content_default = aux.from_b64(content)
+            else:
+                content_default = content.replace("''", "'")
 
             # cannot process a html site. We skip this entry.
             if "<!DOCTYPE html>" in content_default:
@@ -469,9 +473,6 @@ class BetterStreamLoader(BaseSQliteDB):
             if self.__processed_streams % 1000 == 0:
                 self.logger.info(f"                    Processed Streams: {self.__processed_streams}")
 
-            # if self.result_queue.qsize() % 1000 == 0:
-            #     self.logger.info(f"                    Queue Size: {self.result_queue.qsize()}")
-
             # dequeue
             if not self.result_queue.empty():
                 try:
@@ -515,8 +516,10 @@ class BetterStreamLoader(BaseSQliteDB):
         # list of ids in streams table associated with current episode.
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        json_dump_b64 = aux.to_b64(json.dumps(json_str))
-        # json_dump_b64 = json.dumps(json_str).replace("'", "''")
+        if self.ub64:
+            json_dump_b64 = aux.to_b64(json.dumps(json_str))
+        else:
+            json_dump_b64 = json.dumps(json_str).replace("'", "''")
 
         # exists:
         self.debug_execute(
