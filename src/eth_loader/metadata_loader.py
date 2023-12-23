@@ -86,7 +86,7 @@ def handler(worker_nr: int, command_queue: mp.Queue, result_queue: mp.Queue):
 
 
 class EpisodeLoader(BaseSQliteDB):
-    def __init__(self, index_db: str):
+    def __init__(self, index_db: str, use_base64: bool = False):
         """
         Initialise downloader function. Provide the function either with a file containing valid urls or a list of urls.
 
@@ -110,6 +110,7 @@ class EpisodeLoader(BaseSQliteDB):
         self.workers = None
 
         self.genera_cookie = None
+        self.ub64 = use_base64
 
         self.check_results_table()
 
@@ -231,29 +232,54 @@ class EpisodeLoader(BaseSQliteDB):
 
         ctr = 0
         res = {"url": "Empty", "content": "empty"}
-        while ctr < 20:
-            if not self.result_queue.empty():
-                try:
-                    res = self.result_queue.get()
-                    parent_id = res["parent_id"]
-                    url = res["url"]
+        # B64 variant
+        if self.ub64:
+            while ctr < 20:
+                if not self.result_queue.empty():
+                    try:
+                        res = self.result_queue.get()
+                        parent_id = res["parent_id"]
+                        url = res["url"]
 
-                    if res["status"] == 200:
-                        content = aux.to_b64(res["content"])
-                        # content = res["content"].replace("'", "''")
-                        self.insert_update_db(parent_id=parent_id, url=url, json_arg=content)
-                    else:
-                        self.logger.error(f"Failed to download {url} with status code {res['status']}")
+                        if res["status"] == 200:
+                            content = aux.to_b64(res["content"])
+                            # content = res["content"].replace("'", "''")
+                            self.insert_update_db(parent_id=parent_id, url=url, json_arg=content)
+                        else:
+                            self.logger.error(f"Failed to download {url} with status code {res['status']}")
+                            e_counter += 1
+                        ctr = 0
+                    except Exception as e:
+                        self.logger.exception("Exception dequeue from result queue}", e, res)
                         e_counter += 1
-                    ctr = 0
-                except Exception as e:
-                    self.logger.exception("Exception dequeue from result queue}", e, res)
-                    e_counter += 1
-                g_counter += 1
-            else:
-                time.sleep(1)
-                ctr += 1
+                    g_counter += 1
+                else:
+                    time.sleep(1)
+                    ctr += 1
 
+        # Non B64 variant
+        else:
+            while ctr < 20:
+                if not self.result_queue.empty():
+                    try:
+                        res = self.result_queue.get()
+                        parent_id = res["parent_id"]
+                        url = res["url"]
+
+                        if res["status"] == 200:
+                            content = res["content"].replace("'", "''")
+                            self.insert_update_db(parent_id=parent_id, url=url, json_arg=content)
+                        else:
+                            self.logger.error(f"Failed to download {url} with status code {res['status']}")
+                            e_counter += 1
+                        ctr = 0
+                    except Exception as e:
+                        self.logger.exception("Exception dequeue from result queue}", e, res)
+                        e_counter += 1
+                    g_counter += 1
+                else:
+                    time.sleep(1)
+                    ctr += 1
         self.logger.info(f"Downloaded {g_counter} with {e_counter} errors.")
 
     def insert_update_db(self, parent_id: int, url: str, json_arg: str):
