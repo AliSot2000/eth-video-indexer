@@ -48,3 +48,8 @@ loggers:
         level: DEBUG
         handlers: [ console_info, error_file_handler ]
         propagate: no
+
+    thread_handler:
+        level: DEBUG
+        handlers: [ console_info, error_file_handler ]
+        propagate: no
