@@ -151,7 +151,9 @@ class BetterStreamLoader(BaseSQliteDB):
             # /category/subcategory/year/season/lecture_id.html
             # into
             # /category/subcategory/year/season/lecture_id
-            self.specific_urls[i] = self.specific_urls[i].replace(".html", "").replace(".series-metadata.json", "")
+            self.specific_urls[i] = (self.specific_urls[i]
+                                     .replace(".html", "")
+                                     .replace(".series-metadata.json", ""))
 
         self.workers = []
 
@@ -437,8 +439,12 @@ class BetterStreamLoader(BaseSQliteDB):
             cookie = self.general_cookie
 
             # url without file extension
-            strip_url = dl.series_url.replace(".html", "").replace(".series-metadata.json", "")
-            episode_striped_url = dl.episode_url.replace(".html", "").replace(".series-metadata.json", "")
+            strip_url = (dl.series_url
+                         .replace(".html", "")
+                         .replace(".series-metadata.json", ""))
+            episode_striped_url = (dl.episode_url
+                                   .replace(".html", "")
+                                   .replace(".series-metadata.json", ""))
 
             # if the stripped url is a specified url, get login of that url as well
             if strip_url in self.specific_urls:
@@ -579,7 +585,8 @@ class BetterStreamLoader(BaseSQliteDB):
             if dep:
                 # Deprecate everything and activate only selected row
                 self.logger.debug(
-                    f"Found {url} inactive in db, reactivate and set everything else matching parent, url and series to deprecated")
+                    f"Found {url} inactive in db, reactivate and set everything else matching parent, "
+                    f"url and series to deprecated")
 
                 # deprecate any entry matching only parent and url (i.e. not matching json)
                 # then update the one with the matching json
@@ -703,7 +710,8 @@ class BetterStreamLoader(BaseSQliteDB):
 
         else:
             self.logger.debug(
-                f"Found {url} with resolution {resolution} inactive in db, reactivate and set everything else matching parent, url and series to deprecated")
+                f"Found {url} with resolution {resolution} inactive in db, reactivate and set everything else matching "
+                f"parent, url and series to deprecated")
 
             # update to not deprecated where the key matches.
             self.debug_execute(f"UPDATE streams SET deprecated = 0, last_seen = '{now}' WHERE key = {key}")
