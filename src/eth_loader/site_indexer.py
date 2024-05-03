@@ -127,6 +127,15 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
                             "found TEXT,"
                             "last_seen TEXT);")  # found now is equivalent to 'last seen'
 
+        # Create the indexes to speed up the search
+        # self.debug_execute("CREATE INDEX IF NOT EXISTS key_index ON sites (key)")
+        self.debug_execute("CREATE INDEX key_index ON sites (key)")
+        # self.debug_execute("CREATE INDEX IF NOT EXISTS url_index ON sites (URL)")
+        self.debug_execute("CREATE INDEX url_index ON sites (URL)")
+        # self.debug_execute("CREATE INDEX IF NOT EXISTS parent_index ON sites (parent)")
+        self.debug_execute("CREATE INDEX parent_index ON sites (parent)")
+
+
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         # Dummy entry to have a root.
