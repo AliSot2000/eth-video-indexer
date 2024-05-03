@@ -209,12 +209,12 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
         # dump the site to the list of video urls if it matches
         if is_video(tree):
 
-            self.logger.debug(f"put {url}")
+            self.logger.debug(f"put {url}, video")
             self.found_url_queue.put({"url": url, "is_video": 1})
             return
 
         else:
-            self.logger.debug(f"put {url}")
+            self.logger.debug(f"put {url}, branch")
             self.found_url_queue.put({"url": url, "is_video": 0})
 
         # find all <a> elements
