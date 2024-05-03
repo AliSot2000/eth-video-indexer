@@ -156,7 +156,11 @@ class EpisodeLoader(BaseSQliteDB):
                                 "deprecated INTEGER DEFAULT 0 CHECK (metadata.deprecated IN (0, 1)),"
                                 "found TEXT,"
                                 "last_seen TEXT)")
+            self.debug_execute("CREATE INDEX metadata_key_index ON metadata (key)")
+            self.debug_execute("CREATE INDEX metadata_url_parent_index ON metadata (URL, parent)")
 
+        # self.debug_execute("CREATE INDEX IF NOT EXISTS metadata_key_index ON metadata (key)")
+        # self.debug_execute("CREATE INDEX IF NOT EXISTS metadata_url_parent_index ON metadata (URL, parent)")
     def cleanup_workers(self):
         """
         Waits for all worker processes to terminate and then joins them.
