@@ -62,6 +62,8 @@ def handler(worker_nr: int, command_queue: mp.Queue, result_queue: mp.Queue):
     """
     logger = logging.getLogger("metadata_loader")
     logger.info(f"Starting worker {worker_nr}")
+    local_logger = logging.getLogger("thread_handler")
+    local_logger.info(f"Worker {worker_nr:02} started")
 
     ctr = 0
     while ctr < 60:
@@ -84,6 +86,8 @@ def handler(worker_nr: int, command_queue: mp.Queue, result_queue: mp.Queue):
 
         result_queue.put(result)
     logger.info(f"{worker_nr} Terminated")
+    local_logger.info(f"Worker {worker_nr:02} exiting")
+    return
 
 
 class EpisodeLoader(BaseSQliteDB):
