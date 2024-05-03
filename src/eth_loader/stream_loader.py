@@ -539,7 +539,7 @@ class BetterStreamLoader(BaseSQliteDB):
         if key is None:
             assert dep is None, "key is None but dep is not"
 
-            self.logger.debug("Inserting")
+            self.logger.debug(f"Inserting: {url}")
             self.debug_execute(
                 f"INSERT INTO episodes (parent, URL, json, found, last_seen) "
                 f"VALUES ({parent_id}, '{url}', '{json_dump_b64}', '{now}', '{now}')")
@@ -560,7 +560,7 @@ class BetterStreamLoader(BaseSQliteDB):
             if dep:
                 # Deprecate everything and activate only selected row
                 self.logger.debug(
-                    f"Found inactive in db, reactivate and set everything else matching parent, url and series to deprecated")
+                    f"Found {url} inactive in db, reactivate and set everything else matching parent, url and series to deprecated")
 
                 # deprecate any entry matching only parent and url (i.e. not matching json)
                 # then update the one with the matching json
@@ -572,7 +572,7 @@ class BetterStreamLoader(BaseSQliteDB):
             # Found active in database
             else:
                 self.debug_execute(f"UPDATE episodes SET last_seen = '{now}' WHERE key = {key}")
-                self.logger.debug("Found active in db")
+                self.logger.debug(f"Found {url} active in db")
                 return key
 
     def link_episode_streams(self, episode_id: int, streams: List[int]):
@@ -660,7 +660,7 @@ class BetterStreamLoader(BaseSQliteDB):
 
         # Doesn't exist, inserting
         if len(results) == 0:
-            self.logger.debug("Inserting")
+            self.logger.debug(f"Inserting {url} with resolution {resolution}")
             self.debug_execute(
                 f"INSERT INTO streams (URL, resolution, found, last_seen) "
                 f"VALUES ('{url}', '{resolution}', '{now}', '{now}')")
@@ -669,20 +669,22 @@ class BetterStreamLoader(BaseSQliteDB):
                 f"SELECT key FROM streams WHERE URL IS '{url}' AND  resolution IS '{resolution}' AND found IS '{now}'")
 
             # return the key
-            return self.sq_cur.fetchone()[0]
+            val = self.sq_cur.fetchone()[0]
+            assert val is not None, "Just inserted the bloody thing"
+            return val
 
         # results length is 1
         key, deprecated = results[0]
 
         # it exists, abort
         if deprecated == 0:
-            self.logger.debug("Found active in db")
+            self.logger.debug(f"Found {url} with resolution {resolution} active in db")
             self.debug_execute(f"UPDATE streams SET last_seen = '{now}' WHERE key = {key}")
             return key
 
         else:
             self.logger.debug(
-                "Found inactive in db, reactivate and set everything else matching parent, url and series to deprecated")
+                f"Found {url} with resolution {resolution} inactive in db, reactivate and set everything else matching parent, url and series to deprecated")
 
             # update to not deprecated where the key matches.
             self.debug_execute(f"UPDATE streams SET deprecated = 0, last_seen = '{now}' WHERE key = {key}")
