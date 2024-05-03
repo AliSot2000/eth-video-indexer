@@ -37,7 +37,8 @@ def retrieve_metadata(website_url: str, identifier: str, headers: dict, parent_i
     if result.ok:
         content = result.content.decode("utf-8")
     else:
-        logger.error(f"{identifier:.02} error {result.status_code}")
+        # INFO, also dequeue worker will warn
+        logger.error(f"{identifier:.02} error {result.status_code}, {url}")
 
     # only everything after .com or something
     path = url.split("/", 3)[3]
