@@ -63,6 +63,8 @@ def handler(worker_nr: int, command_queue: mp.Queue, result_queue: mp.Queue):
     :return:
     """
     logging.getLogger("stream_loader").info(f"{worker_nr}: Starting")
+    local_logger = logging.getLogger("thread_handler")
+    local_logger.info(f"Worker {worker_nr:02} started")
     ctr = 0
     while ctr < 20:
         try:
@@ -84,6 +86,9 @@ def handler(worker_nr: int, command_queue: mp.Queue, result_queue: mp.Queue):
 
         result_queue.put(result)
     logging.getLogger("stream_loader").info(f"{worker_nr} Terminated")
+    local_logger.info(f"Worker {worker_nr:02} exiting")
+
+    return
 
 
 @dataclass
