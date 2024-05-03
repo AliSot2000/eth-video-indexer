@@ -1,4 +1,6 @@
 import datetime
+import os.path
+
 from eth_loader.site_indexer import ConcurrentETHSiteIndexer
 from eth_loader.metadata_loader import EpisodeLoader
 from eth_loader.stream_loader import BetterStreamLoader, SpecLogin
@@ -38,8 +40,10 @@ def download_all_stream_data(db: str, index_start: datetime.datetime, b64: bool 
 
 
 if __name__ == "__main__":
-    # setup_logging(default_path="logging_debug.yaml")
-    setup_logging(default_path="logging_production.yaml")
+    debug_path = os.path.join(os.path.dirname(__file__), "logging_debug.yaml")
+    production_path = os.path.join(os.path.dirname(__file__), "logging_production.yaml")
+    setup_logging(default_path=debug_path)
+    # setup_logging(default_path=production_path)
     global_start = datetime.datetime.now()
     path = "/home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/scripts/seq_sites_b64.db"
     # path = "/home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/scripts/seq_sites.db"
