@@ -271,6 +271,14 @@ class BetterStreamLoader(BaseSQliteDB):
                                 "found TEXT,"
                                 "last_seen TEXT)")
 
+            # Create index and assert they don't exist
+            self.debug_execute("CREATE INDEX episodes_key_index ON episodes (key)")
+            self.debug_execute("CREATE INDEX episodes_url_parent_index ON episodes (URL, parent)")
+
+        # Create Indexes
+        self.debug_execute("CREATE INDEX IF NOT EXISTS episodes_key_index ON episodes (key)")
+        self.debug_execute("CREATE INDEX IF NOT EXISTS episodes_url_parent_index ON episodes (URL, parent)")
+
         # check that the streams table exists
         self.debug_execute("SELECT name FROM sqlite_master WHERE type='table' AND name='streams'")
 
@@ -287,6 +295,13 @@ class BetterStreamLoader(BaseSQliteDB):
 
             self.debug_execute(
                 "INSERT INTO streams (key, URL, resolution, found) VALUES (-1, 'dummy', 'dummy', 'dummy')")
+
+            # Create Indexes and assert they don't exist
+            self.debug_execute("CREATE INDEX streams_key_index ON streams (key)")
+            self.debug_execute("CREATE INDEX streams_resolution_url_index ON streams (resolution, URL)")
+
+        self.debug_execute("CREATE INDEX IF NOT EXISTS streams_key_index ON streams (key)")
+        self.debug_execute("CREATE INDEX IF NOT EXISTS streams_resolution_url_index ON streams (resolution, URL)")
 
         # Check if the assoz table exists
         self.debug_execute("SELECT name FROM sqlite_master WHERE type='table' AND name='episode_stream_assoz'")
