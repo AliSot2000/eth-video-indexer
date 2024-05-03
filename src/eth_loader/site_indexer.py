@@ -242,13 +242,13 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
             raise ValueError("Thread number outside supported range [1:10'000]")
 
         for i in range(threads):
-            t = Thread(target=self.__indexer)
+            t = Thread(target=self.__indexer, args=(i,))
             t.start()
             self.threads.append(t)
 
         self.logger.info("Workers Spawned")
 
-    def __indexer(self):
+    def __indexer(self, identifier: int):
         """
         Function executed by a worker thread. If the to_download queue is empty for 10s,
         the worker kills itself.
@@ -259,6 +259,8 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
         :return:
         """
         # after timeout of 10s the indexer subprocess kills itself
+        local_logger = logging.getLogger("thread_handler")
+        local_logger.info(f"Worker {identifier:02} started")
         counter = 0
         while counter < 10:
             try:
@@ -275,6 +277,8 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
             except Empty:
                 counter += 1
                 sleep(1)
+        local_logger.info(f"Worker {identifier:02} exiting")
+        return
 
     def sub_index(self, url: str, prefix: str):
         """
