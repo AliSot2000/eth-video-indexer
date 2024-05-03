@@ -161,6 +161,7 @@ class EpisodeLoader(BaseSQliteDB):
 
         # self.debug_execute("CREATE INDEX IF NOT EXISTS metadata_key_index ON metadata (key)")
         # self.debug_execute("CREATE INDEX IF NOT EXISTS metadata_url_parent_index ON metadata (URL, parent)")
+
     def cleanup_workers(self):
         """
         Waits for all worker processes to terminate and then joins them.
