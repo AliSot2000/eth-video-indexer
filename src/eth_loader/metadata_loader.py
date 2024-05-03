@@ -153,7 +153,7 @@ class EpisodeLoader(BaseSQliteDB):
                                 "parent INTEGER, "
                                 "URL TEXT , "
                                 "json TEXT,"
-                                "deprecated INTEGER DEFAULT 0 CHECK (metadata.deprecated >= 0 AND metadata.deprecated <= 1),"
+                                "deprecated INTEGER DEFAULT 0 CHECK (metadata.deprecated IN (0, 1)),"
                                 "found TEXT,"
                                 "last_seen TEXT)")
 

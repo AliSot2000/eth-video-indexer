@@ -123,7 +123,7 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
                             "(key INTEGER PRIMARY KEY AUTOINCREMENT, "
                             "parent INTEGER, "
                             "URL TEXT UNIQUE , "
-                            "IS_VIDEO INTEGER CHECK (IS_VIDEO >= 0 AND IS_VIDEO <= 1),"
+                            "IS_VIDEO INTEGER CHECK (IS_VIDEO IN (0, 1)),"
                             "found TEXT,"
                             "last_seen TEXT);")  # found now is equivalent to 'last seen'
 
