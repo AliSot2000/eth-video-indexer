@@ -41,8 +41,8 @@ def get_stream(website_url: str, identifier: str, headers: dict, cookies: bytes,
     cj = pickle.loads(cookies)
     try:
         result = rq.get(url=url, headers=headers, cookies=cj)
-    except rq.exceptions.RequestException as e:
-        logging.getLogger("stream_loader").error(f"{identifier} error {e}")
+    except Exception as e:
+        logging.getLogger("stream_loader").error(f"{identifier} error {e}", exc_info=e)
         return {"url": url, "status": -1, "content": None, "parent_id": parent_id}
 
     content = None
@@ -541,7 +541,7 @@ class BetterStreamLoader(BaseSQliteDB):
                         self.logger.error(f"url {res['url']} with status code {res['status']}")
                     ctr = 0
                 except Exception as e:
-                    self.logger.exception("Exception while dequeueing", e)
+                    self.logger.exception("Exception while dequeueing", exc_info=e)
             else:
                 time.sleep(1)
                 ctr += 1

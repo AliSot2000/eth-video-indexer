@@ -33,7 +33,7 @@ def retrieve_metadata(website_url: str, identifier: str, headers: dict, parent_i
     try:
         result = rq.get(url=url, headers=headers)
     except Exception as e:
-        logger.exception(f"{identifier:.02} failed to download {url}", e)
+        logger.exception(f"{identifier:.02} failed to download {url}", exc_info=e)
         return {"url": url, "parent_id": parent_id, "status": -1, "content": None}
 
     content = None
