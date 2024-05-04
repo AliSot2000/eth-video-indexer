@@ -171,6 +171,10 @@ class BetterStreamLoader(BaseSQliteDB):
 
         self.__processed_episodes = 0
         self.__processed_streams = 0
+
+        self.__last_info_streams = 0
+        self.__last_info_episodes = 0
+
         self.ub64 = use_base64
 
     def get_episode_urls(self):
@@ -356,6 +360,7 @@ class BetterStreamLoader(BaseSQliteDB):
 
         while self.workers_alive():
             time.sleep(30)
+            self.dequeue_job()
             self.logger.info("Initiator Thread Sleeping Workers")
 
         self.cleanup_workers()
@@ -496,22 +501,19 @@ class BetterStreamLoader(BaseSQliteDB):
         self.__processed_streams = 0
         self.__processed_episodes = 0
 
-        last_info_streams = 0
-        last_info_episodes = 0
-
         while ctr < 20:
-            delta_streams = self.__processed_streams - last_info_streams
-            delta_episodes = self.__processed_episodes - last_info_episodes
+            delta_streams = self.__processed_streams - self.__last_info_streams
+            delta_episodes = self.__processed_episodes - self.__last_info_episodes
             print_queue_size = False
 
             if delta_streams > 1000:
                 self.logger.info(f"                    Processed Episodes: {self.__processed_episodes}")
-                last_info_streams += 1000
+                self.__last_info_streams += 1000
                 print_queue_size = True
 
             if delta_episodes > 1000:
                 self.logger.info(f"                    Processed Streams: {self.__processed_streams}")
-                last_info_episodes += 1000
+                self.__last_info_episodes += 1000
                 print_queue_size = True
 
             if print_queue_size:
