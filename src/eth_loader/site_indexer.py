@@ -151,7 +151,11 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
         :return:
         """
         # load main site
-        resp = rq.get("https://www.video.ethz.ch/", headers={"user-agent": "Mozilla Firefox"})
+        try:
+            resp = rq.get("https://www.video.ethz.ch/", headers={"user-agent": "Mozilla Firefox"})
+        except Exception as e:
+            self.logger.exception("Failed to load main site", e)
+            return
 
         # get the html
         html = resp.content.decode("utf-8")
@@ -195,7 +199,11 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
         :return:
         """
         # load target site
-        resp = rq.get(url, headers={"user-agent": "Mozilla Firefox"})
+        try:
+            resp = rq.get(url, headers={"user-agent": "Mozilla Firefox"})
+        except Exception as e:
+            self.logger.exception(f"Failed to load {url}", e)
+            return
         # get the html
         html = resp.content.decode("utf-8")
 

@@ -39,8 +39,12 @@ def get_stream(website_url: str, identifier: str, headers: dict, cookies: bytes,
 
     url = website_url.replace("\n", "")
     cj = pickle.loads(cookies)
+    try:
+        result = rq.get(url=url, headers=headers, cookies=cj)
+    except rq.exceptions.RequestException as e:
+        logging.getLogger("stream_loader").error(f"{identifier} error {e}")
+        return {"url": url, "status": -1, "content": None, "parent_id": parent_id}
 
-    result = rq.get(url=url, headers=headers, cookies=cj)
     content = None
     # https://www.asdf.com/path?args
 

@@ -167,8 +167,8 @@ class MiddlePruner(BaseSQliteDB):
 
 
 if __name__ == "__main__":
-    path = "/home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/scripts/seq_sites.db"
-    # path = "/home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/scripts/seq_sites_b64.db"
+    # path = "/home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/scripts/seq_sites.db"
+    path = "/home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/scripts/seq_sites_b64.db"
     obj = MiddlePruner(path)
     obj.create_hash_table()
     obj.perform_cleaning_episodes()

@@ -30,7 +30,12 @@ def retrieve_metadata(website_url: str, identifier: str, headers: dict, parent_i
     logger = logging.getLogger("metadata_loader")
     url = website_url.replace(".html", ".series-metadata.json").replace("\n", "")
 
-    result = rq.get(url=url, headers=headers)
+    try:
+        result = rq.get(url=url, headers=headers)
+    except Exception as e:
+        logger.exception(f"{identifier:.02} failed to download {url}", e)
+        return {"url": url, "parent_id": parent_id, "status": -1, "content": None}
+
     content = None
     # https://www.asdf.com/path?args
 
