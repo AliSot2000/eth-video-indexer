@@ -47,11 +47,14 @@ def download_all_stream_data(db: str, index_start: datetime.datetime, b64: bool 
 if __name__ == "__main__":
     debug_path = os.path.join(os.path.dirname(__file__), "logging_debug.yaml")
     production_path = os.path.join(os.path.dirname(__file__), "logging_production.yaml")
+
     setup_logging(default_path=debug_path)
     # setup_logging(default_path=production_path)
+
     global_start = datetime.datetime.now()
     path = "/home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/scripts/seq_sites_b64.db"
     # path = "/home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/scripts/seq_sites.db"
+
     perform_index_of_sites(path)
     download_all_metadata(path, global_start, b64=True)
     download_all_stream_data(path, global_start, b64=True)
