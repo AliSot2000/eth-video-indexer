@@ -70,7 +70,8 @@ class MiddlePruner(BaseSQliteDB):
 
                 # Check the json of the row.
                 if k["json"] != json0:
-                    print(f"Found non-matching json for entry: {k['key']}", file=sys.stderr)
+                    print(f"Found non-matching json for entry: {k['key']}, start_key: {data[0]['key']}",
+                          file=sys.stderr)
                     unequal_json += 1
                     continue
 
@@ -84,12 +85,13 @@ class MiddlePruner(BaseSQliteDB):
                 if stream_keys == stream_keys_0:
                     # Match found, remove duplicate (since we're ordering by order of appearance)
                     equal_streams += 1
-                    print(f"Found matching keys for entry: {k['key']}")
+                    print(f"Found matching keys for entry: {k['key']}, start_key: {data[0]['key']}")
                     self.debug_execute(f"DELETE FROM episodes WHERE key = {k['key']}")
                     self.debug_execute(f"DELETE FROM episode_stream_assoz WHERE episode_key = {k['key']}")
                 else:
                     # Inform about us having found a non-matching set of stream keys.
-                    print(f"Found non-matching keys for entry: {k['key']}", file=sys.stderr)
+                    print(f"Found non-matching keys for entry: {k['key']} , start_key: {data[0]['key']}",
+                          file=sys.stderr)
                     unequal_streams += 1
 
         print(f"Total Number of rows with duplicates: {nor}\n"
@@ -110,7 +112,8 @@ class MiddlePruner(BaseSQliteDB):
         :return:
         """
         # Get all duplicate rows based on json.
-        self.debug_execute("SELECT COUNT(metadata.key), json FROM metadata GROUP BY json HAVING COUNT(metadata.key) > 1 ORDER BY found ASC")
+        self.debug_execute("SELECT COUNT(metadata.key), json FROM metadata "
+                           "GROUP BY json HAVING COUNT(metadata.key) > 1 ORDER BY found ASC")
         raw = self.sq_cur.fetchall()
 
         # Parse the results into a list of dictionaries.
