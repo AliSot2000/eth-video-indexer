@@ -506,12 +506,12 @@ class BetterStreamLoader(BaseSQliteDB):
             delta_episodes = self.__processed_episodes - self.__last_info_episodes
             print_queue_size = False
 
-            if delta_streams > 1000:
+            if delta_episodes > 1000:
                 self.logger.info(f"                    Processed Episodes: {self.__processed_episodes}")
                 self.__last_info_streams += 1000
                 print_queue_size = True
 
-            if delta_episodes > 1000:
+            if delta_streams > 1000:
                 self.logger.info(f"                    Processed Streams: {self.__processed_streams}")
                 self.__last_info_episodes += 1000
                 print_queue_size = True
