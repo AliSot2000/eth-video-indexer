@@ -268,6 +268,7 @@ if __name__ == "__main__":
     obj.perform_cleaning_of_metadata()
     obj.sq_con.commit()
 
+# ITERATION +
 # Dedup episodes
 
 # Searched 9179 rows with duplicates
@@ -284,5 +285,26 @@ if __name__ == "__main__":
 # Dedup metadata
 # Searched 432 rows with duplicates
 # Removed 402 entries
+# Found 8 non-matching parents
+# Found 70 entries with children
+
+
+# ITERATION 2
+# Dedup episodes
+
+# Searched 2560 rows with duplicates
+# Removed 322 entries
+# Removed 322 including parent
+# ------------------------------------------------------------------------------------------------------------------------
+# Found 0 entries with non-matching json
+# Found 0 entries with non-matching streams
+# Found 2867 entries with non-matching parent:
+# Found 2516 mismatches in parent json
+# Found 29 mismatches in parent url
+# Found 0 mismatches in parent of parent
+
+# Dedup metadata
+# Searched 54 rows with duplicates
+# Removed 0 entries
 # Found 8 non-matching parents
 # Found 70 entries with children
