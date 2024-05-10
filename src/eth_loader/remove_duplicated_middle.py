@@ -1,6 +1,8 @@
 import sys
 
 from eth_loader.base_sql import BaseSQliteDB
+
+
 # TODO pruning needs to take into account the full link structure. there have been some episodes that have moved in the
 #  html tree
 
@@ -27,13 +29,15 @@ class MiddlePruner(BaseSQliteDB):
             self.debug_execute(f"SELECT key, json FROM episodes WHERE key > {key} ORDER BY key ASC")
             row_0 = self.sq_cur.fetchone()
 
-
     def perform_cleaning_episodes(self):
         """
         Select duplicates based on hash in episode and
         :return:
         """
-        self.debug_execute("SELECT COUNT(episodes.key), parent, hash_table.hash FROM episodes JOIN hash_table ON episodes.key = hash_table.key GROUP BY hash_table.hash HAVING COUNT(episodes.key) > 1 ORDER BY episodes.key ASC")
+        self.debug_execute(
+            "SELECT COUNT(episodes.key), parent, hash_table.hash FROM episodes "
+            "JOIN hash_table ON episodes.key = hash_table.key GROUP BY hash_table.hash "
+            "HAVING COUNT(episodes.key) > 1 ORDER BY episodes.key ASC")
         raw = self.sq_cur.fetchall()
 
         # Parse the results into a list of dictionaries.
@@ -56,10 +60,13 @@ class MiddlePruner(BaseSQliteDB):
             fhash = r["hash"]
 
             # Get all rows with the same hash.
-            self.debug_execute(f"SELECT episodes.key, json, episodes.parent, episodes.found FROM episodes JOIN hash_table ON episodes.key = hash_table.key WHERE hash_table.hash = '{fhash}' ORDER BY found ASC")
+            self.debug_execute(
+                f"SELECT episodes.key, json, episodes.parent, episodes.found "
+                f"FROM episodes JOIN hash_table ON episodes.key = hash_table.key "
+                f"WHERE hash_table.hash = '{fhash}' ORDER BY found ASC")
 
             # Parse the rows into a list of dictionaries.
-            data = [{"key": k[0], "json": k[1], "parent": k[2],"found": k[3]} for k in self.sq_cur.fetchall()]
+            data = [{"key": k[0], "json": k[1], "parent": k[2], "found": k[3]} for k in self.sq_cur.fetchall()]
 
             # Get the stream keys for the first row.
             self.debug_execute(f"SELECT stream_key FROM episode_stream_assoz WHERE episode_key = {data[0]['key']}")
@@ -133,7 +140,6 @@ class MiddlePruner(BaseSQliteDB):
                         else:
                             raise ValueError("Parent not found for parent0")
 
-
                     if res_dict[0]["json"] != res_dict[1]["json"]:
                         print(f"Parent json is not equal for entry: {k['key']}, start_key: {data[0]['key']}\n"
                               f"parent0: {res_dict[0]['json']}\n"
@@ -158,7 +164,6 @@ class MiddlePruner(BaseSQliteDB):
                         unequal_parent_parent += 1
                         continue
 
-
                     print(f"Parents are a match for entry: {k['key']}, start_key: {data[0]['key']},"
                           f" parent share same json, url and parent")
                     deletes_overall += 1
@@ -174,17 +179,16 @@ class MiddlePruner(BaseSQliteDB):
                 self.debug_execute(f"DELETE FROM episodes WHERE key = {k['key']}")
                 self.debug_execute(f"DELETE FROM episode_stream_assoz WHERE episode_key = {k['key']}")
 
-
         print(f"Searched {nor} rows with duplicates\n"
-                f"Removed {deletes_overall} entries\n"
-                f"Removed {deletes_with_parent} including parent\n"
-                f"{'-' * 120}\n"
-                f"Found {unequal_json} entries with non-matching json\n"
-                f"Found {unequal_streams} entries with non-matching streams\n"
-                f"Found {unequal_parent} entries with non-matching parent:\n"
-                f"Found {unequal_json_parent} mismatches in parent json\n"
-                f"Found {unequal_url_parent} mismatches in parent url\n"
-                f"Found {unequal_parent_parent} mismatches in parent of parent\n")
+              f"Removed {deletes_overall} entries\n"
+              f"Removed {deletes_with_parent} including parent\n"
+              f"{'-' * 120}\n"
+              f"Found {unequal_json} entries with non-matching json\n"
+              f"Found {unequal_streams} entries with non-matching streams\n"
+              f"Found {unequal_parent} entries with non-matching parent:\n"
+              f"Found {unequal_json_parent} mismatches in parent json\n"
+              f"Found {unequal_url_parent} mismatches in parent url\n"
+              f"Found {unequal_parent_parent} mismatches in parent of parent\n")
 
     def remove_hash_table(self):
         """
@@ -251,10 +255,9 @@ class MiddlePruner(BaseSQliteDB):
                 self.debug_execute(f"DELETE FROM metadata WHERE key = {d['key']}")
 
         print(f"Searched {nor} rows with duplicates\n"
-                f"Removed {removed_entries} entries\n"
-                f"Found {non_matching_parent} non-matching parents\n"
+              f"Removed {removed_entries} entries\n"
+              f"Found {non_matching_parent} non-matching parents\n"
               f"Found {having_children} entries with children\n")
-
 
 
 # TODO check metadata for duplicates and ignore the lower end.
