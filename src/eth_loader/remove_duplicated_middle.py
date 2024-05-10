@@ -272,42 +272,69 @@ if __name__ == "__main__":
     obj.sq_con.commit()
 
 # ITERATION +
+
+# Stats on the 10.5.2024, after copying the files freshly from the backup.
+# Freshly created from the original db
+# b64 version
 # Dedup episodes
-
-# Searched 9179 rows with duplicates
-# Removed 12218 entries
-# Removed 12182 including parent
-# ------------------------------------------------------------------------------------------------------------------------
-# Found 0 entries with non-matching json
-# Found 0 entries with non-matching streams
-# Found 15049 entries with non-matching parent:
-# Found 2838 mismatches in parent json
-# Found 29 mismatches in parent url
-# Found 0 mismatches in parent of parent
-
-# Dedup metadata
-# Searched 432 rows with duplicates
-# Removed 402 entries
-# Found 8 non-matching parents
-# Found 70 entries with children
-
-
-# ITERATION 2
-# Dedup episodes
-
-# Searched 2560 rows with duplicates
-# Removed 322 entries
-# Removed 322 including parent
-# ------------------------------------------------------------------------------------------------------------------------
-# Found 0 entries with non-matching json
-# Found 0 entries with non-matching streams
-# Found 2867 entries with non-matching parent:
-# Found 2516 mismatches in parent json
-# Found 29 mismatches in parent url
-# Found 0 mismatches in parent of parent
-
-# Dedup metadata
-# Searched 54 rows with duplicates
+# Found 2 keys for hash: 3077204854470579146
+# Json is a match for entry: 237366, start_key: 180991
+# Streams are a match for entry: 237366, start_key: 180991
+# Searched 11 rows with duplicates
 # Removed 0 entries
-# Found 8 non-matching parents
-# Found 70 entries with children
+# Removed 0 including parent
+# ------------------------------------------------------------------------------------------------------------------------
+# Found 0 entries with non-matching json
+# Found 0 entries with non-matching streams
+# Found 11 entries with non-matching parent:
+# Found 0 mismatches in parent json
+# Found 11 mismatches in parent url
+# Found 0 mismatches in parent of parent
+
+# Dedup metadata
+# Dedup episodes
+# Searched 4 rows with duplicates
+# Removed 0 entries
+# Found 4 non-matching parents
+# Found 0 entries with children
+
+# => Constant with iterations
+
+# non-b64 version
+# Searched 8631 rows with duplicates
+# Removed 6080 entries
+# Removed 6062 including parent
+# ------------------------------------------------------------------------------------------------------------------------
+# Found 0 entries with non-matching json
+# Found 0 entries with non-matching streams
+# Found 8613 entries with non-matching parent:
+# Found 2529 mismatches in parent json
+# Found 22 mismatches in parent url
+# Found 0 mismatches in parent of parent
+
+# Dedup metadata
+# Searched 428 rows with duplicates
+# Removed 402 entries
+# Found 4 non-matching parents
+# Found 46 entries with children
+
+# Iteration 2
+# Dedup episodes
+# Searched 2551 rows with duplicates
+# Removed 314 entries
+# Removed 314 including parent
+# ------------------------------------------------------------------------------------------------------------------------
+# Found 0 entries with non-matching json
+# Found 0 entries with non-matching streams
+# Found 2551 entries with non-matching parent:
+# Found 2215 mismatches in parent json
+# Found 22 mismatches in parent url
+# Found 0 mismatches in parent of parent
+
+# Dedup metadata
+# Searched 50 rows with duplicates
+# Removed 0 entries
+# Found 4 non-matching parents
+# Found 46 entries with children
+
+# => Constant with iterations 2 and upwards
