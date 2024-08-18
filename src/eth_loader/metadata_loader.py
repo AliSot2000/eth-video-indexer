@@ -155,7 +155,7 @@ class EpisodeLoader(BaseSQliteDB):
         if self.sq_cur.fetchone() is None:
             self.debug_execute("CREATE TABLE metadata "
                                 "(key INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                "parent INTEGER, "
+                                "parent INTEGER, "  # Reference to the entry in the the sites table
                                 "URL TEXT , "
                                 "json TEXT,"
                                 "deprecated INTEGER DEFAULT 0 CHECK (metadata.deprecated IN (0, 1)),"

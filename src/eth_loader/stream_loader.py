@@ -272,7 +272,7 @@ class BetterStreamLoader(BaseSQliteDB):
             self.logger.info("Creating episodes table")
             self.debug_execute("CREATE TABLE episodes "
                                 "(key INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                "parent INTEGER, "
+                                "parent INTEGER, "  # Parent is metadata entry in metadata table
                                 "URL TEXT , "
                                 "json TEXT,"
                                 "deprecated INTEGER DEFAULT 0 CHECK (episodes.deprecated >= 0 AND episodes.deprecated <= 1),"
