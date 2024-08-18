@@ -35,7 +35,9 @@ from eth_loader.base_sql import BaseSQliteDB
 def parent_site(url: str) -> str:
     """
     Generates the url to the parent site.
+
     :param url: url to get the parent of.
+
     :return:
     """
     snippets = url.split("/")
@@ -49,7 +51,9 @@ def parent_site(url: str) -> str:
 def is_video(root: _Element) -> bool:
     """
     Checks if the video is present on the video.
+
     :param root: lxml.etree._Element, root element of the html
+
     :return:
     """
     video = root.xpath("//vp-episode-page")
@@ -96,7 +100,9 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
     def val_uri(self, url: str) -> bool:
         """
         Checks if the uri is valid and can be processed.
+
         :param url: url to check.
+
         :return:
         """
         # it is a valid site
@@ -117,6 +123,7 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
     def init_db(self):
         """
         Initialises the database.
+
         :return:
         """
         self.debug_execute("CREATE TABLE sites "
@@ -148,6 +155,7 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
         Starts the indexing of the site.
 
         :param threads: number of concurrent threads to spawn.
+
         :return:
         """
         # load main site
@@ -196,6 +204,7 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
 
         :param url: full url of sub site to index like https://www.video.ethz.ch/speakers/d-infk/2015.html
         :param prefix: prefix of the site, only searching urls with identical prefix, like /speakers/d-infk
+
         :return:
         """
         # load target site
@@ -242,6 +251,7 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
     def cleanup_workers(self):
         """
         Waits for all worker processes to terminate and then joins them.
+
         :return:
         """
         for worker in self.threads:
@@ -253,6 +263,7 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
         Spawns worker threads.
 
         :param threads: number of threads to spawn 1-10000
+
         :return:
         """
         if not 1 < threads < 10000:
@@ -273,6 +284,7 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
 
         WARNING: This function is a member function of the same object. As a result it has access to the queues.
         HOWEVER, it can create data-races so DO NOT ACCESS ANYTHING ELSE OTHER THAN THE QUEUES!
+
         :return:
         """
         # after timeout of 10s the indexer subprocess kills itself
@@ -304,6 +316,7 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
 
         :param url: full url of sub site to index like https://www.video.ethz.ch/speakers/d-infk/2015.html
         :param prefix: prefix of the site, only searching urls with identical prefix, like /speakers/d-infk
+
         :return:
         """
         self.to_download_queue.put({"url": url, "prefix": prefix})
@@ -312,6 +325,7 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
         """
         Function retrieves the urls from the video_url queue and writes them to the file specified in init.
         Function exits after 10s of an empty queue or when all workers are done.
+
         :return:
         """
         # Timeout to prevent endless loop if a subprocesses crash
@@ -348,7 +362,9 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
     def not_in_db(self, url):
         """
         Verifies the url is not already in the database. (Search ONLY based on url)
+
         :param url:
+
         :return:
         """
         self.debug_execute(f"SELECT key FROM sites WHERE URL = '{url}'")
@@ -359,6 +375,7 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
         Update the found entry of a given row to the current date and time.
 
         :param url: url to match for the update for the last seen time.
+
         :return:
         """
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -367,6 +384,7 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
     def gen_parent(self):
         """
         Generates the tree hierarchy for the site index.
+
         :return:
         """
         # temporary storage of parent url:key to parent_id:value.
@@ -404,9 +422,11 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
 
     def get_url_id(self, url: str):
         """
-        Given an url, the function searches the database for the url and returns the key. If it doesn't exist, it
-        returns -1
+        Given an url, the function searches the database for the url and returns the key.
+        If it doesn't exist, it returns -1
+
         :param url: url to retrieve the key from.
+
         :return: key or -1 if no key found.
         """
         self.debug_execute(f"SELECT (key) FROM sites WHERE URL IS '{url}'")
@@ -420,6 +440,7 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
     def one_workers_alive(self):
         """
         Function to verify that at least one of the workers hasn't exited.
+
         :return:
         """
         for worker in self.threads:
