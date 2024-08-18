@@ -193,7 +193,7 @@ class EpisodeLoader(BaseSQliteDB):
         self.check_result()
         self.cleanup_workers()
         self.sq_con.commit()
-        self.logger.info("DOWNLOAD DONE")
+        self.logger.info("DOWNLOAD METADATA DONE")
 
     def spawn(self, workers: int):
         """
