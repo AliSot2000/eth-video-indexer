@@ -21,7 +21,7 @@ handlers:
         class: logging.FileHandler
         level: DEBUG
         formatter: standard
-        filename: /home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/logs/debug.log
+        filename: /home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/logs/debug.log
         encoding: utf8
         mode: w
 
@@ -29,7 +29,7 @@ handlers:
         class: logging.FileHandler
         level: ERROR
         formatter: error
-        filename: /home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/logs/errors.log
+        filename: /home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/logs/errors.log
         encoding: utf8
         mode: a
 
@@ -37,7 +37,7 @@ handlers:
         class: logging.FileHandler
         level: DEBUG
         formatter: standard
-        filename: /home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/logs/threads.log
+        filename: /home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/logs/threads.log
         encoding: utf8
         mode: a
 root:
