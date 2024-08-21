@@ -240,7 +240,7 @@ class MiddlePruner(BaseSQliteDB):
         # Go through all rows of duplicates.
         for r in results:
             # Get all rows with the same json.
-            self.debug_execute(f"SELECT key, parent FROM metadata WHERE json = '{r['json']}'")
+            self.debug_execute(f"SELECT key, parent FROM metadata WHERE json = '{r['json']}' ORDER BY found ASC")
 
             # Parse the rows into a list of dictionaries.
             data = [{"key": k[0], "parent": k[1]} for k in self.sq_cur.fetchall()]
