@@ -35,13 +35,13 @@ class MiddlePruner(BaseSQliteDB):
         :return:
         """
         self.debug_execute(
-            "SELECT COUNT(episodes.key), parent, hash_table.hash FROM episodes "
+            "SELECT COUNT(episodes.key), hash_table.hash FROM episodes "
             "JOIN hash_table ON episodes.key = hash_table.key GROUP BY hash_table.hash "
             "HAVING COUNT(episodes.key) > 1 ORDER BY episodes.key ASC")
         raw = self.sq_cur.fetchall()
 
         # Parse the results into a list of dictionaries.
-        results = [{"count": row[0], "parent": row[1], "hash": row[2]} for row in raw]
+        results = [{"count": row[0], "hash": row[1]} for row in raw]
 
         del_fron_episodes = 0
         del_from_metadata = 0
