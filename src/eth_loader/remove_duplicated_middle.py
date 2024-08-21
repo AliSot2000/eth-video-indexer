@@ -187,15 +187,15 @@ class MiddlePruner(BaseSQliteDB):
                           f"parentn: {parent_dict[1]['parent']}\n",
                           file=sys.stderr)
                     met_unequal_parent += 1
-
-                    print(f"Parents are a match for entry: {k['key']}, start_key: {data[0]['key']},"
-                          f" parent share same json, url and parent")
-                    self.debug_execute(f"DELETE FROM metadata WHERE key = {k['parent']}")
-                    self.debug_execute(f"DELETE FROM episodes WHERE key = {k['key']}")
-                    self.debug_execute(f"DELETE FROM episode_stream_assoz WHERE episode_key = {k['key']}")
                     continue
+
+                # print(f"Parents are a match for entry: {contender['key']}, start_key: {data[0]['key']},"
+                #       f" parent share same json, url and parent")
                 del_fron_episodes += 1
                 del_from_metadata += 1
+                self.debug_execute(f"DELETE FROM metadata WHERE key = {contender['parent']}")
+                self.debug_execute(f"DELETE FROM episodes WHERE key = {contender['key']}")
+                self.debug_execute(f"DELETE FROM episode_stream_assoz WHERE episode_key = {contender['key']}")
 
         print(f"EPISODES: Searched {nor} rows with duplicates\n"
               f"EPISODES: More than one duplicate for {ep_ge_2_eps} rows\n"
