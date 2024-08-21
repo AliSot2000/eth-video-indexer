@@ -219,11 +219,27 @@ class MiddlePruner(BaseSQliteDB):
                     continue
 
                 # check if metadata has children.
-                self.debug_execute(f"SELECT key FROM episodes WHERE parent = {d['key']}")
-                if self.sq_cur.fetchone() is not None:
-                    print(f"Found children for entry: {d['key']}", file=sys.stderr)
+                self.debug_execute(f"SELECT episode_key FROM metadata_episode_assoz WHERE metadata_key = {d['key']}")
+                children = self.sq_cur.fetchall()
+                if len(children) > 0:
+                    print(f"Found children for entry: {d['key']}")
+                    # print(f"Found children for entry: {d['key']}\n"
+                    #       f"children: {children}\n"
+                    #       f"updating...", file=sys.stderr)
                     having_children += 1
-                    continue
+                    self.debug_execute(f"DELETE FROM  metadata_episode_assoz "
+                                       f"WHERE metadata_key = {d['key']}")
+                    for child in children:
+                        self.debug_execute(f"INSERT OR IGNORE INTO metadata_episode_assoz (metadata_key, episode_key) "
+                                           f"VALUES ({key0}, {child[0]})")
+
+                # self.debug_execute(f"SELECT episode_key FROM metadata_episode_assoz WHERE metadata_key = {d['key']}")
+                # print(f"New children for entry: {d['key']}\n"
+                #       f"children: {self.sq_cur.fetchall()}\n")
+                #
+                # self.debug_execute(f"SELECT episode_key FROM metadata_episode_assoz WHERE metadata_key = {key0}")
+                # print(f"New Children of Base Entry {key0}:\n"
+                #       f"children: {self.sq_cur.fetchall()}")
 
                 removed_entries += 1
                 self.debug_execute(f"DELETE FROM metadata WHERE key = {d['key']}")
