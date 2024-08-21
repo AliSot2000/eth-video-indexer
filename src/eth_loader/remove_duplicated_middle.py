@@ -245,14 +245,17 @@ class MiddlePruner(BaseSQliteDB):
             # Parse the rows into a list of dictionaries.
             data = [{"key": k[0], "parent": k[1]} for k in self.sq_cur.fetchall()]
 
+            key0 = data[0]["key"]
+
             # Get the parent of the first row.
             parent_0 = data[0]["parent"]
 
             # Select all matching rows based on parent in episodes table
-            self.debug_execute(f"SELECT key FROM episodes WHERE parent = {data[0]['key']}")
+            self.debug_execute(f"SELECT key FROM episodes WHERE parent = {key0}")
 
             if self.sq_cur.fetchone() is None:
-                print(f"Base entry {data[0]['key']} without children", file=sys.stderr)
+                # very common occurrence need to think about that.
+                print(f"Base entry {key0} without children", file=sys.stderr)
 
             # Go through all rows except the first one.
             for d in data[1:]:
@@ -260,7 +263,7 @@ class MiddlePruner(BaseSQliteDB):
                 # Check if the parent of the row is the same as the first row.
                 if parent_0 != d['parent']:
                     non_matching_parent += 1
-                    print(f"Non Matching Parent for entry: {d['key']}, start_key: {data[0]['key']}\n"
+                    print(f"Non Matching Parent for entry: {d['key']}, start_key: {key0}\n"
                           f"parent0: {parent_0}\n"
                           f"parentn: {d['parent']}", file=sys.stderr)
                     continue
