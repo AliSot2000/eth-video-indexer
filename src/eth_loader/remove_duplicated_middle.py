@@ -184,7 +184,6 @@ class MiddlePruner(BaseSQliteDB):
         removed_entries = 0
         non_matching_parent = 0
         having_children = 0
-        print(f"Found {nor} rows with duplicates")
 
         # Go through all rows of duplicates.
         for r in results:
