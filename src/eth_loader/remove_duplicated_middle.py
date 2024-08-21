@@ -128,13 +128,13 @@ class MiddlePruner(BaseSQliteDB):
                     self.debug_execute(f"DELETE FROM episode_stream_assoz WHERE episode_key = {contender['key']}")
                     continue
 
-                if parent0 != k["parent"]:
-                    print(f"Found non-matching parent for entry: {k['key']}, start_key: {data[0]['key']}\n"
-                          f"parent0: {parent0}\n"
-                          f"parentn: {k['parent']}\n"
-                          f"Checking parents...",
-                          file=sys.stderr)
+                assert parent0 != contender["parent"], "LOGIC_ERROR: Parent is the same for both entries"
                 ep_unequal_parent += 1
+                # print(f"EPISODES: Found non-matching parent for entry: {contender['key']}, start_key: {key0}\n"
+                #       f"parent0: {parent0}\n"
+                #       f"parentn: {contender['parent']}\n"
+                #       f"Checking parents...",
+                #       file=sys.stderr)
 
                     # Get the parents and check them.
                     self.debug_execute(f"SELECT key, URL, parent, json FROM metadata "
