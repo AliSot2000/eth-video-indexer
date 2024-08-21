@@ -57,12 +57,12 @@ class MiddlePruner(BaseSQliteDB):
 
             # Get all rows with the same hash.
             self.debug_execute(
-                f"SELECT episodes.key, json, episodes.parent, episodes.found "
+                f"SELECT episodes.key, json, episodes.found "
                 f"FROM episodes JOIN hash_table ON episodes.key = hash_table.key "
                 f"WHERE hash_table.hash = '{fhash}' ORDER BY found ASC")
 
             # Parse the rows into a list of dictionaries.
-            data = [{"key": k[0], "json": k[1], "parent": k[2], "found": k[3]} for k in self.sq_cur.fetchall()]
+            data = [{"key": k[0], "json": k[1], "found": k[2]} for k in self.sq_cur.fetchall()]
 
             key0 = data[0]["key"]
 
