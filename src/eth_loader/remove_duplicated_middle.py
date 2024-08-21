@@ -83,8 +83,11 @@ class MiddlePruner(BaseSQliteDB):
 
             parent0 = data[0]["parent"]
 
-            print(f"Found {len(data)} keys for hash: {r['hash']}")
+            # Keeping track of more multiples.
             if len(data) > 2:
+                ep_ge_2_eps += 1
+
+            # print(f"EPISODES: Found {len(data)} keys for hash: {r['hash']}")
             # Go through the remaining rows.
             for k in data[1:]:
 
@@ -106,7 +109,7 @@ class MiddlePruner(BaseSQliteDB):
                 # check if the first and current set match
                 if stream_keys != stream_keys_0:
                     # Inform about us having found a non-matching set of stream keys.
-                    print(f"Found non-matching keys for entry: {k['key']} , start_key: {data[0]['key']}\n"
+                    print(f"EPISODES: Found non-matching keys for entry: {contender['key']}, "
                           f"start_key: {key0}\n"
                           f"keys0: {stream_keys_0}\n"
                           f"keysn: {stream_keys}\n",
@@ -131,17 +134,18 @@ class MiddlePruner(BaseSQliteDB):
                     # Get the res dict.
                     res_dict = [{"key": r[0], "URL": r[1], "parent": r[2], "json": r[3]} for r in parents]
 
-                    if len(parents) < 2:
-                        assert len(parents) == 1, f"No Parent found. parentn: {k['parent']}, parent0: {parent0}"
-                        if res_dict[0]["key"] == parent0:
-                                  f"parent0: {parent0}\n"
-                                  f"parentn, not found: {k['parent']}\n"
-                                  f"Deleting entry: {k['key']}\n")
-                            self.debug_execute(f"DELETE FROM metadata WHERE key = {k['parent']}")
-                            self.debug_execute(f"DELETE FROM episodes WHERE key = {k['key']}")
-                            self.debug_execute(f"DELETE FROM episode_stream_assoz WHERE episode_key = {k['key']}")
-                            continue
+                # Second parent is missing for some reason?
+                if len(raw_parents) < 2:
+                    assert len(raw_parents) == 1, f"No Parent found. parentn: {contender['parent']}, parent0: {parent0}"
+                    if parent_dict[0]["key"] == parent0:
                         # print(f"METADATA: Parent not found for entry: {contender['key']}, start_key: {key0}\n"
+                        #       f"parent0: {parent0}\n"
+                        #       f"parentn, not found: {contender['parent']}\n"
+                        #       f"Deleting entry: {contender['key']}\n")
+                        # The first one should be redundant.
+                        self.debug_execute(f"DELETE FROM metadata WHERE key = {contender['parent']}")
+                        self.debug_execute(f"DELETE FROM episodes WHERE key = {contender['key']}")
+                        self.debug_execute(f"DELETE FROM episode_stream_assoz WHERE episode_key = {contender['key']}")
                         del_fron_episodes += 1
                         # del_from_metadata += 1
                         met_parent_missing += 1
@@ -149,28 +153,26 @@ class MiddlePruner(BaseSQliteDB):
                         else:
                             raise ValueError("Parent not found for parent0")
 
-                    if res_dict[0]["json"] != res_dict[1]["json"]:
-                              f"parent0: {res_dict[0]['json']}\n"
-                              f"parentn: {res_dict[1]['json']}\n",
-                              file=sys.stderr)
-                        continue
+                if parent_dict[0]["json"] != parent_dict[1]["json"]:
                     # print(f"METADATA: json is not equal for entry: {contender['key']}, start_key: {key0}\n"
+                          # f"parent0: {parent_dict[0]['json']}\n"
+                          # f"parentn: {parent_dict[1]['json']}\n",
+                          # file=sys.stderr)
                     met_unequal_json += 1
+                    continue
 
-                    if res_dict[0]["URL"] != res_dict[1]["URL"]:
-                              f"parent0: {res_dict[0]['URL']}\n"
-                              f"parentn: {res_dict[1]['URL']}\n",
-                              file=sys.stderr)
-                        continue
+                if parent_dict[0]["URL"] != parent_dict[1]["URL"]:
                     print(f"METADATA: URL is not equal for entry: {contender['key']}, start_key: {key0}\n"
+                          f"parent0: {parent_dict[0]['URL']}\n"
+                          f"parentn: {parent_dict[1]['URL']}\n",
+                          file=sys.stderr)
                     met_unequal_url += 1
 
-                    if res_dict[0]["parent"] != res_dict[1]["parent"]:
-                              f"parent0: {res_dict[0]['parent']}\n"
-                              f"parentn: {res_dict[1]['parent']}\n",
-                              file=sys.stderr)
-                        continue
+                if parent_dict[0]["parent"] != parent_dict[1]["parent"]:
                     print(f"METADATA: site parent is not equal for entry: {contender['key']}, start_key: {key0}\n"
+                          f"parent0: {parent_dict[0]['parent']}\n"
+                          f"parentn: {parent_dict[1]['parent']}\n",
+                          file=sys.stderr)
                     met_unequal_parent += 1
 
                     print(f"Parents are a match for entry: {k['key']}, start_key: {data[0]['key']},"
