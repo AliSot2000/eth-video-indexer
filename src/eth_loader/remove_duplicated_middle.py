@@ -43,17 +43,19 @@ class MiddlePruner(BaseSQliteDB):
         # Parse the results into a list of dictionaries.
         results = [{"count": row[0], "parent": row[1], "hash": row[2]} for row in raw]
 
-        deletes_overall = 0
-        deletes_with_parent = 0
+        del_fron_episodes = 0
+        del_from_metadata = 0
 
-        unequal_json_parent = 0
-        unequal_url_parent = 0
-        unequal_parent_parent = 0
+        met_unequal_json = 0
+        met_unequal_url = 0
+        met_unequal_parent = 0
+        met_parent_missing = 0
 
-        unequal_parent = 0
-        unequal_streams = 0
-        unequal_json = 0
+        ep_unequal_parent = 0
+        ep_unequal_streams = 0
+        ep_unequal_json = 0
         nor = len(results)
+        ep_ge_2_eps = 0
 
         # Go through all rows of hashes which have duplicates.
         for r in results:
@@ -80,6 +82,7 @@ class MiddlePruner(BaseSQliteDB):
             parent0 = data[0]["parent"]
 
             print(f"Found {len(data)} keys for hash: {r['hash']}")
+            if len(data) > 2:
             # Go through the remaining rows.
             for k in data[1:]:
 
@@ -87,7 +90,7 @@ class MiddlePruner(BaseSQliteDB):
                 if k["json"] != json0:
                     print(f"Found non-matching json for entry: {k['key']}, start_key: {data[0]['key']}",
                           file=sys.stderr)
-                    unequal_json += 1
+                    ep_unequal_json += 1
                     continue
                 print(f"Json is a match for entry: {k['key']}, start_key: {data[0]['key']}")
 
@@ -104,17 +107,18 @@ class MiddlePruner(BaseSQliteDB):
                           f"keys0: {stream_keys_0}\n"
                           f"keysn: {stream_keys}\n",
                           file=sys.stderr)
-                    unequal_streams += 1
+                    ep_unequal_streams += 1
+                    del_fron_episodes += 1
                     continue
                 print(f"Streams are a match for entry: {k['key']}, start_key: {data[0]['key']}")
 
                 if parent0 != k["parent"]:
-                    unequal_parent += 1
                     print(f"Found non-matching parent for entry: {k['key']}, start_key: {data[0]['key']}\n"
                           f"parent0: {parent0}\n"
                           f"parentn: {k['parent']}\n"
                           f"Checking parents...",
                           file=sys.stderr)
+                ep_unequal_parent += 1
 
                     # Get the parents and check them.
                     self.debug_execute(f"SELECT key, URL, parent, json FROM metadata "
@@ -133,9 +137,10 @@ class MiddlePruner(BaseSQliteDB):
                             self.debug_execute(f"DELETE FROM metadata WHERE key = {k['parent']}")
                             self.debug_execute(f"DELETE FROM episodes WHERE key = {k['key']}")
                             self.debug_execute(f"DELETE FROM episode_stream_assoz WHERE episode_key = {k['key']}")
-                            deletes_overall += 1
-                            deletes_with_parent += 1
                             continue
+                        del_fron_episodes += 1
+                        # del_from_metadata += 1
+                        met_parent_missing += 1
 
                         else:
                             raise ValueError("Parent not found for parent0")
@@ -145,50 +150,47 @@ class MiddlePruner(BaseSQliteDB):
                               f"parent0: {res_dict[0]['json']}\n"
                               f"parentn: {res_dict[1]['json']}\n",
                               file=sys.stderr)
-                        unequal_json_parent += 1
                         continue
+                    met_unequal_json += 1
 
                     if res_dict[0]["URL"] != res_dict[1]["URL"]:
                         print(f"Parent URL is not equal for entry: {k['key']}, start_key: {data[0]['key']}\n"
                               f"parent0: {res_dict[0]['URL']}\n"
                               f"parentn: {res_dict[1]['URL']}\n",
                               file=sys.stderr)
-                        unequal_url_parent += 1
                         continue
+                    met_unequal_url += 1
 
                     if res_dict[0]["parent"] != res_dict[1]["parent"]:
                         print(f"Parent parent is not equal for entry: {k['key']}, start_key: {data[0]['key']}\n"
                               f"parent0: {res_dict[0]['parent']}\n"
                               f"parentn: {res_dict[1]['parent']}\n",
                               file=sys.stderr)
-                        unequal_parent_parent += 1
                         continue
+                    met_unequal_parent += 1
 
                     print(f"Parents are a match for entry: {k['key']}, start_key: {data[0]['key']},"
                           f" parent share same json, url and parent")
-                    deletes_overall += 1
-                    deletes_with_parent += 1
                     self.debug_execute(f"DELETE FROM metadata WHERE key = {k['parent']}")
                     self.debug_execute(f"DELETE FROM episodes WHERE key = {k['key']}")
                     self.debug_execute(f"DELETE FROM episode_stream_assoz WHERE episode_key = {k['key']}")
                     continue
+                del_fron_episodes += 1
+                del_from_metadata += 1
 
-                # Match found, remove duplicate (since we're ordering by order of appearance)
-                deletes_overall += 1
-                print(f"Found matching keys, parent and json for entry: {k['key']}, start_key: {data[0]['key']}")
-                self.debug_execute(f"DELETE FROM episodes WHERE key = {k['key']}")
-                self.debug_execute(f"DELETE FROM episode_stream_assoz WHERE episode_key = {k['key']}")
-
-        print(f"Searched {nor} rows with duplicates\n"
-              f"Removed {deletes_overall} entries\n"
-              f"Removed {deletes_with_parent} including parent\n"
-              f"{'-' * 120}\n"
-              f"Found {unequal_json} entries with non-matching json\n"
-              f"Found {unequal_streams} entries with non-matching streams\n"
-              f"Found {unequal_parent} entries with non-matching parent:\n"
-              f"Found {unequal_json_parent} mismatches in parent json\n"
-              f"Found {unequal_url_parent} mismatches in parent url\n"
-              f"Found {unequal_parent_parent} mismatches in parent of parent\n")
+        print(f"EPISODES: Searched {nor} rows with duplicates\n"
+              f"EPISODES: More than one duplicate for {ep_ge_2_eps} rows\n"
+              f"EPISODES: Removed {del_fron_episodes} entries\n"
+              f"\n"
+              f"EPISODES: Found {ep_unequal_json} entries with non-matching json\n"
+              f"EPISODES: Found {ep_unequal_streams} entries with non-matching streams\n"
+              f"EPISODES: Found {ep_unequal_parent} entries with non-matching parent\n"
+              f"\n"
+              f"METADATA: Removed {del_from_metadata} rows with duplicates\n"
+              f"METADATA: Found {met_parent_missing} missing parents\n"
+              f"METADATA: Found {met_unequal_json} mismatches in json\n"
+              f"METADATA: Found {met_unequal_url} mismatches in url\n"
+              f"METADATA: Found {met_unequal_parent} mismatches in parent_id\n")
 
     def remove_hash_table(self):
         """
