@@ -232,6 +232,7 @@ class MiddlePruner(BaseSQliteDB):
                         self.debug_execute(f"INSERT OR IGNORE INTO metadata_episode_assoz (metadata_key, episode_key) "
                                            f"VALUES ({key0}, {child[0]})")
 
+                # Was used for sanity checking
                 # self.debug_execute(f"SELECT episode_key FROM metadata_episode_assoz WHERE metadata_key = {d['key']}")
                 # print(f"New children for entry: {d['key']}\n"
                 #       f"children: {self.sq_cur.fetchall()}\n")
