@@ -293,6 +293,8 @@ if __name__ == "__main__":
     obj.perform_cleaning_episodes()
     obj.remove_hash_table()
     obj.perform_cleaning_of_metadata()
+    obj.remove_dangling_assoz()
+
     obj.sq_con.commit()
 
 # ITERATION +
