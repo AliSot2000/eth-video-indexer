@@ -159,9 +159,11 @@ class MiddlePruner(BaseSQliteDB):
                         del_fron_episodes += 1
                         # del_from_metadata += 1
                         met_parent_missing += 1
+                        continue
 
-                        else:
-                            raise ValueError("Parent not found for parent0")
+                    # Base key doesn't have a parent, Raise value Error - bigger issue in db
+                    else:
+                        raise ValueError("Parent not found for parent0")
 
                 if parent_dict[0]["json"] != parent_dict[1]["json"]:
                     # print(f"METADATA: json is not equal for entry: {contender['key']}, start_key: {key0}\n"
