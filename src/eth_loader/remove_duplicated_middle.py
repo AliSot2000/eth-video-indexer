@@ -127,7 +127,6 @@ class MiddlePruner(BaseSQliteDB):
                     self.debug_execute(f"DELETE FROM episodes WHERE key = {contender['key']}")
                     self.debug_execute(f"DELETE FROM episode_stream_assoz WHERE episode_key = {contender['key']}")
                     continue
-                print(f"Streams are a match for entry: {k['key']}, start_key: {data[0]['key']}")
 
                 if parent0 != k["parent"]:
                     print(f"Found non-matching parent for entry: {k['key']}, start_key: {data[0]['key']}\n"
