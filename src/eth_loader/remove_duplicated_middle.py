@@ -114,7 +114,13 @@ class MiddlePruner(BaseSQliteDB):
                     continue
                 # print(f"Streams are a match for entry: {contender['key']}, start_key: {key0}")
 
-                # Parents are a match, delete the contender from the episodes table.
+                # get parents of contender.
+                self.debug_execute(f"SELECT metadata_key "
+                                   f"FROM metadata_episode_assoz "
+                                   f"WHERE episode_key = {contender['key']}")
+                contender["parent"] = set([k[0] for k in self.sq_cur.fetchall()])
+
+                # Parents sets match, remove all entries to the contender
                 if parent0 == contender["parent"]:
                     # Match found, remove duplicate (since we're ordering by order of appearance)
                     del_fron_episodes += 1
