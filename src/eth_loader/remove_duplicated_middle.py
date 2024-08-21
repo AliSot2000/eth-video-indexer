@@ -136,12 +136,13 @@ class MiddlePruner(BaseSQliteDB):
                 #       f"Checking parents...",
                 #       file=sys.stderr)
 
-                    # Get the parents and check them.
-                    self.debug_execute(f"SELECT key, URL, parent, json FROM metadata "
-                    parents = self.sq_cur.fetchall()
-                    # Get the res dict.
-                    res_dict = [{"key": r[0], "URL": r[1], "parent": r[2], "json": r[3]} for r in parents]
+                # Get the parents from metadata table and check them.
+                self.debug_execute(f"SELECT key, URL, parent, json FROM metadata "
                                    f"WHERE key IN ({contender['parent']}, {parent0})")
+
+                raw_parents = self.sq_cur.fetchall()
+                # Get the res dict.
+                parent_dict = [{"key": r[0], "URL": r[1], "parent": r[2], "json": r[3]} for r in raw_parents]
 
                 # Second parent is missing for some reason?
                 if len(raw_parents) < 2:
