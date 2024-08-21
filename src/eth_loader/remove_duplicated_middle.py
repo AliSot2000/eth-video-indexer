@@ -179,6 +179,7 @@ class MiddlePruner(BaseSQliteDB):
                           f"parentn: {parent_dict[1]['URL']}\n",
                           file=sys.stderr)
                     met_unequal_url += 1
+                    continue
 
                 if parent_dict[0]["parent"] != parent_dict[1]["parent"]:
                     print(f"METADATA: site parent is not equal for entry: {contender['key']}, start_key: {key0}\n"
