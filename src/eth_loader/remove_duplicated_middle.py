@@ -75,7 +75,9 @@ class MiddlePruner(BaseSQliteDB):
             # Create a copy of the first json.
             json0 = data[0]["json"]
 
-            parent0 = data[0]["parent"]
+            # Get the parents of the first row
+            self.debug_execute(f"SELECT metadata_key FROM metadata_episode_assoz WHERE episode_key = {key0}")
+            parent0 = set([k[0] for k in self.sq_cur.fetchall()])
 
             # Keeping track of more multiples.
             if len(data) > 2:
