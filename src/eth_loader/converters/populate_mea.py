@@ -14,7 +14,8 @@ class PopulateMEA(BaseSQliteDB):
                                "(key INTEGER PRIMARY KEY AUTOINCREMENT, "
                                "metadata_key INTEGER REFERENCES metadata(key), "
                                "episode_key INTEGER REFERENCES episodes(key), UNIQUE (metadata_key, episode_key))")
-            self.debug_execute("CREATE INDEX mea_index_keys ON metadata_episode_assoz (metadata_key, episode_key)")
+            self.debug_execute("CREATE INDEX IF NOT EXISTS mea_index_keys "
+                               "ON metadata_episode_assoz (metadata_key, episode_key)")
 
     def populate_table(self):
         self.debug_execute("SELECT key, parent FROM episodes")
