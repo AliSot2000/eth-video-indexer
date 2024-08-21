@@ -200,9 +200,10 @@ class MiddlePruner(BaseSQliteDB):
             parent_0 = data[0]["parent"]
 
             # Select all matching rows based on parent in episodes table
-            self.debug_execute(f"SELECT key FROM episodes WHERE parent = {key0}")
+            self.debug_execute(f"SELECT episode_key FROM metadata_episode_assoz WHERE metadata_key = {key0}")
 
-            if self.sq_cur.fetchone() is None:
+            children0 = self.sq_cur.fetchall()
+            if len(children0) == 0:
                 # very common occurrence need to think about that.
                 print(f"Base entry {key0} without children", file=sys.stderr)
 
