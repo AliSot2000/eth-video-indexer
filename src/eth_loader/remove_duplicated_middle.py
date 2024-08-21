@@ -115,7 +115,17 @@ class MiddlePruner(BaseSQliteDB):
                           f"keysn: {stream_keys}\n",
                           file=sys.stderr)
                     ep_unequal_streams += 1
+                    continue
+                # print(f"Streams are a match for entry: {contender['key']}, start_key: {key0}")
+
+                # Parents are a match, delete the contender from the episodes table.
+                if parent0 == contender["parent"]:
+                    # Match found, remove duplicate (since we're ordering by order of appearance)
                     del_fron_episodes += 1
+                    # print(
+                    #     f"Found matching keys, parent_id and json for entry: {contender['key']}, start_key: {key0}")
+                    self.debug_execute(f"DELETE FROM episodes WHERE key = {contender['key']}")
+                    self.debug_execute(f"DELETE FROM episode_stream_assoz WHERE episode_key = {contender['key']}")
                     continue
                 print(f"Streams are a match for entry: {k['key']}, start_key: {data[0]['key']}")
 
