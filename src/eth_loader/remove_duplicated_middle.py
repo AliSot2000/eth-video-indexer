@@ -44,12 +44,6 @@ class MiddlePruner(BaseSQliteDB):
         results = [{"count": row[0], "hash": row[1]} for row in raw]
 
         del_fron_episodes = 0
-        del_from_metadata = 0
-
-        met_unequal_json = 0
-        met_unequal_url = 0
-        met_unequal_parent = 0
-        met_parent_missing = 0
 
         ep_unequal_parent = 0
         ep_unequal_streams = 0
@@ -203,13 +197,7 @@ class MiddlePruner(BaseSQliteDB):
               f"\n"
               f"EPISODES: Found {ep_unequal_json} entries with non-matching json\n"
               f"EPISODES: Found {ep_unequal_streams} entries with non-matching streams\n"
-              f"EPISODES: Found {ep_unequal_parent} entries with non-matching parent\n"
-              f"\n"
-              f"METADATA: Removed {del_from_metadata} rows with duplicates\n"
-              f"METADATA: Found {met_parent_missing} missing parents\n"
-              f"METADATA: Found {met_unequal_json} mismatches in json\n"
-              f"METADATA: Found {met_unequal_url} mismatches in url\n"
-              f"METADATA: Found {met_unequal_parent} mismatches in parent_id\n")
+              f"EPISODES: Found {ep_unequal_parent} entries with non-matching parent\n")
 
     def remove_hash_table(self):
         """
