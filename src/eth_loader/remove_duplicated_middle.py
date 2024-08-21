@@ -249,6 +249,40 @@ class MiddlePruner(BaseSQliteDB):
               f"Found {non_matching_parent} non-matching parents\n"
               f"Found {having_children} entries with children\n")
 
+    def remove_dangling_assoz(self):
+        """
+        Drop the assoz table entries that have either a missing episode or metadata entry.
+        """
+        # Search based on stream_key
+        self.debug_execute("SELECT COUNT(key) FROM episode_stream_assoz "
+                           "WHERE episode_stream_assoz.stream_key NOT IN (SELECT key FROM streams)")
+
+        print(f"Found {self.sq_cur.fetchone()[0]} dangling stream keys in episode_stream_assoz")
+        self.debug_execute("DELETE FROM episode_stream_assoz "
+                           "WHERE episode_stream_assoz.stream_key NOT IN (SELECT key FROM streams)")
+
+        # Search based on episode_key
+        self.debug_execute("SELECT COUNT(key) FROM episode_stream_assoz "
+                           "WHERE episode_stream_assoz.episode_key NOT IN (SELECT key FROM episodes)")
+        print(f"Found {self.sq_cur.fetchone()[0]} dangling episode keys in episode_stream_assoz")
+        self.debug_execute("DELETE FROM episode_stream_assoz "
+                           "WHERE episode_stream_assoz.episode_key NOT IN (SELECT key FROM episodes)")
+
+        # Search based on episode_key
+        self.debug_execute("SELECT COUNT(key) FROM metadata_episode_assoz "
+                           "WHERE metadata_episode_assoz.episode_key NOT IN (SELECT key FROM episodes)")
+        print(f"Found {self.sq_cur.fetchone()[0]} dangling episode keys in metadata_episode_assoz")
+
+        self.debug_execute("DELETE FROM metadata_episode_assoz "
+                           "WHERE metadata_episode_assoz.episode_key NOT IN (SELECT key FROM episodes)")
+
+        # Search based on metadata_key
+        self.debug_execute("SELECT COUNT(key) FROM metadata_episode_assoz "
+                           "WHERE metadata_episode_assoz.metadata_key NOT IN (SELECT key FROM metadata)")
+        print(f"Found {self.sq_cur.fetchone()[0]} dangling metadata keys in metadata_episode_assoz")
+        self.debug_execute("DELETE FROM metadata_episode_assoz "
+                           "WHERE metadata_episode_assoz.metadata_key NOT IN (SELECT key FROM metadata)")
+
 
 # TODO check metadata for duplicates and ignore the lower end.
 if __name__ == "__main__":
