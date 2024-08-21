@@ -131,74 +131,26 @@ class MiddlePruner(BaseSQliteDB):
                     self.debug_execute(f"DELETE FROM metadata_episode_assoz WHERE episode_key = {contender['key']}")
                     continue
 
-                assert parent0 != contender["parent"], "LOGIC_ERROR: Parent is the same for both entries"
-                ep_unequal_parent += 1
-                # print(f"EPISODES: Found non-matching parent for entry: {contender['key']}, start_key: {key0}\n"
-                #       f"parent0: {parent0}\n"
-                #       f"parentn: {contender['parent']}\n"
-                #       f"Checking parents...",
-                #       file=sys.stderr)
-
-                # Get the parents from metadata table and check them.
-                self.debug_execute(f"SELECT key, URL, parent, json FROM metadata "
-                                   f"WHERE key IN ({contender['parent']}, {parent0})")
-
-                raw_parents = self.sq_cur.fetchall()
-                # Get the res dict.
-                parent_dict = [{"key": r[0], "URL": r[1], "parent": r[2], "json": r[3]} for r in raw_parents]
-
-                # Second parent is missing for some reason?
-                if len(raw_parents) < 2:
-                    assert len(raw_parents) == 1, f"No Parent found. parentn: {contender['parent']}, parent0: {parent0}"
-                    if parent_dict[0]["key"] == parent0:
-                        # print(f"METADATA: Parent not found for entry: {contender['key']}, start_key: {key0}\n"
-                        #       f"parent0: {parent0}\n"
-                        #       f"parentn, not found: {contender['parent']}\n"
-                        #       f"Deleting entry: {contender['key']}\n")
-                        # The first one should be redundant.
-                        self.debug_execute(f"DELETE FROM metadata WHERE key = {contender['parent']}")
-                        self.debug_execute(f"DELETE FROM episodes WHERE key = {contender['key']}")
-                        self.debug_execute(f"DELETE FROM episode_stream_assoz WHERE episode_key = {contender['key']}")
-                        del_fron_episodes += 1
-                        # del_from_metadata += 1
-                        met_parent_missing += 1
-                        continue
-
-                    # Base key doesn't have a parent, Raise value Error - bigger issue in db
-                    else:
-                        raise ValueError("Parent not found for parent0")
-
-                if parent_dict[0]["json"] != parent_dict[1]["json"]:
-                    # print(f"METADATA: json is not equal for entry: {contender['key']}, start_key: {key0}\n"
-                          # f"parent0: {parent_dict[0]['json']}\n"
-                          # f"parentn: {parent_dict[1]['json']}\n",
-                          # file=sys.stderr)
-                    met_unequal_json += 1
-                    continue
-
-                if parent_dict[0]["URL"] != parent_dict[1]["URL"]:
-                    print(f"METADATA: URL is not equal for entry: {contender['key']}, start_key: {key0}\n"
-                          f"parent0: {parent_dict[0]['URL']}\n"
-                          f"parentn: {parent_dict[1]['URL']}\n",
+                else:
+                    ep_unequal_parent += 1
+                    print(f"EPISODES: Found non-matching parent for entry: {contender['key']}, "
+                          f"start_key: {key0}\n"
+                          f"parent0: {parent0}\n"
+                          f"parentn: {contender['parent']}\n"
+                          f"Changing Entries for contender to target",
                           file=sys.stderr)
-                    met_unequal_url += 1
-                    continue
 
-                if parent_dict[0]["parent"] != parent_dict[1]["parent"]:
-                    print(f"METADATA: site parent is not equal for entry: {contender['key']}, start_key: {key0}\n"
-                          f"parent0: {parent_dict[0]['parent']}\n"
-                          f"parentn: {parent_dict[1]['parent']}\n",
-                          file=sys.stderr)
-                    met_unequal_parent += 1
-                    continue
+                    children_to_establish = contender['parent'] - parent0
+                    for child in children_to_establish:
+                        self.debug_execute(f"INSERT OR IGNORE INTO metadata_episode_assoz (metadata_key, episode_key) "
+                                           f"VALUES ({child}, {key0})")
 
-                # print(f"Parents are a match for entry: {contender['key']}, start_key: {data[0]['key']},"
-                #       f" parent share same json, url and parent")
-                del_fron_episodes += 1
-                del_from_metadata += 1
-                self.debug_execute(f"DELETE FROM metadata WHERE key = {contender['parent']}")
-                self.debug_execute(f"DELETE FROM episodes WHERE key = {contender['key']}")
-                self.debug_execute(f"DELETE FROM episode_stream_assoz WHERE episode_key = {contender['key']}")
+                    del_fron_episodes += 1
+                    print(
+                        f"Updated parents, removed: {contender['key']}, start_key: {key0}")
+                    self.debug_execute(f"DELETE FROM episodes WHERE key = {contender['key']}")
+                    self.debug_execute(f"DELETE FROM episode_stream_assoz WHERE episode_key = {contender['key']}")
+                    self.debug_execute(f"DELETE FROM metadata_episode_assoz WHERE episode_key = {contender['key']}")
 
         print(f"EPISODES: Searched {nor} rows with duplicates\n"
               f"EPISODES: More than one duplicate for {ep_ge_2_eps} rows\n"
