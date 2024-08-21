@@ -128,6 +128,7 @@ class MiddlePruner(BaseSQliteDB):
                     #     f"Found matching keys, parent_id and json for entry: {contender['key']}, start_key: {key0}")
                     self.debug_execute(f"DELETE FROM episodes WHERE key = {contender['key']}")
                     self.debug_execute(f"DELETE FROM episode_stream_assoz WHERE episode_key = {contender['key']}")
+                    self.debug_execute(f"DELETE FROM metadata_episode_assoz WHERE episode_key = {contender['key']}")
                     continue
 
                 assert parent0 != contender["parent"], "LOGIC_ERROR: Parent is the same for both entries"
