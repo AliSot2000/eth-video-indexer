@@ -89,19 +89,19 @@ class MiddlePruner(BaseSQliteDB):
 
             # print(f"EPISODES: Found {len(data)} keys for hash: {r['hash']}")
             # Go through the remaining rows.
-            for k in data[1:]:
+            for contender in data[1:]:
 
                 # Check the json of the row.
-                if k["json"] != json0:
-                    print(f"Found non-matching json for entry: {k['key']}, start_key: {data[0]['key']}",
+                if contender["json"] != json0:
+                    print(f"EPISODES: Found non-matching json for entry: {contender['key']}, "
                           f"start_key: {key0}",
                           file=sys.stderr)
                     ep_unequal_json += 1
                     continue
-                print(f"Json is a match for entry: {k['key']}, start_key: {data[0]['key']}")
+                # print(f"Json is a match for entry: {contender['key']}, start_key: {key0}")
 
                 # Get the stream keys for the row.
-                self.debug_execute(f"SELECT stream_key FROM episode_stream_assoz WHERE episode_key = {k['key']}")
+                self.debug_execute(f"SELECT stream_key FROM episode_stream_assoz WHERE episode_key = {contender['key']}")
 
                 # Create a set of those keys.
                 stream_keys = set([k[0] for k in self.sq_cur.fetchall()])
@@ -129,10 +129,10 @@ class MiddlePruner(BaseSQliteDB):
 
                     # Get the parents and check them.
                     self.debug_execute(f"SELECT key, URL, parent, json FROM metadata "
-                                       f"WHERE key IN ({k['parent']}, {parent0})")
                     parents = self.sq_cur.fetchall()
                     # Get the res dict.
                     res_dict = [{"key": r[0], "URL": r[1], "parent": r[2], "json": r[3]} for r in parents]
+                                   f"WHERE key IN ({contender['parent']}, {parent0})")
 
                 # Second parent is missing for some reason?
                 if len(raw_parents) < 2:
