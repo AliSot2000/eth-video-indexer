@@ -345,13 +345,13 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
 
             try:
                 now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                if self.not_in_db(url):
+                if self.not_in_db(url=url, video=a_video):
                     self.debug_execute("INSERT INTO sites (URL, IS_VIDEO, found, last_seen) VALUES "
                                         f"('{url}', {a_video}, '{now}', '{now}')")
                     insert_counter += 1
                     self.logger.info(f"Found new: {url}")
                 else:
-                    self.update_found(url=url)
+                    self.update_found(url=url, video=a_video)
                     found_counter += 1
                     self.logger.debug(f"Already in DB: {url}")
             except sqlite3.IntegrityError as e:
@@ -362,27 +362,29 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
         self.logger.info(f"Inserted {insert_counter} entries in sites table"
                          f"Updated {found_counter} entries in sites table")
 
-    def not_in_db(self, url):
+    def not_in_db(self, url: str, video: int):
         """
         Verifies the url is not already in the database. (Search ONLY based on url)
 
-        :param url:
+        :param url: url of the site that was found
+        :param video: boolean if the site is a video
 
         :return:
         """
-        self.debug_execute(f"SELECT key FROM sites WHERE URL = '{url}'")
+        self.debug_execute(f"SELECT key FROM sites WHERE URL = '{url}' AND IS_VIDEO = {video}")
         return self.sq_cur.fetchone() is None
 
-    def update_found(self, url: str):
+    def update_found(self, url: str, video: int):
         """
         Update the found entry of a given row to the current date and time.
 
         :param url: url to match for the update for the last seen time.
+        :param video: int(bool) if the site is a video
 
         :return:
         """
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.debug_execute(f"UPDATE sites SET last_seen = '{now}' WHERE URL IS '{url}'")
+        self.debug_execute(f"UPDATE sites SET last_seen = '{now}' WHERE URL = '{url}' AND IS_VIDEO = {video}")
 
     def gen_parent(self):
         """
