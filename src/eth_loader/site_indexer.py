@@ -71,7 +71,7 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
     It also has a found tag which stores the date the site was found.
     """
 
-    def __init__(self, db_file: str, prefixes: list = None):
+    def __init__(self, db_file: str, start_dt: datetime.datetime, prefixes: list = None):
         """
         Initializer for concurrent indexing of entire video.ethz.ch site.
 
@@ -79,10 +79,12 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
 
         :param db_file: Database where the results are stored. (at the time 6460 urls)
         :param prefixes: provide custom prefixes, main_header [campus, lectures, ...]
+        :param start_dt: Datetime at which this operation is performed.
         """
         make_db = not os.path.exists(db_file)
 
         self.logger = logging.getLogger("site_indexer")
+        self.start_dt = start_dt
 
         self.prefixes = ["/campus", "/conferences", "/events", "/speakers", "/lectures"]
         if prefixes is not None:
