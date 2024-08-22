@@ -149,7 +149,8 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
 
         # Dummy entry to have a root.
         self.debug_execute(
-            f"INSERT INTO sites (key, parent, URL, IS_VIDEO, found, last_seen) VALUES (0, -1, 'https://www.video.ethz.ch', 0, '{now}', '{now}')")
+            f"INSERT INTO sites (key, parent, URL, IS_VIDEO, found, last_seen) "
+            f"VALUES (0, -1, 'https://www.video.ethz.ch', 0, '{now}', '{now}')")
         self.logger.info("Table Created")
 
     def index_video_eth(self, threads : int = 100):
