@@ -335,6 +335,7 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
         insert_counter = 0
         found_counter = 0
         counter = 0
+        now = self.start_dt.strftime("%Y-%m-%d %H:%M:%S")
         while counter < 10 and self.one_workers_alive():
             try:
                 arguments = self.found_url_queue.get(block=False)
@@ -347,7 +348,6 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
             a_video = arguments["is_video"]
 
             try:
-                now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 if self.not_in_db(url=url, video=a_video):
                     self.debug_execute("INSERT INTO sites (URL, IS_VIDEO, found, last_seen) VALUES "
                                         f"('{url}', {a_video}, '{now}', '{now}')")
@@ -386,7 +386,7 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
 
         :return:
         """
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        now = self.start_dt.strftime("%Y-%m-%d %H:%M:%S")
         self.debug_execute(f"UPDATE sites SET last_seen = '{now}' WHERE URL = '{url}' AND IS_VIDEO = {video}")
 
     def gen_parent(self):
@@ -437,10 +437,12 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
 
         :return: key or -1 if no key found.
         """
-        self.debug_execute(f"SELECT (key) FROM sites WHERE URL IS '{url}'")
+        now = self.start_dt.strftime("%Y-%m-%d %H:%M:%S")
+        self.debug_execute(f"SELECT (key) FROM sites WHERE URL IS '{url} AND found = '{now}' AND IS_VIDEO = 0")
         query_result = self.sq_cur.fetchall()
 
         if len(query_result) == 0 or len(query_result[0]) == 0:
+            self.logger.error(f"Failed to find {url} with found {now} and is_video 0")
             return -1
 
         return query_result[0][0]
