@@ -330,6 +330,7 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
         """
         # Timeout to prevent endless loop if a subprocesses crash
         insert_counter = 0
+        found_counter = 0
         counter = 0
         while counter < 10 and self.one_workers_alive():
             try:
@@ -351,13 +352,15 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
                     self.logger.info(f"Found new: {url}")
                 else:
                     self.update_found(url=url)
+                    found_counter += 1
                     self.logger.debug(f"Already in DB: {url}")
             except sqlite3.IntegrityError as e:
                 self.logger.exception(f"Error while insert updating url {url}", e)
             counter = 0
 
         self.sq_con.commit()
-        self.logger.info(f"Inserted {insert_counter} entries in sites table")
+        self.logger.info(f"Inserted {insert_counter} entries in sites table"
+                         f"Updated {found_counter} entries in sites table")
 
     def not_in_db(self, url):
         """
