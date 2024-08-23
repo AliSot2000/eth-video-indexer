@@ -95,6 +95,8 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
         if make_db:
             self.init_db()
 
+        self.test_indexes()
+
         self.to_download_queue = mp.Queue()
         self.found_url_queue = mp.Queue(maxsize=100)
         self.threads = []
@@ -121,6 +123,16 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
                 return True
 
         return False
+
+    def test_indexes(self):
+        """
+        Check if the indexes are present in the database. Otherwise, create them.
+        """
+        # Create the indexes to speed up the search
+        self.debug_execute("CREATE INDEX IF NOT EXISTS c ON sites (key)")
+        self.debug_execute("CREATE INDEX IF NOT EXISTS site_url_index ON sites (URL)")
+        self.debug_execute("CREATE INDEX IF NOT EXISTS site_parent_index ON sites (parent)")
+
 
     def init_db(self):
         """
