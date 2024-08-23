@@ -106,7 +106,6 @@ class EpisodeLoader(BaseSQliteDB):
 
         /category/subcategory/site.html
 
-
         :param index_db: Database result of the indexer.
         """
         super().__init__(index_db)
