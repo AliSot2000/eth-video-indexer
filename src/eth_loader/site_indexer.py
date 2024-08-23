@@ -374,8 +374,8 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
             counter = 0
 
         self.sq_con.commit()
-        self.logger.info(f"Inserted {insert_counter} entries in sites table"
-                         f"Updated {found_counter} entries in sites table")
+        self.logger.info(f"Inserted {insert_counter} entries in sites table")
+        self.logger.info(f"Updated {found_counter} entries in sites table")
 
     def not_in_db(self, url: str, video: int):
         """
