@@ -143,18 +143,18 @@ class ConcurrentETHSiteIndexer(BaseSQliteDB):
         self.debug_execute("CREATE TABLE sites "
                             "(key INTEGER PRIMARY KEY AUTOINCREMENT, "
                             "parent INTEGER, "
-                            "URL TEXT UNIQUE , "
+                            "URL TEXT, "
                             "IS_VIDEO INTEGER CHECK (IS_VIDEO IN (0, 1)),"
                             "found TEXT,"
-                            "last_seen TEXT);")  # found now is equivalent to 'last seen'
+                            "last_seen TEXT, UNIQUE (URL, IS_VIDEO));")  # found now is equivalent to 'last seen'
 
         # Create the indexes to speed up the search
-        # self.debug_execute("CREATE INDEX IF NOT EXISTS site_key_index ON sites (key)")
-        self.debug_execute("CREATE INDEX key_index ON site_sites (key)")
+        # self.debug_execute("CREATE INDEX IF NOT EXISTS c ON sites (key)")
+        self.debug_execute("CREATE INDEX site_key_index ON sites (key)")
         # self.debug_execute("CREATE INDEX IF NOT EXISTS site_url_index ON sites (URL)")
-        self.debug_execute("CREATE INDEX url_index ON site_sites (URL)")
+        self.debug_execute("CREATE INDEX site_url_index ON sites (URL)")
         # self.debug_execute("CREATE INDEX IF NOT EXISTS site_parent_index ON sites (parent)")
-        self.debug_execute("CREATE INDEX parent_index ON site_sites (parent)")
+        self.debug_execute("CREATE INDEX site_parent_index ON sites (parent)")
 
 
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
