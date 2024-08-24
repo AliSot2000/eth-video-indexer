@@ -280,7 +280,7 @@ class BetterStreamLoader(BaseSQliteDB):
 
             # Create index and assert they don't exist
             self.debug_execute("CREATE INDEX episodes_key_index ON episodes (key)")
-            self.debug_execute("CREATE INDEX episodes_url_parent_index ON episodes (URL, parent)")
+            self.debug_execute("CREATE INDEX episodes_url_parent_index ON episodes (URL)")
 
         # Create Indexes
         self.debug_execute("CREATE INDEX IF NOT EXISTS episodes_key_index ON episodes (key)")
