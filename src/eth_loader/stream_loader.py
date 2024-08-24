@@ -745,9 +745,7 @@ class BetterStreamLoader(BaseSQliteDB):
             return key
 
         else:
-            self.logger.debug(
-                f"Found {url} with resolution {resolution} inactive in db, reactivate and set everything else matching "
-                f"parent, url and series to deprecated")
+            self.logger.debug(f"Found {url} with resolution {resolution} inactive in db, reactivate")
 
             # update to not deprecated where the key matches.
             self.debug_execute(f"UPDATE streams SET deprecated = 0, last_seen = '{now}' WHERE key = {key}")
