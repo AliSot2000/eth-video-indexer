@@ -353,7 +353,6 @@ class EpisodeLoader(BaseSQliteDB):
                 self.debug_execute(f"UPDATE metadata SET last_seen = '{now}' WHERE key = {key}")
                 return
 
-
     def deprecate(self, dt: datetime.datetime):
         """
         Go through all entries of table. Make sure the parent has a last_seen newer than dt. If not, set deprecated to
