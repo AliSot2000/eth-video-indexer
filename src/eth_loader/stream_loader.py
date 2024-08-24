@@ -267,7 +267,7 @@ class BetterStreamLoader(BaseSQliteDB):
         # check if the episodes table exists already.
         self.debug_execute("SELECT name FROM sqlite_master WHERE type='table' AND name='episodes'")
 
-        # if it doesn't exist, create a results table.
+        # if it doesn't exist, create a episodes table.
         if self.sq_cur.fetchone() is None:
             self.logger.info("Creating episodes table")
             self.debug_execute("CREATE TABLE episodes "
