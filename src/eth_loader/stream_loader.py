@@ -627,7 +627,7 @@ class BetterStreamLoader(BaseSQliteDB):
                 # deprecate any entry matching only parent and url (i.e. not matching json)
                 # then update the one with the matching json
                 self.debug_execute(
-                    f"UPDATE episodes SET deprecated = 1 WHERE parent = {parent_id} AND URL = '{url}'")
+                    f"UPDATE episodes SET deprecated = 1 WHERE URL = '{url}'")
                 self.debug_execute(f"UPDATE episodes SET deprecated = 0, last_seen = '{now}' WHERE key = {key}")
                 return key
 
