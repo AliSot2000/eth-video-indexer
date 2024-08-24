@@ -583,7 +583,6 @@ class BetterStreamLoader(BaseSQliteDB):
         # exists:
         self.debug_execute(
             f"SELECT key, json, deprecated FROM episodes WHERE "
-            f"parent = {parent_id} AND "
             f"URL = '{url}'")
 
         results = self.sq_cur.fetchall()
@@ -600,17 +599,20 @@ class BetterStreamLoader(BaseSQliteDB):
 
             self.logger.debug(f"Inserting: {url}")
             self.debug_execute(
-                f"INSERT INTO episodes (parent, URL, json, found, last_seen) "
-                f"VALUES ({parent_id}, '{url}', '{json_dump_b64}', '{now}', '{now}')")
+                f"INSERT INTO episodes (URL, json, found, last_seen) "
+                f"VALUES ('{url}', '{json_dump_b64}', '{now}', '{now}')")
 
             self.debug_execute(f"SELECT key FROM episodes "
-                               f"WHERE parent = {parent_id} "
-                               f"AND URL = '{url}' "
+                               f"WHERE URL = '{url}' "
                                f"AND json = '{json_dump_b64}'"
                                f"AND found = '{now}'")
 
             result = self.sq_cur.fetchone()
             assert result is not None, "Just inserted the bloody thing"
+
+            self.debug_execute(f"INSERT OR IGNORE INTO metadata_episode_assoz (metadata_key, episode_key) "
+                               f"VALUES ({parent_id}, {result[0]})")
+
             return result[0]
 
         if key is not None:
