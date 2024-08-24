@@ -131,7 +131,8 @@ class EpisodeLoader(BaseSQliteDB):
         dts = dt.strftime("%Y-%m-%d %H:%M:%S")
 
         self.verify_args_table()
-        self.debug_execute(f"SELECT key, url FROM sites WHERE IS_VIDEO=1 AND datetime(last_seen) > datetime('{dts}')")
+        # Need to check >= since we're now using the same datetime for consistency.
+        self.debug_execute(f"SELECT key, url FROM sites WHERE IS_VIDEO=1 AND datetime(last_seen) >= datetime('{dts}')")
         self.urls = self.sq_cur.fetchall()
 
     def verify_args_table(self):
