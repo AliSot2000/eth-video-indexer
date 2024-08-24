@@ -620,7 +620,7 @@ class BetterStreamLoader(BaseSQliteDB):
 
             if dep:
                 # Deprecate everything and activate only selected row
-                self.logger.debug(
+                self.logger.info(
                     f"Found {url} inactive in db, reactivate and set everything else matching parent, "
                     f"url and series to deprecated")
 
