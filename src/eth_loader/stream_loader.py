@@ -383,7 +383,7 @@ class BetterStreamLoader(BaseSQliteDB):
 
         # self.deprecate_streams()
         self.sq_con.commit()
-        self.logger.info("DONE")
+        self.logger.info("DONE DOWNLOADING STERAMS AND EPISODES")
 
     def cleanup_workers(self):
         """
