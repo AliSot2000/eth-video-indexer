@@ -284,7 +284,21 @@ class BetterStreamLoader(BaseSQliteDB):
 
         # Create Indexes
         self.debug_execute("CREATE INDEX IF NOT EXISTS episodes_key_index ON episodes (key)")
-        self.debug_execute("CREATE INDEX IF NOT EXISTS episodes_url_parent_index ON episodes (URL, parent)")
+        self.debug_execute("CREATE INDEX IF NOT EXISTS episodes_url_parent_index ON episodes (URL)")
+
+        # Create the association table from episode to metadata (can be difficult)
+        self.debug_execute("SELECT name FROM sqlite_master WHERE type='table' AND name='metadata_episode_assoz'")
+        if self.sq_cur.fetchone() is None:
+            self.logger.info("Creating metadata episode assoz table")
+            self.debug_execute("CREATE TABLE metadata_episode_assoz "
+                                "(key INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                "metadata_key INTEGER REFERENCES metadata(key), "
+                                "episode_key INTEGER REFERENCES episodes(key), UNIQUE (metadata_key, episode_key))")
+            self.debug_execute("CREATE INDEX mea_index_keys ON metadata_episode_assoz (metadata_key, episode_key)")
+
+        # Create Index
+        self.debug_execute("CREATE INDEX IF NOT EXISTS mea_index_keys "
+                           "ON metadata_episode_assoz (metadata_key, episode_key)")
 
         # check that the streams table exists
         self.debug_execute("SELECT name FROM sqlite_master WHERE type='table' AND name='streams'")
