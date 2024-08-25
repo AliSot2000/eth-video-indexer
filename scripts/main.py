@@ -53,19 +53,26 @@ def sanity_check(db: str):
     print(f"required {(end - start).total_seconds()}s")
 
 if __name__ == "__main__":
-    debug_path = os.path.join(os.path.dirname(__file__), "logging_debug.yaml")
-    production_path = os.path.join(os.path.dirname(__file__), "logging_production.yaml")
-
-    setup_logging(default_path=debug_path)
-    # setup_logging(default_path=production_path)
+    debug = True
+    if debug:
+        debug_path = os.path.join(os.path.dirname(__file__), "logging_debug.yaml")
+        setup_logging(default_path=debug_path)
+        print("DEBUGGING")
+    else:
+        production_path = os.path.join(os.path.dirname(__file__), "logging_production.yaml")
+        setup_logging(default_path=production_path)
+        print("PRODUCTION")
 
     global_start = datetime.datetime.now()
-    path = "/home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/scripts/seq_sites_b64.db"
-    # path = "/home/alisot2000/Documents/01_ReposNCode/ETH-Lecture-Indexer/scripts/seq_sites.db"
+    is_b64 = True
+    if is_b64:
+        path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites_b64.db"
+    else:
+        path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites.db"
 
-    perform_index_of_sites(path)
-    download_all_metadata(path, global_start, b64=True)
-    download_all_stream_data(path, global_start, b64=True)
+    perform_index_of_sites(path, global_start)
+    download_all_metadata(path, global_start, b64=is_b64)
+    download_all_stream_data(path, global_start, b64=is_b64)
 
     global_end = datetime.datetime.now()
     print(f"Overall Time for complete indexing: {(global_end - global_start).total_seconds():.02f}")
