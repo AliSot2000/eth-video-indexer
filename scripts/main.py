@@ -4,6 +4,7 @@ import os.path
 from eth_loader.site_indexer import ConcurrentETHSiteIndexer
 from eth_loader.metadata_loader import EpisodeLoader
 from eth_loader.stream_loader import BetterStreamLoader, SpecLogin
+from eth_loader.sanity_check import SanityCheck
 from secrets import user_name, password, spec_login
 from logs import setup_logging
 
@@ -43,6 +44,13 @@ def download_all_stream_data(db: str, index_start: datetime.datetime, b64: bool 
     end = datetime.datetime.now()
     print(f"required {(end - start).total_seconds()}s")
 
+
+def sanity_check(db: str):
+    sc = SanityCheck(db)
+    start = datetime.datetime.now()
+    sc.check_all()
+    end = datetime.datetime.now()
+    print(f"required {(end - start).total_seconds()}s")
 
 if __name__ == "__main__":
     debug_path = os.path.join(os.path.dirname(__file__), "logging_debug.yaml")
