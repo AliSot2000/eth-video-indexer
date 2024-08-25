@@ -7,14 +7,14 @@ from eth_loader.stream_loader import BetterStreamLoader, SpecLogin
 from secrets import user_name, password, spec_login
 from logs import setup_logging
 
-
 workers = 10
 
-def perform_index_of_sites(db: str):
+
+def perform_index_of_sites(db: str, dt: datetime.datetime):
     global workers
     print("Started")
     index_start = datetime.datetime.now()
-    eid = ConcurrentETHSiteIndexer(db)
+    eid = ConcurrentETHSiteIndexer(db_file=db, start_dt=dt)
     eid.index_video_eth(threads=workers)
     eid.gen_parent()
     end = datetime.datetime.now()
