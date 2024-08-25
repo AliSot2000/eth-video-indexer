@@ -15,6 +15,7 @@ class SanityCheck(BaseSQliteDB):
         self.check_metadata_table()
         self.check_episode_table()
         self.check_stream_table()
+
         self.check_metadata_episode_assoz_table()
         self.check_episode_stream_assoz_table()
 
