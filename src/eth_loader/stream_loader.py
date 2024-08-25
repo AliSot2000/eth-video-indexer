@@ -334,6 +334,12 @@ class BetterStreamLoader(BaseSQliteDB):
                                 "episode_key INTEGER REFERENCES episodes(key), "
                                 "stream_key INTEGER REFERENCES streams(key), UNIQUE (episode_key, stream_key))")
 
+            self.debug_execute("CREATE INDEX esa_index_keys ON episode_stream_assoz (episode_key, stream_key)")
+        self.debug_execute("CREATE INDEX IF NOT EXISTS esa_index_keys "
+                           "ON episode_stream_assoz (episode_key, stream_key)")
+
+
+
 
     def spawn(self, threads: int = 100):
         """
