@@ -56,19 +56,19 @@ class SanityCheck(BaseSQliteDB):
         """
         Check the metadata table for dangling records
         """
-        pass
+        self.logger.info("No Sanity Checks for metadata table")
 
     def check_episode_table(self):
         """
         Check the episode table for dangling records
         """
-        pass
+        self.logger.info("No Sanity Checks for episode table")
 
     def check_stream_table(self):
         """
         Check the stream table for dangling records
         """
-        pass
+        self.logger.info("No Sanity Checks for stream table")
 
     def check_metadata_episode_assoz_table(self):
         """
