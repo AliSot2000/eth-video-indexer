@@ -76,12 +76,20 @@ class SanityCheck(BaseSQliteDB):
         """
         self.debug_execute("SELECT COUNT(key) FROM metadata_episode_assoz "
                            "WHERE metadata_episode_assoz.episode_key NOT IN (SELECT key FROM episodes)")
-        print(f"Found {self.sq_cur.fetchone()[0]} dangling episode keys in metadata_episode_assoz")
+        cnt = self.sq_cur.fetchone()[0]
+        if cnt > 0:
+            self.logger.warning(f"Found {cnt} dangling episode keys in metadata_episode_assoz")
+        else:
+            self.logger.info(f"Found no dangling episode keys in metadata_episode_assoz")
 
         # Search based on metadata_key
         self.debug_execute("SELECT COUNT(key) FROM metadata_episode_assoz "
                            "WHERE metadata_episode_assoz.metadata_key NOT IN (SELECT key FROM metadata)")
-        print(f"Found {self.sq_cur.fetchone()[0]} dangling metadata keys in metadata_episode_assoz")
+        cnt = self.sq_cur.fetchone()[0]
+        if cnt > 0:
+            self.logger.warning(f"Found {cnt} dangling metadata keys in metadata_episode_assoz")
+        else:
+            self.logger.info(f"Found no dangling metadata keys in metadata_episode_assoz")
 
     def check_episode_stream_assoz_table(self):
         """
@@ -89,11 +97,18 @@ class SanityCheck(BaseSQliteDB):
         """
         self.debug_execute("SELECT COUNT(key) FROM episode_stream_assoz "
                            "WHERE episode_stream_assoz.stream_key NOT IN (SELECT key FROM streams)")
-
-        self.logger.warning(f"Found {self.sq_cur.fetchone()[0]} dangling stream keys in episode_stream_assoz")
+        cnt = self.sq_cur.fetchone()[0]
+        if cnt > 0:
+            self.logger.warning(f"Found {self.sq_cur.fetchone()[0]} dangling stream keys in episode_stream_assoz")
+        else:
+            self.logger.info(f"Found no dangling stream keys in episode_stream_assoz")
 
         # Search based on episode_key
         self.debug_execute("SELECT COUNT(key) FROM episode_stream_assoz "
                            "WHERE episode_stream_assoz.episode_key NOT IN (SELECT key FROM episodes)")
-        self.logger.warning(f"Found {self.sq_cur.fetchone()[0]} dangling episode keys in episode_stream_assoz")
+        cnt = self.sq_cur.fetchone()[0]
+        if cnt > 0:
+            self.logger.warning(f"Found {self.sq_cur.fetchone()[0]} dangling episode keys in episode_stream_assoz")
+        else:
+            self.logger.info(f"Found no dangling episode keys in episode_stream_assoz")
 
