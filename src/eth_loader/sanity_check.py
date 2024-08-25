@@ -112,3 +112,15 @@ class SanityCheck(BaseSQliteDB):
         else:
             self.logger.info(f"Found no dangling episode keys in episode_stream_assoz")
 
+
+if __name__ == "__main__":
+    l = logging.getLogger("sanity_checker")
+    l.setLevel(logging.DEBUG)
+    h = logging.StreamHandler()
+    h.setLevel(logging.DEBUG)
+    l.addHandler(h)
+    l.propagate = False
+    path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites.db"
+
+    sc = SanityCheck(path)
+    sc.check_all()
