@@ -78,3 +78,11 @@ loggers:
             - thread_file_handler
             - error_file_handler
         propagate: no
+
+    sanity_checker:
+        level: DEBUG
+        handlers:
+            - console_info
+            - thread_file_handler
+            - error_file_handler
+        propagate: no
