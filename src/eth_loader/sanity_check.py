@@ -74,12 +74,12 @@ class SanityCheck(BaseSQliteDB):
         """
         Check the assoz table for dangling records
         """
-        self.logger.warning("SELECT COUNT(key) FROM metadata_episode_assoz "
+        self.debug_execute("SELECT COUNT(key) FROM metadata_episode_assoz "
                            "WHERE metadata_episode_assoz.episode_key NOT IN (SELECT key FROM episodes)")
         print(f"Found {self.sq_cur.fetchone()[0]} dangling episode keys in metadata_episode_assoz")
 
         # Search based on metadata_key
-        self.logger.warning("SELECT COUNT(key) FROM metadata_episode_assoz "
+        self.debug_execute("SELECT COUNT(key) FROM metadata_episode_assoz "
                            "WHERE metadata_episode_assoz.metadata_key NOT IN (SELECT key FROM metadata)")
         print(f"Found {self.sq_cur.fetchone()[0]} dangling metadata keys in metadata_episode_assoz")
 
@@ -93,7 +93,7 @@ class SanityCheck(BaseSQliteDB):
         self.logger.warning(f"Found {self.sq_cur.fetchone()[0]} dangling stream keys in episode_stream_assoz")
 
         # Search based on episode_key
-        self.logger.warning("SELECT COUNT(key) FROM episode_stream_assoz "
+        self.debug_execute("SELECT COUNT(key) FROM episode_stream_assoz "
                            "WHERE episode_stream_assoz.episode_key NOT IN (SELECT key FROM episodes)")
         self.logger.warning(f"Found {self.sq_cur.fetchone()[0]} dangling episode keys in episode_stream_assoz")
 
