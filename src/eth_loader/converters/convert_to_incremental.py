@@ -346,8 +346,8 @@ class ConvToIncremental(BaseSQliteDB):
             f"SELECT key, json, last_seen FROM {tbl} WHERE URL = '{url}' ORDER BY DATETIME(found) ASC")
         raw = self.sq_cur.fetchall()
 
-        # print(f"Converting {tbl} for {url} with {len(raw)} entries", flush=True, end="\r")
-        print(f"Converting {tbl} for {url} with {len(raw)} entries")
+        print(f"Converting {tbl} for {url} with {len(raw)} entries", flush=True, end="\r")
+        # print(f"Converting {tbl} for {url} with {len(raw)} entries")
 
         # parse the rows
         if not self.b64:
