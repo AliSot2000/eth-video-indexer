@@ -276,7 +276,8 @@ class BetterStreamLoader(BaseSQliteDB):
                                 "json TEXT,"
                                 "deprecated INTEGER DEFAULT 0 CHECK (episodes.deprecated >= 0 AND episodes.deprecated <= 1),"
                                 "found TEXT,"
-                                "last_seen TEXT)")
+                                "last_seen TEXT,"
+                                "record_type CHECK (episodes.record_type IN (0, 1, 2)))")
 
             # Create index and assert they don't exist
             self.debug_execute("CREATE INDEX episodes_key_index ON episodes (key)")
