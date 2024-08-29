@@ -3,7 +3,7 @@ import multiprocessing as mp
 import os
 import queue
 import time
-from typing import List, Dict
+from typing import List, Dict, Union
 
 import jsondiff as jd
 
@@ -106,7 +106,7 @@ class ConvToIncremental(BaseSQliteDB):
     proc_count: int
     use_mp: bool = True
 
-    workers: List[mp.Process] | None = None
+    workers: Union[List[mp.Process],  None] = None
     cmd_queue: mp.Queue
     result_queue: mp.Queue
 
