@@ -516,4 +516,5 @@ if __name__ == "__main__":
 
     c = ConvToIncremental(db_path=path, b64=True)
     c.convert()
+    c.sq_con.commit()
     c.sanity_check()
