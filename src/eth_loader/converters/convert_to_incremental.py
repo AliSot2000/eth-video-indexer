@@ -296,6 +296,9 @@ class ConvToIncremental(BaseSQliteDB):
 
 
     def _sequential_convert(self, tbl: str):
+        """
+        Sequentially convert an sanity check all urls.
+        """
         self.debug_execute(f"SELECT URL FROM {tbl} GROUP BY URL HAVING COUNT(URL) > 1 "
                            f"ORDER BY COUNT(URL) DESC, LENGTH(json) DESC")
         urls_raw = self.sq_cur.fetchall()
