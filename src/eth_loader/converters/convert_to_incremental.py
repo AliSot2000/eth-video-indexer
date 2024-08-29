@@ -510,7 +510,10 @@ class ConvToIncremental(BaseSQliteDB):
 
 if __name__ == "__main__":
     # path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites.db"
-    path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites_b64.db"
+    # path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites_b64.db"
+    # path = "/home/asotoude/projects/eth-video-indexer/scripts/seq_sites.db"
+    # path = "/home/asotoude/projects/eth-video-indexer/scripts/seq_sites_b64.db"
+
     c = ConvToIncremental(db_path=path, b64=True)
     c.convert()
     c.sanity_check()
