@@ -433,7 +433,7 @@ class ConvToIncremental(BaseSQliteDB):
         self._check_records(sql_stmt="SELECT url "
                            "FROM metadata "
                            "GROUP BY URL HAVING "
-                                     "AND SUM(CASE WHEN record_type = 1 THEN 1 ELSE 0 END) > 0" # Has diff
+                                     "AND SUM(CASE WHEN record_type = 1 THEN 1 ELSE 0 END) > 0 " # Has diff
                                      "AND SUM(CASE WHEN record_type = 2 THEN 1 ELSE 0 END) = 0;",
                             on_success="No urls with diff and no final record found in metadata",
                             on_fail="Found urls with diff and no final record in metadata")
@@ -441,7 +441,7 @@ class ConvToIncremental(BaseSQliteDB):
         self._check_records(sql_stmt="SELECT url "
                            "FROM episodes "
                            "GROUP BY URL HAVING "
-                                     "AND SUM(CASE WHEN record_type = 1 THEN 1 ELSE 0 END) > 0" # Has diff
+                                     "AND SUM(CASE WHEN record_type = 1 THEN 1 ELSE 0 END) > 0 " # Has diff
                                      "AND SUM(CASE WHEN record_type = 2 THEN 1 ELSE 0 END) = 0;",
                             on_success="No urls with diff and no final record found in episodes",
                             on_fail="Found urls with diff and no final record in episodes")
