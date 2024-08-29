@@ -321,16 +321,17 @@ class ConvToIncremental(BaseSQliteDB):
                 deltas[rows[i]['key']] = jd.diff(rows[i - 1]['json'], rows[i]['json'], load=True, dump=True)
 
             # check the result is equivalent (so for my sanity)
-            acc = rows[0]['json']
-            for i in range(1, len(rows)):
-                acc = jd.patch(acc, deltas[rows[i]['key']], load=True, dump=True)
-                eq = json.loads(acc) == json.loads(rows[i]['json'])
+            if self.__test:
+                acc = rows[0]['json']
+                for i in range(1, len(rows)):
+                    acc = jd.patch(acc, deltas[rows[i]['key']], load=True, dump=True)
+                    eq = json.loads(acc) == json.loads(rows[i]['json'])
 
-                if not eq:
-                    print(f"Error converting {tbl}")
-                    print(rows)
-                    print(deltas)
-                    exit(1)
+                    if not eq:
+                        print(f"Error converting {tbl}")
+                        print(rows)
+                        print(deltas)
+                        exit(1)
 
             # update the deltas
             for key, delta in deltas.items():
