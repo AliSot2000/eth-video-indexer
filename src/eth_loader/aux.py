@@ -16,3 +16,12 @@ def from_b64(s: str):
     :return:
     """
     return b64.b64decode(s.encode("utf-8")).decode("utf-8")
+
+
+def escape_sql(s: str):
+    """
+    Escape a string for sql
+    :param s: string to escape
+    :return:
+    """
+    return s.replace("'", "''")
