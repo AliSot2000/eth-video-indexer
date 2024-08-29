@@ -385,17 +385,125 @@ class ConvToIncremental(BaseSQliteDB):
         """
         self.generic_table_converter("episodes")
 
+    def _check_records(self, sql_stmt: str, on_success: str, on_fail: str):
+        """
+        SQL statement should return rows of failures. If no rows are returned, the on_success statement is printed,
+        otherwise the on_fail statement is printed.
+        """
+        self.debug_execute(sql_stmt)
+        res = self.sq_cur.fetchall()
+
+        if len(res) == 0:
+            print(on_success)
+        else:
+            print(on_fail)
+            print(f"Printing {len(res)} results which failed.")
+            for r in res:
+                print(r)
+
     def sanity_check(self):
+
+        # Check no initial
+        self._check_records(sql_stmt="SELECT url "
+                           "FROM metadata "
+                           "GROUP BY URL HAVING SUM(CASE WHEN record_type = 0 THEN 1 ELSE 0 END) = 0;",
+                            on_success="No urls with no initial record found in metadata",
+                            on_fail="Found urls with no initial record in metadata")
+
+        self._check_records(sql_stmt="SELECT url "
+                           "FROM episodes "
+                           "GROUP BY URL HAVING SUM(CASE WHEN record_type = 0 THEN 1 ELSE 0 END) = 0;",
+                            on_success="No urls with no initial record found in episodes",
+                            on_fail="Found urls with no initial record in episodes")
+
+        # more than one initial
+        self._check_records(sql_stmt="SELECT url "
+                           "FROM metadata "
+                           "GROUP BY URL HAVING SUM(CASE WHEN record_type = 0 THEN 1 ELSE 0 END) > 1;",
+                            on_success="No urls with more than one initial record found in metadata",
+                            on_fail="Found urls with more than one initial record in metadata")
+
+        self._check_records(sql_stmt="SELECT url "
+                           "FROM episodes "
+                           "GROUP BY URL HAVING SUM(CASE WHEN record_type = 0 THEN 1 ELSE 0 END) > 1;",
+                            on_success="No urls with more than one initial record found in episodes",
+                            on_fail="Found urls with more than one initial record in episodes")
+
+        # Diff but no final
+        self._check_records(sql_stmt="SELECT url "
+                           "FROM metadata "
+                           "GROUP BY URL HAVING "
+                                     "AND SUM(CASE WHEN record_type = 1 THEN 1 ELSE 0 END) > 0" # Has diff
+                                     "AND SUM(CASE WHEN record_type = 2 THEN 1 ELSE 0 END) = 0;",
+                            on_success="No urls with diff and no final record found in metadata",
+                            on_fail="Found urls with diff and no final record in metadata")
+
+        self._check_records(sql_stmt="SELECT url "
+                           "FROM episodes "
+                           "GROUP BY URL HAVING "
+                                     "AND SUM(CASE WHEN record_type = 1 THEN 1 ELSE 0 END) > 0" # Has diff
+                                     "AND SUM(CASE WHEN record_type = 2 THEN 1 ELSE 0 END) = 0;",
+                            on_success="No urls with diff and no final record found in episodes",
+                            on_fail="Found urls with diff and no final record in episodes")
+
+        # more than one final
+        self._check_records(sql_stmt="SELECT url "
+                           "FROM metadata "
+                           "GROUP BY URL HAVING SUM(CASE WHEN record_type = 2 THEN 1 ELSE 0 END) > 1;",
+                            on_success="No urls with more than one final record found in metadata",
+                            on_fail="Found urls with more than one final record in metadata")
+
+        self._check_records(sql_stmt="SELECT url "
+                           "FROM episodes "
+                           "GROUP BY URL HAVING SUM(CASE WHEN record_type = 2 THEN 1 ELSE 0 END) > 1;",
+                            on_success="No urls with more than one final record found in episodes",
+                            on_fail="Found urls with more than one final record in episodes")
+
+        # no diff but more than two values per url
+        self._check_records(sql_stmt="SELECT url "
+                           "FROM metadata "
+                           "GROUP BY URL HAVING COUNT(*) > 1 AND SUM(CASE WHEN record_type = 1 THEN 1 ELSE 0 END) = 0;",
+                            on_success="No urls with no diff but more than one records found in metadata",
+                            on_fail="Found urls with no diff but more than one records in metadata")
+
+        self._check_records(sql_stmt="SELECT url "
+                           "FROM episodes "
+                           "GROUP BY URL HAVING COUNT(*) > 1 AND SUM(CASE WHEN record_type = 1 THEN 1 ELSE 0 END) = 0;",
+                            on_success="No urls with no diff but more than one records found in episodes",
+                            on_fail="Found urls with no diff but more than one records in episodes")
+
+        # Check no links to final records
+        self._check_records(sql_stmt="SELECT * FROM metadata_episode_assoz "
+                                     "WHERE metadata_key IN (SELECT key FROM metadata WHERE record_type = 2) "
+                                     "OR episode_key IN (SELECT key FROM episodes WHERE record_type = 2);",
+                            on_success="No links to final record in metadata_episode_assoz tables",
+                            on_fail="Found links to final record in metadata_episode_assoz tables")
+
+        self._check_records(sql_stmt="SELECT * FROM episode_stream_assoz "
+                                     "WHERE episode_key IN (SELECT key FROM episodes WHERE record_type = 2);",
+                            on_success="No links to final record in episode_stream_assoz tables",
+                            on_fail="Found links to final record in episode_stream_assoz tables")
+
+        # check final records aren't found
+        self._check_records(sql_stmt="SELECT key FROM metadata WHERE record_type = 2 AND found IS NOT NULL;",
+                            on_success="All final records have no found date in metadata table",
+                            on_fail="Found final records with a found date in metadata table")
+
+        self._check_records(sql_stmt="SELECT key FROM episodes WHERE record_type = 2 AND found IS NOT NULL;",
+                            on_success="All final records have no found date in episodes table",
+                            on_fail="Found final records with a found date in episodes table")
+
+        # if there's exactly one entry for a given url, the type is initial not final
+        self._check_records(sql_stmt="SELECT URL FROM metadata GROUP BY URL HAVING COUNT(*) = 1 WHERE record_type != 0;",
+                            on_success="All single URLS have an initial record in metadata table",
+                            on_fail="Found single URLS have no initial record in metadata table")
+
+        self._check_records(sql_stmt="SELECT URL FROM episodes GROUP BY URL HAVING COUNT(*) = 1 WHERE record_type != 0;",
+                            on_success="All single URLS have an initial record in episodes table",
+                            on_fail="Found single URLS have no initial record in episodes table")
+
         # TODO sanity check
         #    Checks:
-        #     - no initial
-        #     - more than one initial
-        #     - no final (iff exists a diff)
-        #     - more than one final
-        #     - no diff but more than two values per url
-        #     - no links leaving or going to final in assoz tables.
-        #     - no final has a found date
-        #     - if there's exactly one entry for a given url, the type is initial not final
         #     - if there's a diff, the diff and the incremental must be deprecated
         pass
 
@@ -405,3 +513,4 @@ if __name__ == "__main__":
     path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites_b64.db"
     c = ConvToIncremental(db_path=path, b64=True)
     c.convert()
+    c.sanity_check()
