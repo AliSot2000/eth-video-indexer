@@ -153,6 +153,7 @@ class EpisodeLoader(BaseSQliteDB):
         self.debug_execute("SELECT name FROM sqlite_master WHERE type='table' AND name='metadata'")
 
         if self.sq_cur.fetchone() is None:
+            # Record Types are 0, initial, 1 differential, 2 current final
             self.debug_execute("CREATE TABLE metadata "
                                 "(key INTEGER PRIMARY KEY AUTOINCREMENT, "
                                 "parent INTEGER, "  # Reference to the entry in the the sites table
@@ -160,7 +161,8 @@ class EpisodeLoader(BaseSQliteDB):
                                 "json TEXT,"
                                 "deprecated INTEGER DEFAULT 0 CHECK (metadata.deprecated IN (0, 1)),"
                                 "found TEXT,"
-                                "last_seen TEXT)")
+                                "last_seen TEXT,"
+                                "record_type CHECK (metadata.record_type IN (0, 1, 2)))")
             self.debug_execute("CREATE INDEX metadata_key_index ON metadata (key)")
             self.debug_execute("CREATE INDEX metadata_url_parent_index ON metadata (URL, parent)")
 
