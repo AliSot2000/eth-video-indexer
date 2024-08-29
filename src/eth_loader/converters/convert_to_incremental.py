@@ -151,7 +151,7 @@ class ConvToIncremental(BaseSQliteDB):
         print(f"Found {cnt} URLs that only appear once in metadata, updating type to initial")
 
         # Perform the update
-        self.debug_execute("UPDATE metadata SET record_type = 1 WHERE URL IN "
+        self.debug_execute("UPDATE metadata SET record_type = 0 WHERE URL IN "
                            "(SELECT URL FROM metadata GROUP BY URL HAVING COUNT(URL) = 1)")
 
         # Get the count for logging
@@ -160,7 +160,7 @@ class ConvToIncremental(BaseSQliteDB):
         print(f"Found {cnt} URLs that only appear once in episodes, updating type to initial")
 
         # Perform the update
-        self.debug_execute("UPDATE episodes SET record_type = 1 WHERE URL IN "
+        self.debug_execute("UPDATE episodes SET record_type = 0 WHERE URL IN "
                            "(SELECT URL FROM episodes GROUP BY URL HAVING COUNT(URL) = 1)")
 
     def _start_workers(self):
