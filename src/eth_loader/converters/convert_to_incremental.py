@@ -406,26 +406,26 @@ class ConvToIncremental(BaseSQliteDB):
         # Check no initial
         self._check_records(sql_stmt="SELECT url "
                            "FROM metadata "
-                           "GROUP BY URL HAVING SUM(CASE WHEN record_type = 0 THEN 1 ELSE 0 END) = 0;",
+                           "GROUP BY URL HAVING COUNT(*) > 1 AND SUM(CASE metadata.record_type WHEN 0 THEN 1 ELSE 0 END) = 0;",
                             on_success="No urls with no initial record found in metadata",
                             on_fail="Found urls with no initial record in metadata")
 
         self._check_records(sql_stmt="SELECT url "
                            "FROM episodes "
-                           "GROUP BY URL HAVING SUM(CASE WHEN record_type = 0 THEN 1 ELSE 0 END) = 0;",
+                           "GROUP BY URL HAVING COUNT(*) > 1 AND SUM(CASE episodes.record_type WHEN 0 THEN 1 ELSE 0 END) = 0;",
                             on_success="No urls with no initial record found in episodes",
                             on_fail="Found urls with no initial record in episodes")
 
         # more than one initial
         self._check_records(sql_stmt="SELECT url "
                            "FROM metadata "
-                           "GROUP BY URL HAVING SUM(CASE WHEN record_type = 0 THEN 1 ELSE 0 END) > 1;",
+                           "GROUP BY URL HAVING SUM (CASE metadata.record_type WHEN 0 THEN 1 ELSE 0 END) > 1;",
                             on_success="No urls with more than one initial record found in metadata",
                             on_fail="Found urls with more than one initial record in metadata")
 
         self._check_records(sql_stmt="SELECT url "
                            "FROM episodes "
-                           "GROUP BY URL HAVING SUM(CASE WHEN record_type = 0 THEN 1 ELSE 0 END) > 1;",
+                           "GROUP BY URL HAVING SUM (CASE episodes.record_type WHEN 0 THEN 1 ELSE 0 END) > 1;",
                             on_success="No urls with more than one initial record found in episodes",
                             on_fail="Found urls with more than one initial record in episodes")
 
@@ -433,42 +433,44 @@ class ConvToIncremental(BaseSQliteDB):
         self._check_records(sql_stmt="SELECT url "
                            "FROM metadata "
                            "GROUP BY URL HAVING "
-                                     "AND SUM(CASE WHEN record_type = 1 THEN 1 ELSE 0 END) > 0 " # Has diff
-                                     "AND SUM(CASE WHEN record_type = 2 THEN 1 ELSE 0 END) = 0;",
+                                     "SUM (CASE metadata.record_type WHEN 1 THEN 1 ELSE 0 END) > 0 " # Has diff
+                                     "AND SUM (CASE metadata.record_type WHEN 2 THEN 1 ELSE 0 END) = 0;",
                             on_success="No urls with diff and no final record found in metadata",
                             on_fail="Found urls with diff and no final record in metadata")
 
         self._check_records(sql_stmt="SELECT url "
                            "FROM episodes "
                            "GROUP BY URL HAVING "
-                                     "AND SUM(CASE WHEN record_type = 1 THEN 1 ELSE 0 END) > 0 " # Has diff
-                                     "AND SUM(CASE WHEN record_type = 2 THEN 1 ELSE 0 END) = 0;",
+                                     "SUM (CASE episodes.record_type WHEN 1 THEN 1 ELSE 0 END) > 0 " # Has diff
+                                     "AND SUM (CASE episodes.record_type WHEN 2 THEN 1 ELSE 0 END) = 0;",
                             on_success="No urls with diff and no final record found in episodes",
                             on_fail="Found urls with diff and no final record in episodes")
 
         # more than one final
         self._check_records(sql_stmt="SELECT url "
                            "FROM metadata "
-                           "GROUP BY URL HAVING SUM(CASE WHEN record_type = 2 THEN 1 ELSE 0 END) > 1;",
+                           "GROUP BY URL HAVING SUM (CASE metadata.record_type WHEN 2 THEN 1 ELSE 0 END) > 1;",
                             on_success="No urls with more than one final record found in metadata",
                             on_fail="Found urls with more than one final record in metadata")
 
         self._check_records(sql_stmt="SELECT url "
                            "FROM episodes "
-                           "GROUP BY URL HAVING SUM(CASE WHEN record_type = 2 THEN 1 ELSE 0 END) > 1;",
+                           "GROUP BY URL HAVING SUM (CASE episodes.record_type WHEN 2 THEN 1 ELSE 0 END) > 1;",
                             on_success="No urls with more than one final record found in episodes",
                             on_fail="Found urls with more than one final record in episodes")
 
         # no diff but more than two values per url
         self._check_records(sql_stmt="SELECT url "
                            "FROM metadata "
-                           "GROUP BY URL HAVING COUNT(*) > 1 AND SUM(CASE WHEN record_type = 1 THEN 1 ELSE 0 END) = 0;",
+                           "GROUP BY URL HAVING COUNT(*) > 1 "
+                                     "AND SUM (CASE metadata.record_type WHEN 1 THEN 1 ELSE 0 END) = 0;",
                             on_success="No urls with no diff but more than one records found in metadata",
                             on_fail="Found urls with no diff but more than one records in metadata")
 
         self._check_records(sql_stmt="SELECT url "
                            "FROM episodes "
-                           "GROUP BY URL HAVING COUNT(*) > 1 AND SUM(CASE WHEN record_type = 1 THEN 1 ELSE 0 END) = 0;",
+                           "GROUP BY URL HAVING COUNT(*) > 1 "
+                                     "AND SUM (CASE episodes.record_type WHEN 1 THEN 1 ELSE 0 END) = 0;",
                             on_success="No urls with no diff but more than one records found in episodes",
                             on_fail="Found urls with no diff but more than one records in episodes")
 
@@ -494,11 +496,11 @@ class ConvToIncremental(BaseSQliteDB):
                             on_fail="Found final records with a found date in episodes table")
 
         # if there's exactly one entry for a given url, the type is initial not final
-        self._check_records(sql_stmt="SELECT URL FROM metadata GROUP BY URL HAVING COUNT(*) = 1 WHERE record_type != 0;",
+        self._check_records(sql_stmt="SELECT URL FROM metadata WHERE record_type != 0 GROUP BY URL HAVING COUNT(*) = 1;",
                             on_success="All single URLS have an initial record in metadata table",
                             on_fail="Found single URLS have no initial record in metadata table")
 
-        self._check_records(sql_stmt="SELECT URL FROM episodes GROUP BY URL HAVING COUNT(*) = 1 WHERE record_type != 0;",
+        self._check_records(sql_stmt="SELECT URL FROM episodes WHERE record_type != 0 GROUP BY URL HAVING COUNT(*) = 1;",
                             on_success="All single URLS have an initial record in episodes table",
                             on_fail="Found single URLS have no initial record in episodes table")
 
