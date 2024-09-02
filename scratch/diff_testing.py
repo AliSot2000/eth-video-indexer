@@ -3,6 +3,9 @@ from eth_loader.base_sql import BaseSQliteDB
 import json
 import difflib
 
+from scratch.diff_base import b_reconstructed
+
+
 class Test(BaseSQliteDB):
     def __init__(self, db_path: str):
         super().__init__(db_path)
@@ -45,7 +48,8 @@ class Test(BaseSQliteDB):
 
 
 
-path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites.db"
+# path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites.db"
+path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites_hash_test.db"
 
 if __name__ == "__main__":
     t = Test(path)
@@ -68,7 +72,11 @@ if __name__ == "__main__":
         delta2 = jd.diff(snapshot_1, snapshot_2, load=True, dump=True)
         print(delta2)
         snapshot2_reconstructed = jd.patch(snapshot_1, delta2, load=True, dump=True)
-        print("Reconstructed  == Actual: ", json.dumps(json.loads(snapshot2_reconstructed)) == json.dumps(json.loads(snapshot_2)))
+        a = json.loads(snapshot2_reconstructed)
+        b = json.loads(snapshot_2)
+        a_hash = hash(a)
+        b_hash = hash(b)
+        print("Reconstructed  == Actual: ", a == b)
         print("Similarity: ", jd.similarity(snapshot_2, snapshot2_reconstructed, load=True))
         print(snapshot_2)
         print(snapshot2_reconstructed)
