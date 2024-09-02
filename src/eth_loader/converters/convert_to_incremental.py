@@ -128,7 +128,6 @@ class ConvToIncremental(BaseSQliteDB):
         self.convert_singles()
         self.convert_multiples_metadata()
         self.convert_multiples_episodes()
-        self.sanity_check()
 
     def prepare_tables(self):
         """
