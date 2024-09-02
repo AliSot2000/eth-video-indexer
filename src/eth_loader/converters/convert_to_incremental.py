@@ -503,6 +503,9 @@ class ConvToIncremental(BaseSQliteDB):
                             on_success="All single URLS have an initial record in episodes table",
                             on_fail="Found single URLS have no initial record in episodes table")
 
+        # doesn't fully capture it
+        # SELECT URL FROM metadata WHERE deprecated = 0 GROUP BY URL HAVING COUNT(*) > 2
+
         # TODO sanity check
         #    Checks:
         #     - if there's a diff, the diff and the incremental must be deprecated
