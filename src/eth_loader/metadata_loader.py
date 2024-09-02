@@ -96,7 +96,7 @@ def handler(worker_nr: int, command_queue: mp.Queue, result_queue: mp.Queue):
 
 
 class EpisodeLoader(BaseSQliteDB):
-    def __init__(self, index_db: str, use_base64: bool = False):
+    def __init__(self, index_db: str, start_dt: datetime.datetime, use_base64: bool = False):
         """
         Initialise downloader function. Provide the function either with a file containing valid urls or a list of urls.
 
@@ -120,6 +120,7 @@ class EpisodeLoader(BaseSQliteDB):
 
         self.genera_cookie = None
         self.ub64 = use_base64
+        self.start_dt = start_dt
 
         self.check_results_table()
 
@@ -311,7 +312,7 @@ class EpisodeLoader(BaseSQliteDB):
         """
         # exists:
         self.debug_execute(f"SELECT key, json, deprecated FROM metadata WHERE parent = {parent_id} AND URL = '{url}'")
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        now = self.start_dt.strftime("%Y-%m-%d %H:%M:%S")
 
         # it exists, abort
         results = self.sq_cur.fetchall()
