@@ -339,9 +339,6 @@ class BetterStreamLoader(BaseSQliteDB):
         self.debug_execute("CREATE INDEX IF NOT EXISTS esa_index_keys "
                            "ON episode_stream_assoz (episode_key, stream_key)")
 
-
-
-
     def spawn(self, threads: int = 100):
         """
         Spawns worker threads.
