@@ -25,7 +25,7 @@ def diff_for_row(data: dict, hid: int, test: bool):
             dict value, the lst contains these rows
 
     """
-    assert set(data.keys()) == {"rows", "tbl", "b64", "url"}, "Malformatted input"
+    assert set(data.keys()) == {"rows", "tbl", "b64", "url", "parent"}, "Malformatted input"
 
     rows: List[Dict[str, str]] = data["rows"]
     tbl: str = data["tbl"]
