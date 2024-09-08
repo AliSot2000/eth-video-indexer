@@ -1,3 +1,4 @@
 # Reformatting Data:
-- Group by datetime (one datetime for entire run.)
-- Add hash of json value
+1. [ ] - Regularize json data
+   - Regularize json data 
+   - Remove the entries which only have {} as a diff.
