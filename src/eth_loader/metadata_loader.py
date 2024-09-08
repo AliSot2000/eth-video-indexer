@@ -56,6 +56,13 @@ def retrieve_metadata(website_url: str, identifier: str, headers: dict, parent_i
     path = path.split("?")[0]
     logger.debug(f"{identifier} Done {url}")
 
+    # conform json
+    try:
+        content = json.dumps(json.loads(content), sort_keys=True)
+    except json.JSONDecodeError as e:
+        logger.error(f"{identifier:.02} Failed to decode json from {url}", exc_info=e)
+        # keep the same content as before
+
     return {"url": url, "parent_id": parent_id, "status": result.status_code, "content": content}
 
 
