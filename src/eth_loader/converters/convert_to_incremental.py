@@ -455,7 +455,11 @@ class ConvToIncremental(BaseSQliteDB):
         """
         Convert the data format of the episodes table of all non-trivial entries.
         """
-        self.generic_table_converter("episodes")
+        self._generic_table_converter("episodes")
+
+    # ==================================================================================================================
+    # Sanity Check
+    # ==================================================================================================================
 
     def _check_records(self, sql_stmt: str, on_success: str, on_fail: str):
         """
