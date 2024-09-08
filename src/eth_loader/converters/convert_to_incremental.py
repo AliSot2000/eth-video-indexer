@@ -140,10 +140,10 @@ class ConvToIncremental(BaseSQliteDB):
         """
          # Record Types are 0, initial, 1 differential, 2 current final
         print("Adding column to metadata")
-        self.debug_execute("ALTER TABLE metadata ADD COLUMN record_type CHECK (metadata.record_type IN (0, 1, 2))")
+        self.debug_execute("ALTER TABLE metadata ADD COLUMN record_type INTEGER CHECK (metadata.record_type IN (0, 1, 2))")
 
         print("Adding column to episodes")
-        self.debug_execute("ALTER TABLE episodes ADD COLUMN record_type CHECK (episodes.record_type IN (0, 1, 2))")
+        self.debug_execute("ALTER TABLE episodes ADD COLUMN record_type INTEGER CHECK (episodes.record_type IN (0, 1, 2))")
 
     def convert_singles(self):
         """
