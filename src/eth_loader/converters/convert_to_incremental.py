@@ -409,8 +409,13 @@ class ConvToIncremental(BaseSQliteDB):
         """
         Get the rows associated with a url,
         """
-        self.debug_execute(
-            f"SELECT key, json, last_seen FROM {tbl} WHERE URL = '{url}' ORDER BY DATETIME(found) ASC")
+        if parent is None:
+            self.debug_execute(
+                f"SELECT key, json, last_seen FROM {tbl} WHERE URL = '{url}' ORDER BY DATETIME(found) ASC")
+        else:
+            self.debug_execute(
+                f"SELECT key, json, last_seen FROM {tbl} WHERE URL = '{url}' AND parent = {parent} "
+                f"ORDER BY DATETIME(found) ASC")
         raw = self.sq_cur.fetchall()
 
         print(f"Converting {tbl} for {url} with {len(raw)} entries", flush=True, end="\r")
