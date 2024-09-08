@@ -42,7 +42,7 @@ def get_stream(website_url: str, identifier: str, headers: dict, cookies: bytes,
     try:
         result = rq.get(url=url, headers=headers, cookies=cj)
     except Exception as e:
-        logging.getLogger("stream_loader").error(f"{identifier} error {e}", exc_info=e)
+        logging.getLogger("stream_loader").error(f"{identifier:.02} error {e}", exc_info=e)
         return {"url": url, "status": -1, "content": None, "parent_id": parent_id}
 
     content = None
@@ -51,7 +51,14 @@ def get_stream(website_url: str, identifier: str, headers: dict, cookies: bytes,
     if result.ok:
         content = result.content.decode("utf-8")
     else:
-        logging.getLogger("stream_loader").error(f"{identifier} error {result.status_code}")
+        logging.getLogger("stream_loader").error(f"{identifier:.02} error {result.status_code}")
+
+    # conform json
+    try:
+        content = json.dumps(json.loads(content), sort_keys=True)
+    except json.JSONDecodeError as e:
+        logging.getLogger("stream_loader").error(f"{identifier:.02} Failed to decode json from {url}", exc_info=e)
+        # keep the same content as before
 
     return {"url": url, "status": result.status_code, "content": content, "parent_id": parent_id}
 
