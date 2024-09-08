@@ -105,7 +105,7 @@ class MiddlePruner(BaseSQliteDB):
                 # check if the first and current set match
                 if stream_keys != stream_keys_0:
                     # Inform about us having found a non-matching set of stream keys.
-                    print(f"EPISODES: Found non-matching keys for entry: {contender['key']}, "
+                    print(f"EPISODES: Found non-matching stream keys for entry: {contender['key']}, "
                           f"start_key: {key0}\n"
                           f"keys0: {stream_keys_0}\n"
                           f"keysn: {stream_keys}\n",
