@@ -1,6 +1,11 @@
 # eth-video-indexer
 Create an index of the entire video site of eth. Given username and password for ldap / for a specific series or lecture, indexer can also fetch the url of all video files available on the eth video servers.
 
+Commands:
+```bash
+rsync -avu --exclude sample\ text/ --exclude scratch/ --exclude __pycache__/ --exclude db_backup/ --exclude logs/ --exclude lin_venv/ /home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/ piora:/home/asotoude/projects/eth-video-indexer/
+```
+
 ## Table Specs:
 - `sites` : Contains the list of all the sites that have been indexed.
 - `metadata` : Contains the series_metadata.json of the html file.
