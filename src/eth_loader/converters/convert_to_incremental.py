@@ -395,7 +395,17 @@ class ConvToIncremental(BaseSQliteDB):
                 new_json = to_b64(delta) if self.b64 else escape_sql(delta)
                 self.debug_execute(f"UPDATE episodes SET json = '{new_json}', record_type = 1 WHERE key = {key}")
 
-    def get_rows(self, url: str, tbl: str) -> List[Dict[str, str]]:
+    def _sequential_convert(self, tbl: str):
+        """
+        Convert the table in a sequential manner (wrapper for the two sequential converters - needed because fo
+        backwards compatibility)
+        """
+        if tbl == "metadata":
+            self._sequential_metadata_converter()
+        else:
+            self._sequential_episodes_converter()
+
+    def get_rows(self, url: str, tbl: str, parent: int = None) -> List[Dict[str, str]]:
         """
         Get the rows associated with a url,
         """
