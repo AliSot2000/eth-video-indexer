@@ -427,7 +427,7 @@ class ConvToIncremental(BaseSQliteDB):
         else:
             return [{"key": r[0], "json": from_b64(r[1]), "last_seen": r[2]} for r in raw]
 
-    def generic_table_converter(self, tbl: str):
+    def _generic_table_converter(self, tbl: str):
         """
         Convert the data format of the table of all non-trivial entries.
 
@@ -449,7 +449,7 @@ class ConvToIncremental(BaseSQliteDB):
         """
         Convert the data format of the metadata table of all non-trivial entries.
         """
-        self.generic_table_converter("metadata")
+        self._generic_table_converter("metadata")
 
     def convert_multiples_episodes(self):
         """
