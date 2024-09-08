@@ -306,24 +306,70 @@ class ConvToIncremental(BaseSQliteDB):
         }
         return args
 
-    def _sequential_convert(self, tbl: str):
+    def _sequential_metadata_converter(self):
         """
-        Sequentially convert an sanity check all urls.
+        Sequentially convert and sanity check all urls from the metadata table.
         """
-        self.debug_execute(f"SELECT URL FROM {tbl} GROUP BY URL HAVING COUNT(URL) > 1 "
+        self.debug_execute(f"SELECT URL, PARENT FROM metadata GROUP BY URL, PARENT HAVING COUNT(URL) > 1 "
+                           f"ORDER BY COUNT(URL) DESC, LENGTH(json) DESC")
+
+        entries_raw = self.sq_cur.fetchall()
+        entries = [{"url": u[0], "parent": u[1]} for u in entries_raw]
+        print(f"Found {len(entries)} URLs that appear more than once in metadata")
+
+        for entry in entries:
+            url = entry["url"]
+            parent = entry["parent"]
+            rows = self.get_rows(url=url, tbl="metadata", parent=parent)
+
+            # update the first entry, set record type to initial i.e. 0
+            self.debug_execute(f"UPDATE metadata SET record_type = 0 WHERE key = {rows[0]['key']}")
+
+            # duplicate the last entry for keeping the state of the last index (i.e. record of type final i.e. 2)
+            self.debug_execute(f"INSERT INTO metadata (URL, json, last_seen, record_type, parent) VALUES "
+                               f"('{url}','{escape_sql(rows[-1]['json'])}', '{rows[-1]['last_seen']}', 2, {parent})")
+
+            # Compute the deltas
+            deltas = {}
+            for i in range(1, len(rows)):
+                deltas[rows[i]['key']] = jd.diff(rows[i - 1]['json'], rows[i]['json'], load=True, dump=True)
+
+            # check the result is equivalent (so for my sanity)
+            if self.__test:
+                acc = rows[0]['json']
+                for i in range(1, len(rows)):
+                    acc = jd.patch(acc, deltas[rows[i]['key']], load=True, dump=True)
+                    eq = json.loads(acc) == json.loads(rows[i]['json'])
+
+                    if not eq:
+                        print(f"Error converting metadata")
+                        print(rows)
+                        print(deltas)
+                        exit(1)
+
+            # update the deltas
+            for key, delta in deltas.items():
+                new_json = to_b64(delta) if self.b64 else escape_sql(delta)
+                self.debug_execute(f"UPDATE metadata SET json = '{new_json}', record_type = 1 WHERE key = {key}")
+
+    def _sequential_episodes_converter(self):
+        """
+        Sequentially convert and sanity check all urls from the episodes table.
+        """
+        self.debug_execute(f"SELECT URL FROM episodes GROUP BY URL HAVING COUNT(URL) > 1 "
                            f"ORDER BY COUNT(URL) DESC, LENGTH(json) DESC")
         urls_raw = self.sq_cur.fetchall()
         urls = [u[0] for u in urls_raw]
         print(f"Found {len(urls)} URLs that appear more than once in metadata")
 
         for url in urls:
-            rows = self.get_rows(url=url, tbl=tbl)
+            rows = self.get_rows(url=url, tbl="episodes")
 
             # update the first entry, set record type to initial i.e. 0
-            self.debug_execute(f"UPDATE {tbl} SET record_type = 0 WHERE key = {rows[0]['key']}")
+            self.debug_execute(f"UPDATE episodes SET record_type = 0 WHERE key = {rows[0]['key']}")
 
             # duplicate the last entry for keeping the state of the last index (i.e. record of type final i.e. 2)
-            self.debug_execute(f"INSERT INTO {tbl} (URL, json, last_seen, record_type) VALUES "
+            self.debug_execute(f"INSERT INTO episodes (URL, json, last_seen, record_type) VALUES "
                                f"('{url}','{escape_sql(rows[-1]['json'])}', '{rows[-1]['last_seen']}', 2)")
 
             # Compute the deltas
@@ -339,7 +385,7 @@ class ConvToIncremental(BaseSQliteDB):
                     eq = json.loads(acc) == json.loads(rows[i]['json'])
 
                     if not eq:
-                        print(f"Error converting {tbl}")
+                        print(f"Error converting episodes")
                         print(rows)
                         print(deltas)
                         exit(1)
@@ -347,7 +393,7 @@ class ConvToIncremental(BaseSQliteDB):
             # update the deltas
             for key, delta in deltas.items():
                 new_json = to_b64(delta) if self.b64 else escape_sql(delta)
-                self.debug_execute(f"UPDATE {tbl} SET json = '{new_json}', record_type = 1 WHERE key = {key}")
+                self.debug_execute(f"UPDATE episodes SET json = '{new_json}', record_type = 1 WHERE key = {key}")
 
     def get_rows(self, url: str, tbl: str) -> List[Dict[str, str]]:
         """
