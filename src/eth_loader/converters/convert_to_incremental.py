@@ -150,13 +150,13 @@ class ConvToIncremental(BaseSQliteDB):
         Update the record types of urls that only appear once
         """
         # get the count for info to logging
-        self.debug_execute("SELECT COUNT(*) FROM (SELECT * FROM metadata GROUP BY URL HAVING COUNT(*) = 1)")
+        self.debug_execute("SELECT COUNT(*) FROM (SELECT * FROM metadata GROUP BY URL, parent HAVING COUNT(*) = 1)")
         cnt = self.sq_cur.fetchone()[0]
         print(f"Found {cnt} URLs that only appear once in metadata, updating type to initial")
 
         # Perform the update
-        self.debug_execute("UPDATE metadata SET record_type = 0 WHERE URL IN "
-                           "(SELECT URL FROM metadata GROUP BY URL HAVING COUNT(URL) = 1)")
+        self.debug_execute("UPDATE metadata SET record_type = 0 WHERE key IN "
+                           "(SELECT key FROM metadata GROUP BY URL, parent HAVING COUNT(*) = 1)")
 
         # Get the count for logging
         self.debug_execute("SELECT COUNT(*) FROM (SELECT * FROM episodes GROUP BY URL HAVING COUNT(*) = 1)")
