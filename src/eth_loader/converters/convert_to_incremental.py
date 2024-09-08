@@ -249,15 +249,7 @@ class ConvToIncremental(BaseSQliteDB):
 
         # Prefill the queue
         for i in range(self.proc_count):
-            url = urls.pop(0)
-            rows = self.get_rows(url=url, tbl=tbl)
-            data = {
-                "rows": rows,
-                "tbl": tbl,
-                "b64": self.b64,
-                "url": url
-            }
-            self.cmd_queue.put(data)
+            self.cmd_queue.put(self._process_group(data=urls.pop(0), tbl=tbl))
 
         # start parallel processes
         self._start_workers()
@@ -274,15 +266,7 @@ class ConvToIncremental(BaseSQliteDB):
                 self.debug_execute(stmt)
 
             # Add the new task
-            url = urls.pop(0)
-            rows = self.get_rows(url=url, tbl=tbl)
-            data = {
-                "rows": rows,
-                "tbl": tbl,
-                "b64": self.b64,
-                "url": url
-            }
-            self.cmd_queue.put(data)
+            self.cmd_queue.put(self._process_group(data=urls.pop(0), tbl=tbl))
 
         # done with all urls
         assert len(urls) == 0, "Expecting to be done with all urls and processes are consuming all tasks"
@@ -306,6 +290,21 @@ class ConvToIncremental(BaseSQliteDB):
 
         self._stop_workers()
 
+    def _process_group(self, data: Dict[str, str], tbl: str):
+        """
+        Process a group of urls and generate arguments for workers
+        """
+        url: str = data["url"]
+        parent = data["parent"]
+        rows = self.get_rows(url=url, tbl=tbl)
+        args = {
+            "rows": rows,
+            "tbl": tbl,
+            "b64": self.b64,
+            "url": url,
+            "parent": parent
+        }
+        return args
 
     def _sequential_convert(self, tbl: str):
         """
