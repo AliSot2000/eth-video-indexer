@@ -599,3 +599,4 @@ if __name__ == "__main__":
     # c.convert()
     # c.sq_con.commit()
     c.sanity_check()
+    c.cleanup()
