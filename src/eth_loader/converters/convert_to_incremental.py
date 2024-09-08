@@ -233,10 +233,18 @@ class ConvToIncremental(BaseSQliteDB):
         while not self.cmd_queue.empty():
             print(f"Command Queue not empty: {self.cmd_queue.get()}")
 
-        self.debug_execute(f"SELECT URL FROM {tbl} GROUP BY URL HAVING COUNT(URL) > 1 "
-                           f"ORDER BY COUNT(URL) DESC, LENGTH(json) DESC")
-        urls_raw = self.sq_cur.fetchall()
-        urls = [u[0] for u in urls_raw]
+        if tbl == "metadata":
+            self.debug_execute(f"SELECT URL, PARENT FROM metadata GROUP BY URL, PARENT HAVING COUNT(URL) > 1 "
+                               f"ORDER BY COUNT(URL) DESC, LENGTH(json) DESC")
+            urls_raw = self.sq_cur.fetchall()
+            urls = [{"url": u[0], "parent": u[1]} for u in urls_raw]
+
+        else:
+            self.debug_execute(f"SELECT URL FROM {tbl} GROUP BY URL HAVING COUNT(URL) > 1 "
+                               f"ORDER BY COUNT(URL) DESC, LENGTH(json) DESC")
+            urls_raw = self.sq_cur.fetchall()
+            urls = [{"url": u[0], "parent": None} for u in urls_raw]
+
         print(f"Found {len(urls)} URLs that appear more than once in metadata")
 
         # Prefill the queue
