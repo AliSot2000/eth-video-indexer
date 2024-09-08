@@ -31,6 +31,7 @@ def diff_for_row(data: dict, hid: int, test: bool):
     tbl: str = data["tbl"]
     b64: bool = data["b64"]
     url: str = data["url"]
+    parent: int = data["parent"]
 
     stmts = []
 
@@ -38,8 +39,12 @@ def diff_for_row(data: dict, hid: int, test: bool):
     stmts.append(f"UPDATE {tbl} SET record_type = 0 WHERE key = {rows[0]['key']}")
 
     # duplicate the last entry for keeping the state of the last index (i.e. record of type final i.e. 2)
-    stmts.append(f"INSERT INTO {tbl} (URL, json, last_seen, record_type) VALUES "
-                       f"('{url}','{escape_sql(rows[-1]['json'])}', '{rows[-1]['last_seen']}', 2)")
+    if parent is None:
+        stmts.append(f"INSERT INTO {tbl} (URL, json, last_seen, record_type) VALUES "
+                           f"('{url}','{escape_sql(rows[-1]['json'])}', '{rows[-1]['last_seen']}', 2)")
+    else:
+        stmts.append(f"INSERT INTO {tbl} (URL, json, last_seen, record_type, parent) VALUES "
+                           f"('{url}','{escape_sql(rows[-1]['json'])}', '{rows[-1]['last_seen']}', 2, {parent})")
 
     # Compute the deltas
     deltas = {}
