@@ -245,7 +245,7 @@ class ConvToIncremental(BaseSQliteDB):
             urls_raw = self.sq_cur.fetchall()
             urls = [{"url": u[0], "parent": None} for u in urls_raw]
 
-        print(f"Found {len(urls)} URLs that appear more than once in metadata")
+        print(f"Found {len(urls)} URLs that appear more than once in {tbl}")
 
         # Prefill the queue
         for i in range(self.proc_count):
