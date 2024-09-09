@@ -44,7 +44,7 @@ def diff_for_row(data: dict, hid: int, test: bool):
                            f"('{url}','{escape_sql(rows[-1]['json'])}', '{rows[-1]['last_seen']}', 2)")
     else:
         stmts.append(f"INSERT INTO {tbl} (URL, json, last_seen, record_type, parent) VALUES "
-                           f"('{url}','{escape_sql(rows[-1]['json'])}', '{rows[-1]['last_seen']}', 2, {parent})")
+                           f"('{url}','{to_b64(rows[-1]['json'])}', '{rows[-1]['last_seen']}', 2, {parent})")
 
     # Compute the deltas
     deltas = {}
