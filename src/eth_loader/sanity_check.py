@@ -1,4 +1,4 @@
-from base_sql import BaseSQliteDB
+from eth_loader.base_sql import BaseSQliteDB
 import logging
 
 
