@@ -5,7 +5,8 @@ from eth_loader.aux import from_b64, to_b64
 
 """
 Some Final Records weren't converted to b64 encoded in one of the runs. This file is to fix this instead of 
-converting the entire database again"""
+converting the entire database again
+"""
 
 class FixJson(BaseSQliteDB):
     """
@@ -31,6 +32,7 @@ class FixJson(BaseSQliteDB):
         keys = [r[0] for r in self.sq_cur.fetchall()]
 
         for k in keys:
+            print(f"Fixing key {k} of table {tbl}")
             self.debug_execute(f"SELECT json FROM {tbl} WHERE key = {k}")
             json_data = self.sq_cur.fetchone()[0]
             try:
