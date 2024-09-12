@@ -18,6 +18,7 @@ def perform_index_of_sites(db: str, dt: datetime.datetime):
     eid = ConcurrentETHSiteIndexer(db_file=db, start_dt=dt)
     eid.index_video_eth(threads=workers)
     eid.gen_parent()
+    eid.cleanup()
     end = datetime.datetime.now()
     print(f"required {(end - index_start).total_seconds()}s")
 
@@ -30,6 +31,7 @@ def download_all_metadata(db, index_start: datetime.datetime, b64: bool = False)
     eid = EpisodeLoader(db, use_base64=b64)
     eid.download(index_start, workers)
     eid.deprecate(dt=index_start)
+    eid.cleanup()
     end = datetime.datetime.now()
     print(f"required {(end - start).total_seconds()}s")
 
@@ -41,6 +43,7 @@ def download_all_stream_data(db: str, index_start: datetime.datetime, b64: bool 
     bsl = BetterStreamLoader(db=db, user_name=user_name, password=password, spec_login=spec_login, use_base64=b64)
     bsl.initiator(workers=workers)
     bsl.deprecate(index_start)
+    bsl.cleanup()
     end = datetime.datetime.now()
     print(f"required {(end - start).total_seconds()}s")
 
