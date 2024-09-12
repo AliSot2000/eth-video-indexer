@@ -130,7 +130,7 @@ class BetterStreamLoader(BaseSQliteDB):
     Class loads all stream file urls for the given database.
     """
 
-    def __init__(self, db: str, user_name: str = None, password: str = None,
+    def __init__(self, db: str, start_dt: datetime.datetime, user_name: str = None, password: str = None,
                  spec_login: List[SpecLogin] = None, verify_tbl: bool = True,
                  use_base64: bool = False):
 
@@ -188,6 +188,7 @@ class BetterStreamLoader(BaseSQliteDB):
         self.__last_info_episodes = 0
 
         self.ub64 = use_base64
+        self.start_dt = start_dt
 
     def get_episode_urls(self):
         """
@@ -589,7 +590,7 @@ class BetterStreamLoader(BaseSQliteDB):
         self.__processed_episodes += 1
 
         # list of ids in streams table associated with current episode.
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        now = self.start_dt.strftime("%Y-%m-%d %H:%M:%S")
 
         if self.ub64:
             json_dump_b64 = aux.to_b64(json.dumps(json_str))
@@ -728,7 +729,7 @@ class BetterStreamLoader(BaseSQliteDB):
         :return:
         """
         self.__processed_streams += 1
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        now = self.start_dt.strftime("%Y-%m-%d %H:%M:%S")
 
         # exists:
         self.debug_execute(f"SELECT key, deprecated FROM streams WHERE URL = '{url}' AND resolution = '{resolution}'")
