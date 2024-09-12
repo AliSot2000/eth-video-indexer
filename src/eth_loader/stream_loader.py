@@ -854,8 +854,8 @@ class BetterStreamLoader(BaseSQliteDB):
                            f"FROM episodes JOIN episode_stream_assoz ON episodes.key = episode_stream_assoz.episode_key "
                            f"JOIN streams ON episode_stream_assoz.stream_key = streams.key "
                            f"WHERE episodes.deprecated = 0 "
-                           f"AND datetime(episodes.last_seen) > datetime('{dts}') "
-                           f"AND datetime(streams.last_seen) > datetime('{dts}')")
+                           f"AND datetime(episodes.last_seen) >= datetime('{dts}') "
+                           f"AND datetime(streams.last_seen) >= datetime('{dts}')")
 
         self.debug_execute(f"SELECT COUNT(DISTINCT streams.key) FROM streams "
                            f"WHERE streams.key NOT IN (SELECT key FROM temp) AND deprecated = 0;")
