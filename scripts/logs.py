@@ -5,6 +5,9 @@ import logging
 import coloredlogs
 
 
+# Info for idiots:
+#     https://docs.python.org/3/howto/logging.html#logging-flow
+
 def setup_logging(default_path='logging.yaml', default_level=logging.INFO, env_key='LOG_CFG'):
     """
     | **@author:** Prathyush SP
