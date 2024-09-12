@@ -3,8 +3,7 @@ import sys
 from eth_loader.base_sql import BaseSQliteDB
 
 
-# TODO pruning needs to take into account the full link structure. there have been some episodes that have moved in the
-#  html tree
+
 
 class MiddlePruner(BaseSQliteDB):
     def __init__(self, db: str):
