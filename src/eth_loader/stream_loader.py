@@ -592,7 +592,7 @@ class BetterStreamLoader(BaseSQliteDB):
 
         :param parent_id: key of the parent entry. (Series in XXX table)
         :param url: url of the episode that was downloaded
-        :param json_str: json string of the series site???
+        :param json_str: json string of the episode site
         :return:
         """
         self.__processed_episodes += 1
