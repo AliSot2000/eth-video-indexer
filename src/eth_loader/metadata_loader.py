@@ -302,51 +302,76 @@ class EpisodeLoader(BaseSQliteDB):
         :param json_arg: json stored at metadata url (is already properly encoded for the db)
         :return:
         """
-        # exists:
-        self.debug_execute(f"SELECT key, json, deprecated FROM metadata WHERE parent = {parent_id} AND URL = '{url}'")
+        # Prepare arguments for function
         now = self.start_dt.strftime("%Y-%m-%d %H:%M:%S")
+        key, json_db, deprecated, record_type = None, None, None, None
+        json_hash = hash(json_arg)
+        conv_json_arg = to_b64(json_arg) if self.ub64 else json_arg.replace("'", "''")
 
-        # it exists, abort
+        # check existence of initial and final record:
+        self.debug_execute(f"SELECT key, json, deprecated, record_type FROM metadata "
+                           f"WHERE parent = {parent_id} AND URL = '{url}' AND record_type IN (2, 0) "
+                           f"ORDER BY record_type DESC LIMIT 1")
+
         results = self.sq_cur.fetchall()
-        key = None
-        dep = None
-        for key_res, json_res, deprecated in results:
-            if json_arg == json_res:
-                dep = deprecated == 1
-                key = key_res
-                break
 
-        # doesn't exist -> insert
+        # check the length is 1, so we can unpack
+        if len(results) != 0:
+            assert len(results) == 1, "Update of the sql statement violates the assert - only one result expected"
+            key, temp_json, deprecated, record_type = results[0]
+
+            json_db = from_b64(temp_json) if self.ub64 else temp_json
+
+            # Check the json matches
+            if json_db == json_arg:
+
+                # Differing logging messages depending on if the entry is deprecated or not
+                if deprecated == 1:
+                    self.logger.info(f"Reactivating deprecated entry in metadata: {url}")
+                else:
+                    self.logger.debug(f"Found active entry in metadata: {url}")
+
+                # Perform the update of the differential entry that belongs to the final entry.
+                if record_type == 2:
+                    self.debug_execute(f"SELECT key FROM metadata "
+                                       f"WHERE record_type = 1 AND parent = {parent_id} AND URL = '{url}' "
+                                       f"ORDER BY found DESC LIMIT 1")
+                    row = self.sq_cur.fetchone()
+
+                    # Row mustn't be None, since we have a final record
+                    assert row is not None, f"Couldn't find differential entry for {url}."
+                    diff_key = row[0]
+                    self.debug_execute(f"UPDATE metadata SET last_seen = '{now}', deprecated = 0 WHERE key = {diff_key}")
+
+                # Else -> record_type == 0. The final or initial entry needs to be updated anyway, no else block needed
+                # else:
+                #     pass
+
+                # Update the latest entry (i.e. the final entry or the initial entry if the json
+                # has been the same all the time)
+                assert record_type in (0, 2), f"Record type is {record_type}, expected 0 or 2"
+                self.debug_execute(f"UPDATE metadata SET last_seen = '{now}', deprecated = 0 WHERE key = {key}")
+                return
+
+            # Else -> json is different, need to add something to the database. Don't update but insert for later diff
+            # else:
+            #     pass
+
+        # Key would have been populated by now -> the variables is declared in both branches of the if statement
+        # => no record found at all, so insert a new initial record
         if key is None:
-            assert dep is None, "key is None but dep is not"
-
-            self.logger.debug("Inserting")
+            self.logger.debug(f"Inserting new entry to metadata: {url}")
+            # Found a new url, is initial so record type 0
             self.debug_execute(
-                f"INSERT INTO metadata (parent, URL, json, found, last_seen) VALUES "
-                f"({parent_id}, '{url}', '{json_arg}', '{now}', '{now}')")
-            return
-
-        if key is not None:
-            assert dep is not None, "key is not None but dep is"
-
-            # deprecated entry found
-            if dep:
-                self.logger.debug(f"Found {url} inactive in db, reactivate and set everything else matching parent, "
-                                  f"url and series to deprecated")
-                # update all entries, to deprecated, unset deprecated where it is here
-                keys = [k[0] for k in results]
-                if len(results) > 1:
-                    self.logger.debug(f"Found {len(keys)} entries for {url} in and parent {parent_id}: {keys}")
-                self.debug_execute(f"UPDATE metadata SET deprecated = 1 WHERE parent = {parent_id} AND URL = '{url}'")
-                self.debug_execute(f"UPDATE metadata SET deprecated = 0, last_seen = '{now}' WHERE key = {key}")
-                return
-
-            # active entry found
-            else:
-                self.logger.debug(f"Found {url} active in db")
-
-                self.debug_execute(f"UPDATE metadata SET last_seen = '{now}' WHERE key = {key}")
-                return
+                f"INSERT INTO metadata (parent, URL, json, found, last_seen, record_type, json_hash) VALUES "
+                f"({parent_id}, '{url}', '{conv_json_arg}', '{now}', '{now}', 0, '{json_hash}')")
+        else:
+            self.logger.debug(f"Adding new state of existing entry to metadata: {url}")
+            # Does exist, but json is different, needs to be a new diff entry, so record_type is left empty
+            # for diff building
+            self.debug_execute(                                              # INFO, record_type is left empty
+                f"INSERT INTO metadata (parent, URL, json, found, last_seen, json_hash) VALUES "
+                f"({parent_id}, '{url}', '{conv_json_arg}', '{now}', '{now}', '{json_hash}')")
 
     def deprecate(self, dt: datetime.datetime):
         """
