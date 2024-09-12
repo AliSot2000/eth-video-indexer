@@ -266,7 +266,6 @@ class BetterStreamLoader(BaseSQliteDB):
         Verifies a Table exists inside the given sqlite database.
         :return:
         """
-        # TODO: Verify columns and type match
         self.debug_execute("SELECT name FROM sqlite_master WHERE type='table' AND name='metadata'")
 
         if self.sq_cur.fetchone() is None:
