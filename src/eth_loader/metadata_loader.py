@@ -9,7 +9,7 @@ import time
 import jsondiff as jd
 import requests as rq
 
-import eth_loader.aux as aux
+from eth_loader.aux import from_b64, to_b64
 from eth_loader.base_sql import BaseSQliteDB
 
 
