@@ -62,6 +62,8 @@ def retrieve_metadata(website_url: str, identifier: str, headers: dict, parent_i
     except json.JSONDecodeError as e:
         logger.error(f"{identifier:.02} Failed to decode json from {url}", exc_info=e)
         # keep the same content as before
+    except Exception as e:
+        logger.error(f"{identifier:.02} Failed to decode json from {url}", exc_info=e)
 
     return {"url": url, "parent_id": parent_id, "status": result.status_code, "content": content}
 
