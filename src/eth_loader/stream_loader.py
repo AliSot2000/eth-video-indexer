@@ -201,7 +201,7 @@ class BetterStreamLoader(BaseSQliteDB):
         self.verify_args_table()
 
         # select first entry
-        self.debug_execute("SELECT key, json, URL FROM metadata WHERE deprecated = 0")
+        self.debug_execute("SELECT key, json, URL FROM metadata WHERE deprecated = 0 AND record_type IN (0, 2)")
         row = self.sq_cur.fetchone()
 
         while row is not None:
@@ -591,6 +591,9 @@ class BetterStreamLoader(BaseSQliteDB):
 
         # list of ids in streams table associated with current episode.
         now = self.start_dt.strftime("%Y-%m-%d %H:%M:%S")
+        key, json_db, deprecated, record_type = None, None, None, None
+        json_hash = hash(json_str)
+        conv_json_arg = aux.to_b64(json_str) if self.ub64 else json_str.replace("'", "''")
 
         if self.ub64:
             json_dump_b64 = aux.to_b64(json.dumps(json_str))
