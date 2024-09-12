@@ -564,7 +564,7 @@ class BetterStreamLoader(BaseSQliteDB):
                             continue
 
                         ep_id = self.insert_update_episodes(parent_id=res["parent_id"], url=res["url"],
-                                                    json_str=json_obj)
+                                                            json_str=res["content"])
                         streams = self.retrieve_streams(json_obj=json_obj, parent_id=res["parent_id"])
                         self.link_episode_streams(episode_id=ep_id, streams=streams)
                     else:
