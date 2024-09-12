@@ -825,7 +825,14 @@ class BetterStreamLoader(BaseSQliteDB):
                            f"SELECT episodes.key AS key FROM episodes "
                            f"WHERE episodes.record_type = 2 AND datetime(episodes.last_seen) >= datetime('{dts}')")
 
-        self.debug_execute(f"SELECT COUNT(key) FROM episodes "
+        self.debug_execute(f"SELECT COUNT(episodes.key) AS key "
+                           f"FROM episodes "
+                           f"WHERE episodes.record_type = 2 AND datetime(episodes.last_seen) >= datetime('{dts}');")
+
+        count = self.sq_cur.fetchone()[0]
+        self.logger.info(f"Added {count} final records to the temp table")
+
+        self.debug_execute(f"SELECT COUNT(DISTINCT key) FROM episodes "
                            f"WHERE key NOT IN (SELECT temp.key FROM temp) AND deprecated = 0")
         count = self.sq_cur.fetchone()[0]
         self.debug_execute("UPDATE episodes SET deprecated = 1 "
