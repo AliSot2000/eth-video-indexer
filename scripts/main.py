@@ -1,12 +1,12 @@
 import datetime
 import os.path
 
-from eth_loader.site_indexer import ConcurrentETHSiteIndexer
 from eth_loader.metadata_loader import EpisodeLoader
-from eth_loader.stream_loader import BetterStreamLoader, SpecLogin
 from eth_loader.sanity_check import SanityCheck
-from secrets import user_name, password, spec_login
+from eth_loader.site_indexer import ConcurrentETHSiteIndexer
+from eth_loader.stream_loader import BetterStreamLoader
 from logs import setup_logging
+from scripts.secrets import user_name, password, spec_login
 
 workers = 10
 
