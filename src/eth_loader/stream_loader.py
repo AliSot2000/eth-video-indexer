@@ -557,7 +557,6 @@ class BetterStreamLoader(BaseSQliteDB):
 
                     # verify the correct download of the episode metadata
                     if res["status"] == 200:
-                        # why is res['content'] read twice?
                         try:
                             json_obj = json.loads(res["content"])
                         except json.JSONDecodeError as e:
