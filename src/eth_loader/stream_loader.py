@@ -559,7 +559,7 @@ class BetterStreamLoader(BaseSQliteDB):
                     if res["status"] == 200:
                         try:
                             json_obj = json.loads(res["content"])
-                        except json.JSONDecodeError as e:
+                        except json.JSONDecodeError:
                             self.logger.error(f"Json Decode error with key: {res['parent_id']}, url: {res['url']}")
                             continue
 
