@@ -299,7 +299,7 @@ class EpisodeLoader(BaseSQliteDB):
 
         :param parent_id: id of the parent site in the sites table
         :param url: url of the metadata
-        :param json_arg: json stored at metadata url
+        :param json_arg: json stored at metadata url (is already properly encoded for the db)
         :return:
         """
         # exists:
