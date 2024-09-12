@@ -285,11 +285,12 @@ class BetterStreamLoader(BaseSQliteDB):
             self.debug_execute("CREATE TABLE episodes "
                                 "(key INTEGER PRIMARY KEY AUTOINCREMENT, "
                                 "URL TEXT , "
-                                "json TEXT,"
-                                "deprecated INTEGER DEFAULT 0 CHECK (episodes.deprecated >= 0 AND episodes.deprecated <= 1),"
-                                "found TEXT,"
-                                "last_seen TEXT,"
-                                "record_type CHECK (episodes.record_type IN (0, 1, 2)))")
+                                "json TEXT, "
+                                "deprecated INTEGER DEFAULT 0 CHECK (episodes.deprecated >= 0 AND episodes.deprecated <= 1), "
+                                "found TEXT, "
+                                "last_seen TEXT, "
+                                "json_hash TEXT, "
+                                "record_type INTEGER CHECK (episodes.record_type IN (0, 1, 2)))")
 
             # Create index and assert they don't exist
             self.debug_execute("CREATE INDEX episodes_key_index ON episodes (key)")
