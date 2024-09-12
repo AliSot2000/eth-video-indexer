@@ -262,6 +262,7 @@ class EpisodeLoader(BaseSQliteDB):
         """
         g_counter = 0
         e_counter = 0
+        e_url = []
 
         ctr = 0
         res = {"url": "Empty", "content": "empty"}
@@ -289,6 +290,7 @@ class EpisodeLoader(BaseSQliteDB):
                 else:
                     time.sleep(1)
                     ctr += 1
+                        e_url.append(url)
 
         # Non B64 variant
         else:
@@ -314,6 +316,9 @@ class EpisodeLoader(BaseSQliteDB):
                     time.sleep(1)
                     ctr += 1
         self.logger.info(f"Downloaded {g_counter} with {e_counter} errors.")
+        self.logger.info(f"Urls with failures:")
+        for url in e_url:
+            self.logger.info(url)
 
     def insert_update_db(self, parent_id: int, url: str, json_arg: str):
         """
