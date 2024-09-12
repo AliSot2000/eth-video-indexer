@@ -67,6 +67,7 @@ if __name__ == "__main__":
         print("PRODUCTION")
 
     global_start = datetime.datetime.now()
+    # global_start = datetime.datetime(2024, 9, 10, 0, 0, 0)
     is_b64 = True
     if is_b64:
         path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites_b64.db"
