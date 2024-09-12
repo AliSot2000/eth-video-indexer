@@ -62,6 +62,8 @@ def get_stream(website_url: str, identifier: str, headers: dict, cookies: bytes,
     except json.JSONDecodeError as e:
         logging.getLogger("stream_loader").error(f"{identifier:.02} Failed to decode json from {url}", exc_info=e)
         # keep the same content as before
+    except Exception as e:
+        logging.getLogger("stream_loader").error(f"{identifier:.02} Failed to decode json from {url}", exc_info=e)
 
     return {"url": url, "status": result.status_code, "content": content, "parent_id": parent_id}
 
