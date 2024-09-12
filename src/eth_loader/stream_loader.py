@@ -530,6 +530,7 @@ class BetterStreamLoader(BaseSQliteDB):
         ctr = 0
         self.__processed_streams = 0
         self.__processed_episodes = 0
+        e_url = []
 
         while ctr < 20:
             delta_streams = self.__processed_streams - self.__last_info_streams
@@ -569,6 +570,7 @@ class BetterStreamLoader(BaseSQliteDB):
                         self.link_episode_streams(episode_id=ep_id, streams=streams)
                     else:
                         self.logger.error(f"url {res['url']} with status code {res['status']}")
+                        e_url.append(res["url"])
                     ctr = 0
                 except Exception as e:
                     self.logger.exception("Exception while dequeueing", exc_info=e)
@@ -576,7 +578,11 @@ class BetterStreamLoader(BaseSQliteDB):
                 time.sleep(1)
                 ctr += 1
 
-    def insert_update_episodes(self, parent_id: int, url: str, json_str: dict):
+        self.logger.info(f"Urls with failures:")
+        for url in e_url:
+            self.logger.info(url)
+
+    def insert_update_episodes(self, parent_id: int, url: str, json_str: str) -> int:
         """
         Given the parent_id (key), the url of the episode, the json_string associated with the episode and the content
         of the episode site, it updates the stream and episodes table. Updating or inserting depending on presence and
