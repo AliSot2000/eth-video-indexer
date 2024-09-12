@@ -603,67 +603,82 @@ class BetterStreamLoader(BaseSQliteDB):
         json_hash = hash(json_str)
         conv_json_arg = aux.to_b64(json_str) if self.ub64 else json_str.replace("'", "''")
 
-        if self.ub64:
-            json_dump_b64 = aux.to_b64(json.dumps(json_str))
-        else:
-            json_dump_b64 = json.dumps(json_str).replace("'", "''")
-
-        # exists:
-        self.debug_execute(
-            f"SELECT key, json, deprecated FROM episodes WHERE "
-            f"URL = '{url}'")
+        # check existence of initial and final record:
+        self.debug_execute(f"SELECT key, json, deprecated, record_type FROM episodes "
+                           f"WHERE URL = '{url}' AND record_type IN (2, 0) "
+                           f"ORDER BY record_type DESC LIMIT 1")
 
         results = self.sq_cur.fetchall()
-        key = dep = None
-        for key_res, json_res, deprecated in results:
-            if json_res == json_dump_b64:
-                key = key_res
-                dep = deprecated == 1
-                break
 
-        # Doesn't exist, inserting
+        # check the length is 1, so we can unpack
+        if len(results) != 0:
+            assert len(results) == 1, "Update of the sql statement violates the assert - only one result expected"
+            key, temp_json, deprecated, record_type = results[0]
+            json_db = aux.from_b64(temp_json) if self.ub64 else temp_json
+
+            # Check the json matches
+            if json_db == json_str:
+                # Differing logging messages depending on if the entry is deprecated or not
+                if deprecated == 1:
+                    self.logger.info(f"Reactivating deprecated entry in episodes: {url}")
+                else:
+                    self.logger.debug(f"Found active entry in episodes: {url}")
+
+                # Perform the update of the differential entry that belongs to the final entry.
+                if record_type == 2:
+                    self.debug_execute(f"SELECT key FROM episodes "
+                                       f"WHERE record_type = 1 AND URL = '{url}' "
+                                       f"ORDER BY found DESC LIMIT 1")
+                    row = self.sq_cur.fetchone()
+
+                    # Row mustn't be None, since we have a final record
+                    assert row is not None, f"Couldn't find differential entry for {url}."
+                    diff_key = row[0]
+                    self.debug_execute(f"UPDATE episodes SET last_seen = '{now}', deprecated = 0 WHERE key = {diff_key}")
+
+                # Else -> record_type == 0. The final or initial entry needs to be updated anyway, no else block needed
+                # else:
+                #     pass
+
+                # Update the latest entry (i.e. the final entry or the initial entry if the json
+                # has been the same all the time)
+                assert record_type in (0, 2), f"Record type is {record_type}, expected 0 or 2"
+                self.debug_execute(f"UPDATE episodes SET last_seen = '{now}', deprecated = 0 WHERE key = {key}")
+                return key
+
+            # Else -> json is different, need to add something to the database. Don't update but insert for later diff
+            # else:
+            #     pass
+
+        # Key would have been populated by now -> the variables is declared in both branches of the if statement
         if key is None:
-            assert dep is None, "key is None but dep is not"
-
-            self.logger.debug(f"Inserting: {url}")
+            self.logger.debug(f"Inserting new episode: {url}")
+            # Found a new url, is initial so record type 0
             self.debug_execute(
-                f"INSERT INTO episodes (URL, json, found, last_seen) "
-                f"VALUES ('{url}', '{json_dump_b64}', '{now}', '{now}')")
+                f"INSERT INTO episodes (URL, json, found, last_seen, record_type, json_hash) VALUES "
+                f"('{url}', '{conv_json_arg}', '{now}', '{now}', 0, '{json_hash}')")
+        else:
+            self.logger.debug(f"Adding new state of existing entry to metadata: {url}")
+            # Does exist, but json is different, needs to be a new diff entry, so record_type is left empty
+            # for diff building
+            self.debug_execute(
+                f"INSERT INTO episodes (URL, json, found, last_seen, json_hash) VALUES "
+                f"('{url}', '{conv_json_arg}', '{now}', '{now}', '{json_hash}')")
 
-            self.debug_execute(f"SELECT key FROM episodes "
-                               f"WHERE URL = '{url}' "
-                               f"AND json = '{json_dump_b64}'"
-                               f"AND found = '{now}'")
+        # Get the key of the newly inserted entry
+        self.debug_execute(f"SELECT key FROM episodes "
+                           f"WHERE URL = '{url}' "
+                           f"AND json = '{conv_json_arg}'"
+                           f"AND found = '{now}'")
 
-            result = self.sq_cur.fetchone()
-            assert result is not None, "Just inserted the bloody thing"
+        result = self.sq_cur.fetchone()
+        assert result is not None, "Just inserted the bloody thing"
 
-            self.debug_execute(f"INSERT OR IGNORE INTO metadata_episode_assoz (metadata_key, episode_key) "
-                               f"VALUES ({parent_id}, {result[0]})")
+        # Add entry into the assoz table
+        self.debug_execute(f"INSERT OR IGNORE INTO metadata_episode_assoz (metadata_key, episode_key) "
+                           f"VALUES ({parent_id}, {result[0]})")
 
-            return result[0]
-
-        if key is not None:
-            assert dep is not None, "key is not None but dep is"
-
-            if dep:
-                # Deprecate everything and activate only selected row
-                self.logger.info(
-                    f"Found {url} inactive in db, reactivate and set everything else matching parent, "
-                    f"url and series to deprecated")
-
-                # deprecate any entry matching only parent and url (i.e. not matching json)
-                # then update the one with the matching json
-                self.debug_execute(
-                    f"UPDATE episodes SET deprecated = 1 WHERE URL = '{url}'")
-                self.debug_execute(f"UPDATE episodes SET deprecated = 0, last_seen = '{now}' WHERE key = {key}")
-                return key
-
-            # Found active in database
-            else:
-                self.debug_execute(f"UPDATE episodes SET last_seen = '{now}' WHERE key = {key}")
-                self.logger.debug(f"Found {url} active in db")
-                return key
+        return result[0]
 
     def link_episode_streams(self, episode_id: int, streams: List[int]):
         """
