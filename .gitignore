@@ -130,3 +130,4 @@ dmypy.json
 .pyre/
 .idea/
 /scripts/secrets.py
+/src/secrets.py
