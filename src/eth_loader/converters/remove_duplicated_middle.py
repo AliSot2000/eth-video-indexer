@@ -283,7 +283,6 @@ class MiddlePruner(BaseSQliteDB):
                            "WHERE metadata_episode_assoz.metadata_key NOT IN (SELECT key FROM metadata)")
 
 
-# TODO check metadata for duplicates and ignore the lower end.
 if __name__ == "__main__":
     # path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites.db"
     path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites_b64.db"
