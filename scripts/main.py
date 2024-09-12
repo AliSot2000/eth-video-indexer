@@ -28,8 +28,10 @@ def download_all_metadata(db, index_start: datetime.datetime, b64: bool = False)
     start = datetime.datetime.now()
     print("Started")
     print(index_start)
-    eid = EpisodeLoader(db, use_base64=b64)
+    eid = EpisodeLoader(db, use_base64=b64, start_dt=index_start)
+    eid.build_diff()
     eid.download(index_start, workers)
+    eid.build_diff()
     eid.deprecate(dt=index_start)
     eid.cleanup()
     end = datetime.datetime.now()
@@ -40,8 +42,15 @@ def download_all_stream_data(db: str, index_start: datetime.datetime, b64: bool 
     global workers
     start = datetime.datetime.now()
     print("Started")
-    bsl = BetterStreamLoader(db=db, user_name=user_name, password=password, spec_login=spec_login, use_base64=b64)
+    bsl = BetterStreamLoader(db=db,
+                             user_name=user_name,
+                             password=password,
+                             spec_login=spec_login,
+                             use_base64=b64,
+                             start_dt=index_start)
+    bsl.build_diff()
     bsl.initiator(workers=workers)
+    bsl.build_diff()
     bsl.deprecate(index_start)
     bsl.cleanup()
     end = datetime.datetime.now()
