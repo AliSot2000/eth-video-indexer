@@ -580,9 +580,9 @@ class BetterStreamLoader(BaseSQliteDB):
         self.logger.info(f"Found {self.__processed_streams} streams.")
         self.logger.info(f"Encountered {len(e_url)} errors.")
 
-        self.logger.info(f"Urls with failures:")
+        self.logger.error(f"Urls with failures:")
         for url in e_url:
-            self.logger.info(url)
+            self.logger.error(url)
 
     def insert_update_episodes(self, parent_id: int, url: str, json_str: str) -> int:
         """
