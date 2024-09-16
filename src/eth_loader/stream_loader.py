@@ -68,7 +68,7 @@ def get_stream(website_url: str, identifier: str, headers: dict, cookies: bytes,
     return {"url": url, "status": result.status_code, "content": content, "parent_id": parent_id}
 
 
-def handler(worker_nr: int, command_queue: mp.Queue, result_queue: mp.Queue):
+def stream_download_handler(worker_nr: int, command_queue: mp.Queue, result_queue: mp.Queue):
     """
     Function executed in a worker thread. The function tries to download the given url in the queue. If the queue is
     empty for 20s, it will kill itself.
@@ -364,7 +364,7 @@ class BetterStreamLoader(BaseSQliteDB):
 
         self.workers = []
         for i in range(threads):
-            t = Thread(target=handler, args=(i, self.command_queue, self.result_queue))
+            t = Thread(target=stream_download_handler, args=(i, self.command_queue, self.result_queue))
             t.start()
             self.workers.append(t)
 
