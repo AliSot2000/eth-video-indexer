@@ -108,7 +108,7 @@ def metadata_download_handler(worker_nr: int, command_queue: mp.Queue, result_qu
     return
 
 
-class EpisodeLoader(BaseSQliteDB):
+class MetadataLoader(BaseSQliteDB):
     def __init__(self, index_db: str, start_dt: datetime.datetime, use_base64: bool = False):
         """
         Initialise downloader function. Provide the function either with a file containing valid urls or a list of urls.

@@ -1,7 +1,7 @@
 import datetime
 import os.path
 
-from eth_loader.metadata_loader import EpisodeLoader
+from eth_loader.metadata_loader import MetadataLoader
 from eth_loader.sanity_check import SanityCheck
 from eth_loader.site_indexer import ETHSiteIndexer
 from eth_loader.stream_loader import BetterStreamLoader
@@ -28,7 +28,7 @@ def download_all_metadata(db, index_start: datetime.datetime, b64: bool = False)
     start = datetime.datetime.now()
     print("Started")
     print(index_start)
-    eid = EpisodeLoader(db, use_base64=b64, start_dt=index_start)
+    eid = MetadataLoader(db, use_base64=b64, start_dt=index_start)
     eid.build_diff()
     eid.download(index_start, workers)
     eid.build_diff()
