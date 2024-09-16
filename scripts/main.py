@@ -3,7 +3,7 @@ import os.path
 
 from eth_loader.metadata_loader import EpisodeLoader
 from eth_loader.sanity_check import SanityCheck
-from eth_loader.site_indexer import ConcurrentETHSiteIndexer
+from eth_loader.site_indexer import ETHSiteIndexer
 from eth_loader.stream_loader import BetterStreamLoader
 from logs import setup_logging
 from scripts.secrets import user_name, password, spec_login
@@ -15,7 +15,7 @@ def perform_index_of_sites(db: str, dt: datetime.datetime):
     global workers
     print("Started")
     index_start = datetime.datetime.now()
-    eid = ConcurrentETHSiteIndexer(db_file=db, start_dt=dt)
+    eid = ETHSiteIndexer(db_file=db, start_dt=dt)
     eid.index_video_eth(threads=workers)
     eid.gen_parent()
     eid.cleanup()

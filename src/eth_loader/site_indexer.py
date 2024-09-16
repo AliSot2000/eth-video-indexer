@@ -64,7 +64,7 @@ def is_video(root: _Element) -> bool:
     return False
 
 
-class ConcurrentETHSiteIndexer(BaseSQliteDB):
+class ETHSiteIndexer(BaseSQliteDB):
     """
     Creates a Database of the hierarchy of the video sites of video.ethz.ch
     It tracks the parent site which contained the link to the current site.
