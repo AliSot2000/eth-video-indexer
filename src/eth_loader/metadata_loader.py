@@ -68,7 +68,7 @@ def retrieve_metadata(website_url: str, identifier: str, headers: dict, parent_i
     return {"url": url, "parent_id": parent_id, "status": result.status_code, "content": content}
 
 
-def handler(worker_nr: int, command_queue: mp.Queue, result_queue: mp.Queue):
+def metadata_download_handler(worker_nr: int, command_queue: mp.Queue, result_queue: mp.Queue):
     """
     Function executed in a worker thread. The function tries to download the given url in the queue. If the queue is
     empty for 20s, it will kill itself.
@@ -225,7 +225,7 @@ class EpisodeLoader(BaseSQliteDB):
 
         # spawn threads
         for command in commands:
-            t = threading.Thread(target=handler, args=command)
+            t = threading.Thread(target=metadata_download_handler, args=command)
             t.start()
             threads.append(t)
 
