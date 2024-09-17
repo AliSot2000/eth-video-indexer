@@ -289,9 +289,10 @@ class MetadataLoader(BaseSQliteDB):
                 ctr += 1
 
         self.logger.info(f"Downloaded {g_counter} with {e_counter} errors.")
-        self.logger.error(f"Urls with failures:")
-        for url in e_url:
-            self.logger.error(url)
+        if len(e_url) > 0:
+            self.logger.error(f"Urls with failures:")
+            for url in e_url:
+                self.logger.error(url)
 
     def insert_update_db(self, parent_id: int, url: str, json_arg: str):
         """
