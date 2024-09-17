@@ -78,14 +78,19 @@ if __name__ == "__main__":
     global_start = datetime.datetime.now()
     # global_start = datetime.datetime(2024, 9, 10, 0, 0, 0)
     is_b64 = True
-    if is_b64:
+    both = True
+    if is_b64 or both:
         path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites_b64.db"
-    else:
-        path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites.db"
+        perform_index_of_sites(path, global_start)
+        download_all_metadata(path, global_start, b64=True)
+        download_all_stream_data(path, global_start, b64=True)
 
-    perform_index_of_sites(path, global_start)
-    download_all_metadata(path, global_start, b64=is_b64)
-    download_all_stream_data(path, global_start, b64=is_b64)
+    if not is_b64 or both:
+        path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites.db"
+        perform_index_of_sites(path, global_start)
+        download_all_metadata(path, global_start, b64=False)
+        download_all_stream_data(path, global_start, b64=False)
+
 
     global_end = datetime.datetime.now()
     print(f"Overall Time for complete indexing: {(global_end - global_start).total_seconds():.02f}")
