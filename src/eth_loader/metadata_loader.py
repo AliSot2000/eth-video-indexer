@@ -324,7 +324,7 @@ class MetadataLoader(BaseSQliteDB):
             json_db = from_b64(temp_json) if self.ub64 else temp_json
 
             # Check the json matches
-            if json_db == json_arg:
+            if json.loads(json_db) == json.loads(json_arg):
 
                 # Differing logging messages depending on if the entry is deprecated or not
                 if deprecated == 1:
