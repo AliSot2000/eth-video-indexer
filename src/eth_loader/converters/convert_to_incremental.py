@@ -40,11 +40,13 @@ def diff_for_row(data: dict, hid: int, test: bool):
 
     # duplicate the last entry for keeping the state of the last index (i.e. record of type final i.e. 2)
     if parent is None:
-        stmts.append(f"INSERT INTO {tbl} (URL, json, last_seen, record_type) VALUES "
-                           f"('{url}','{escape_sql(rows[-1]['json'])}', '{rows[-1]['last_seen']}', 2)")
+        stmts.append(f"INSERT INTO {tbl} (URL, json, last_seen, record_type, json_hash) VALUES "
+                           f"('{url}','{escape_sql(rows[-1]['json'])}', '{rows[-1]['last_seen']}', 2, "
+                     f"'{rows[-1]['json_hash']}')")
     else:
-        stmts.append(f"INSERT INTO {tbl} (URL, json, last_seen, record_type, parent) VALUES "
-                           f"('{url}','{to_b64(rows[-1]['json'])}', '{rows[-1]['last_seen']}', 2, {parent})")
+        stmts.append(f"INSERT INTO {tbl} (URL, json, last_seen, record_type, parent, json_hash) VALUES "
+                           f"('{url}','{to_b64(rows[-1]['json'])}', '{rows[-1]['last_seen']}', 2, {parent},"
+                     f" {rows[-1]['json_hash']})")
 
     # Compute the deltas
     deltas = {}
@@ -411,10 +413,10 @@ class ConvToIncremental(BaseSQliteDB):
         """
         if parent is None:
             self.debug_execute(
-                f"SELECT key, json, last_seen FROM {tbl} WHERE URL = '{url}' ORDER BY DATETIME(found) ASC")
+                f"SELECT key, json, last_seen, json_hash FROM {tbl} WHERE URL = '{url}' ORDER BY DATETIME(found) ASC")
         else:
             self.debug_execute(
-                f"SELECT key, json, last_seen FROM {tbl} WHERE URL = '{url}' AND parent = {parent} "
+                f"SELECT key, json, last_seen, json_hash FROM {tbl} WHERE URL = '{url}' AND parent = {parent} "
                 f"ORDER BY DATETIME(found) ASC")
         raw = self.sq_cur.fetchall()
 
