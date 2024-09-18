@@ -178,7 +178,7 @@ class RegularizeJSON(BaseSQliteDB):
         if self.workers is not None:
             raise ValueError("workers aren't none. Only one process at a time.")
 
-        self.workers = [mp.Process(target=regularize_handler, args=(i, self.cmd_queue, self.res_queue))
+        self.workers = [mp.Process(target=regularize_handler, args=(i, self.cmd_queue, self.res_queue, self.b64))
                         for i in range(self.proc_count)]
 
         for worker in self.workers:
