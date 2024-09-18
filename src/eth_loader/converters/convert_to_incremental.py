@@ -639,7 +639,7 @@ class ConvToIncremental(BaseSQliteDB):
         self.debug_execute("INSERT INTO temp SELECT key FROM episodes "
                            "WHERE deprecated = 0 "
                            "AND record_type = 2 "
-                           "AND URL IN (SELECT URL FROM metadata GROUP BY parent, URL HAVING COUNT(*) > 2) ")
+                           "AND URL IN (SELECT URL FROM episodes GROUP BY URL HAVING COUNT(*) > 2) ")
 
         self._check_records(sql_stmt="SELECT URL FROM episodes WHERE deprecated = 0 "
                                      "                                 AND key NOT IN (SELECT key FROM temp) ",
