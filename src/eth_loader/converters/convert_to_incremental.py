@@ -582,13 +582,72 @@ class ConvToIncremental(BaseSQliteDB):
                             on_success="All single URLS have an initial record in episodes table",
                             on_fail="Found single URLS have no initial record in episodes table")
 
-        # doesn't fully capture it
-        # SELECT URL FROM metadata WHERE deprecated = 0 GROUP BY URL HAVING COUNT(*) > 2
+        # Check the non-deprecated records are either initial records or the newest diff record + the final record
+        self.debug_execute("DROP TABLE IF EXISTS temp;")
+        # Get the correctly attributed records from diff records
+        self.debug_execute("CREATE TABLE temp AS "
+                           "WITH LatestRecord AS (SELECT URL, parent, MAX(DATETIME(found)) AS "
+                           "                      latest_found FROM metadata WHERE record_type = 1 "
+                           "                      GROUP BY URL, parent ) "
+                           "SELECT t.key FROM metadata t "
+                           "JOIN LatestRecord lr ON t.URL = lr.URL "
+                           "                     AND t.found = lr.latest_found "
+                           "                     AND t.parent = lr.parent "
+                           "WHERE t.record_type = 1 AND deprecated = 0")
 
-        # TODO sanity check
-        #    Checks:
-        #     - if there's a diff, the diff and the incremental must be deprecated
-        pass
+        # Get the correctly attributed records initial records
+        self.debug_execute("SELECT key FROM metadata WHERE deprecated = 0 "
+                           "                         AND record_type = 0 "
+                           "                         AND key IN (SELECT key FROM metadata "
+                           "                                     GROUP BY parent, URL HAVING COUNT(*) = 1)")
+
+        # Get the correctly attributed final records
+        self.debug_execute("SELECT key FROM metadata WHERE deprecated = 0 "
+                           "                         AND record_type = 2 "
+                           "                         AND key IN (SELECT key FROM metadata "
+                           "                                     GROUP BY parent, URL HAVING COUNT(*) > 2)")
+
+        self._check_records(sql_stmt="SELECT URL, parent FROM metadata WHERE deprected = 0 "
+                                     "                                 AND key NOT IN (SELECT key FROM temp) ",
+                            on_success="All deprecated entries are either singular initial or final and diff, with the "
+                                       "diff being the newest diff record in metadata table",
+                            on_fail="Found Entries that were not deprecated but not singular initial or final and diff, "
+                                    "with the diff being the newest diff record in metadata table")
+
+        self.debug_execute("DROP TABLE IF EXISTS temp")
+
+        # Check the episodes table
+        # Get the correctly attributed records from diff records
+        self.debug_execute("CREATE TABLE temp AS "
+                           "WITH LatestRecord AS (SELECT URL, MAX(DATETIME(found)) AS "
+                           "                      latest_found FROM episodes WHERE record_type = 1 "
+                           "                      GROUP BY URL ) "
+                           "SELECT t.key FROM episodes t "
+                           "JOIN LatestRecord lr ON t.URL = lr.URL "
+                           "                     AND t.found = lr.latest_found "
+                           "WHERE t.record_type = 1 AND deprecated = 0")
+
+        # Get the correctly attributed records initial records
+        self.debug_execute("SELECT key FROM episodes WHERE deprecated = 0 "
+                           "                         AND record_type = 0 "
+                           "                         AND key IN (SELECT key FROM metadata "
+                           "                                     GROUP BY URL HAVING COUNT(*) = 1)")
+
+        # Get the correctly attributed final records
+        self.debug_execute("SELECT key FROM episodes WHERE deprecated = 0 "
+                           "                         AND record_type = 2 "
+                           "                         AND key IN (SELECT key FROM metadata "
+                           "                                     GROUP BY URL HAVING COUNT(*) > 2)")
+
+        self._check_records(sql_stmt="SELECT URL FROM episodes WHERE deprected = 0 "
+                                     "                                 AND key NOT IN (SELECT key FROM temp) ",
+                            on_success="All deprecated entries are either singular initial or final and diff, with the "
+                                       "diff being the newest diff record in episodes table",
+                            on_fail="Found Entries that were not deprecated but not singular initial or final and diff, "
+                                    "with the diff being the newest diff record in episodes table")
+
+        self.debug_execute("DROP TABLE IF EXISTS temp")
+
 
 
 if __name__ == "__main__":
