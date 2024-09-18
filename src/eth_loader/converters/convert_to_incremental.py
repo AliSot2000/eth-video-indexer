@@ -597,16 +597,17 @@ class ConvToIncremental(BaseSQliteDB):
                            "WHERE t.record_type = 1 AND deprecated = 0")
 
         # Get the correctly attributed records initial records
-        self.debug_execute("SELECT key FROM metadata WHERE deprecated = 0 "
-                           "                         AND record_type = 0 "
-                           "                         AND key IN (SELECT key FROM metadata "
-                           "                                     GROUP BY parent, URL HAVING COUNT(*) = 1)")
+        self.debug_execute("INSERT INTO temp SELECT key FROM metadata "
+                           "WHERE deprecated = 0 "
+                           "AND record_type = 0 "
+                           "AND key IN (SELECT key FROM metadata GROUP BY parent, URL HAVING COUNT(*) = 1)")
 
         # Get the correctly attributed final records
-        self.debug_execute("SELECT key FROM metadata WHERE deprecated = 0 "
-                           "                         AND record_type = 2 "
-                           "                         AND key IN (SELECT key FROM metadata "
-                           "                                     GROUP BY parent, URL HAVING COUNT(*) > 2)")
+        self.debug_execute("INSERT INTO temp SELECT key FROM metadata "
+                           "WHERE deprecated = 0 "
+                           "AND record_type = 2 "
+                           "AND URL IN (SELECT URL FROM metadata GROUP BY parent, URL HAVING COUNT(*) > 2) "
+                           "AND parent IN (SELECT parent FROM metadata GROUP BY parent, URL HAVING COUNT(*) > 2)")
 
         self._check_records(sql_stmt="SELECT URL, parent FROM metadata WHERE deprecated = 0 "
                                      "                                 AND key NOT IN (SELECT key FROM temp) ",
@@ -629,16 +630,16 @@ class ConvToIncremental(BaseSQliteDB):
                            "WHERE t.record_type = 1 AND deprecated = 0")
 
         # Get the correctly attributed records initial records
-        self.debug_execute("SELECT key FROM episodes WHERE deprecated = 0 "
-                           "                         AND record_type = 0 "
-                           "                         AND key IN (SELECT key FROM metadata "
-                           "                                     GROUP BY URL HAVING COUNT(*) = 1)")
+        self.debug_execute("INSERT INTO temp SELECT key FROM episodes "
+                           "WHERE deprecated = 0 "
+                           "AND record_type = 0 "
+                           "AND key IN (SELECT key FROM episodes GROUP BY URL HAVING COUNT(*) = 1)")
 
         # Get the correctly attributed final records
-        self.debug_execute("SELECT key FROM episodes WHERE deprecated = 0 "
-                           "                         AND record_type = 2 "
-                           "                         AND key IN (SELECT key FROM metadata "
-                           "                                     GROUP BY URL HAVING COUNT(*) > 2)")
+        self.debug_execute("INSERT INTO temp SELECT key FROM episodes "
+                           "WHERE deprecated = 0 "
+                           "AND record_type = 2 "
+                           "AND URL IN (SELECT URL FROM metadata GROUP BY parent, URL HAVING COUNT(*) > 2) ")
 
         self._check_records(sql_stmt="SELECT URL FROM episodes WHERE deprecated = 0 "
                                      "                                 AND key NOT IN (SELECT key FROM temp) ",
