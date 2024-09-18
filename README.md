@@ -3,7 +3,9 @@ Create an index of the entire video site of eth. Given username and password for
 
 Commands:
 ```bash
-rsync -avu --exclude sample\ text/ --exclude scratch/ --exclude __pycache__/ --exclude db_backup/ --exclude logs/ --exclude lin_venv/ /home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/ piora:/home/asotoude/projects/eth-video-indexer/
+rsync -avu --exclude sample\ text/ --exclude scratch/ --exclude __pycache__/ --exclude db_backup/ --exclude db_fucked/ --exclude logs/ --exclude lin_venv/ /home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/ piora:/home/asotoude/projects/eth-video-indexer/
+export PYTHONPATH="/home/asotoude/projects/eth-video-indexer/src"
+source /home/asotoude/projects/eth-video-indexer/lin_venv/bin/activate
 ```
 
 ## Table Specs:
