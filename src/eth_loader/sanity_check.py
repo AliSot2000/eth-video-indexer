@@ -112,6 +112,8 @@ class SanityCheck(BaseSQliteDB):
         else:
             self.logger.info(f"Found no dangling episode keys in episode_stream_assoz")
 
+    # TODO
+    #   - last_seen is not Null
 
 if __name__ == "__main__":
     l = logging.getLogger("sanity_checker")
