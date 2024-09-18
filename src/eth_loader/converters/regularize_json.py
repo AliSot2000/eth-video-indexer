@@ -1,14 +1,12 @@
-import os
-
-import queue
-from eth_loader.base_sql import BaseSQliteDB
 import json
-from eth_loader.aux import from_b64
 import multiprocessing as mp
+import os
+import queue
 import time
-
 from typing import Union, List
-from eth_loader.aux import to_b64
+
+from eth_loader.aux import from_b64, to_b64
+from eth_loader.base_sql import BaseSQliteDB
 
 
 def convert_json(data: dict, b64: bool = False) -> dict:
