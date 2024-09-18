@@ -8,7 +8,7 @@ import multiprocessing as mp
 import time
 
 from typing import Union, List
-from eth_loader.converters.convert_b64 import to_b64
+from eth_loader.aux import to_b64
 
 
 def convert_json(data: dict, b64: bool = False) -> dict:
