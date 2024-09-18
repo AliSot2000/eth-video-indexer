@@ -328,8 +328,8 @@ class ConvToIncremental(BaseSQliteDB):
             self.debug_execute(f"UPDATE metadata SET record_type = 0 WHERE key = {rows[0]['key']}")
 
             # duplicate the last entry for keeping the state of the last index (i.e. record of type final i.e. 2)
-            self.debug_execute(f"INSERT INTO metadata (URL, json, last_seen, record_type, parent) VALUES "
-                               f"('{url}','{escape_sql(rows[-1]['json'])}', '{rows[-1]['last_seen']}', 2, {parent})")
+            self.debug_execute(f"INSERT INTO metadata (URL, json, last_seen, record_type, parent, json_hash) VALUES "
+                               f"('{url}','{escape_sql(rows[-1]['json'])}', '{rows[-1]['last_seen']}', 2, {parent}, {rows[-1]['json_hash']})")
 
             # Compute the deltas
             deltas = {}
@@ -371,8 +371,8 @@ class ConvToIncremental(BaseSQliteDB):
             self.debug_execute(f"UPDATE episodes SET record_type = 0 WHERE key = {rows[0]['key']}")
 
             # duplicate the last entry for keeping the state of the last index (i.e. record of type final i.e. 2)
-            self.debug_execute(f"INSERT INTO episodes (URL, json, last_seen, record_type) VALUES "
-                               f"('{url}','{escape_sql(rows[-1]['json'])}', '{rows[-1]['last_seen']}', 2)")
+            self.debug_execute(f"INSERT INTO episodes (URL, json, last_seen, record_type, json_hash) VALUES "
+                               f"('{url}','{escape_sql(rows[-1]['json'])}', '{rows[-1]['last_seen']}', 2, {rows[-1]['json_hash']})")
 
             # Compute the deltas
             deltas = {}
