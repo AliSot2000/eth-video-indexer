@@ -425,9 +425,9 @@ class ConvToIncremental(BaseSQliteDB):
 
         # parse the rows
         if not self.b64:
-            return [{"key": r[0], "json": r[1], "last_seen": r[2]} for r in raw]
+            return [{"key": r[0], "json": r[1], "last_seen": r[2], "json_hash": r[3]} for r in raw]
         else:
-            return [{"key": r[0], "json": from_b64(r[1]), "last_seen": r[2]} for r in raw]
+            return [{"key": r[0], "json": from_b64(r[1]), "last_seen": r[2], "json_hash": r[3]} for r in raw]
 
     def _generic_table_converter(self, tbl: str):
         """
