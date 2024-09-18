@@ -608,7 +608,7 @@ class ConvToIncremental(BaseSQliteDB):
                            "                         AND key IN (SELECT key FROM metadata "
                            "                                     GROUP BY parent, URL HAVING COUNT(*) > 2)")
 
-        self._check_records(sql_stmt="SELECT URL, parent FROM metadata WHERE deprected = 0 "
+        self._check_records(sql_stmt="SELECT URL, parent FROM metadata WHERE deprecated = 0 "
                                      "                                 AND key NOT IN (SELECT key FROM temp) ",
                             on_success="All deprecated entries are either singular initial or final and diff, with the "
                                        "diff being the newest diff record in metadata table",
@@ -640,7 +640,7 @@ class ConvToIncremental(BaseSQliteDB):
                            "                         AND key IN (SELECT key FROM metadata "
                            "                                     GROUP BY URL HAVING COUNT(*) > 2)")
 
-        self._check_records(sql_stmt="SELECT URL FROM episodes WHERE deprected = 0 "
+        self._check_records(sql_stmt="SELECT URL FROM episodes WHERE deprecated = 0 "
                                      "                                 AND key NOT IN (SELECT key FROM temp) ",
                             on_success="All deprecated entries are either singular initial or final and diff, with the "
                                        "diff being the newest diff record in episodes table",
