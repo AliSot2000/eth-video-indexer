@@ -307,13 +307,17 @@ class SanityCheck(BaseSQliteDB):
         """
         Check the assoz table for dangling records
         """
-        self.debug_execute("SELECT COUNT(key) FROM metadata_episode_assoz "
-                           "WHERE metadata_episode_assoz.episode_key NOT IN (SELECT key FROM episodes)")
-        cnt = self.sq_cur.fetchone()[0]
-        if cnt > 0:
-            self.logger.warning(f"Found {cnt} dangling episode keys in metadata_episode_assoz")
-        else:
-            self.logger.info(f"Found no dangling episode keys in metadata_episode_assoz")
+        # Find dangling records based on episode_key
+        self._perform_check(stmt="SELECT key FROM metadata_episode_assoz "
+                                 "WHERE metadata_episode_assoz.episode_key NOT IN (SELECT key FROM episodes)",
+                            on_success="Found no dangling episode keys in metadata_episode_assoz",
+                            on_failure="Found dangling episode keys in metadata_episode_assoz")
+
+        # Find dangling records based on metadata_key
+        self._perform_check(stmt="SELECT key FROM metadata_episode_assoz "
+                                 "WHERE metadata_episode_assoz.metadata_key NOT IN (SELECT key FROM metadata)",
+                            on_success="Found no dangling metadata keys in metadata_episode_assoz",
+                            on_failure="Found dangling metadata keys in metadata_episode_assoz")
 
         # Check no links to final records
         self._perform_check(stmt="SELECT * FROM metadata_episode_assoz "
