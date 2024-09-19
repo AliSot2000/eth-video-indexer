@@ -1,9 +1,9 @@
 SELECT * FROM episodes WHERE URL LIKE '%.mp4';
+SELECT COUNT(*) FROM episodes WHERE URL LIKE '%.mp4' -- 41643
+
 
 ALTER TABLE metadata DROP COLUMN record_type;
 ALTER TABLE episodes DROP COLUMN record_type;
-
-SELECT COUNT(*) FROM episodes WHERE URL LIKE '%.mp4' -- 41643
 
 SELECT COUNT(*) FROM streams;
 SELECT COUNT(*) FROM episodes;
@@ -12,13 +12,11 @@ SELECT COUNT(*) FROM sites;
 
 SELECT * FROM  sqlite_master;
 
-
-UPDATE metadata SET record_type = 0 WHERE URL IN (SELECT URL FROM metadata GROUP BY URL HAVING COUNT(URL) = 1);
-UPDATE episodes SET record_type = 0 WHERE URL IN (SELECT URL FROM episodes GROUP BY URL HAVING COUNT(URL) = 1);
-
 SELECT URL FROM metadata WHERE deprecated = 0 GROUP BY URL HAVING COUNT(*) > 2;
 
 VACUUM;
+
+SELECT * FROM streams;
 
 SELECT COUNT(*) FROM episodes WHERE key > 190000;
 
