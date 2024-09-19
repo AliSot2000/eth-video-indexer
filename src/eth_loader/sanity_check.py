@@ -62,6 +62,10 @@ class SanityCheck(BaseSQliteDB):
         """
         Check the site table for dangling records
         """
+        self.logger.info("=" * 120)
+        self.logger.info("Performing Sanity Checks of the Site Table")
+        self.logger.info("=" * 120)
+
         # Check for parent is video
         self._perform_check(stmt="SELECT * FROM sites WHERE parent IN (SELECT key FROM sites WHERE IS_VIDEO = 1)",
                             on_failure="Found mal-attributed records in the site table (parent is a video)",
@@ -82,6 +86,8 @@ class SanityCheck(BaseSQliteDB):
                             on_failure="Found records with empty found field in site table",
                             on_success="No records with empty found field found in site table")
 
+        self.logger.info("Done with Site Table Checks")
+
     # ==================================================================================================================
     # Checks for the Metadata Table
     # ==================================================================================================================
@@ -90,6 +96,10 @@ class SanityCheck(BaseSQliteDB):
         """
         Check the metadata table for dangling records
         """
+        self.logger.info("=" * 120)
+        self.logger.info("Performing Sanity Checks of the Metadata Table")
+        self.logger.info("=" * 120)
+
         # Checking for entries without a last_seen field.
         self._perform_check(stmt="SELECT * FROM metadata WHERE last_seen IS NULL",
                             on_failure="Found records with empty last_seen field in metadata table",
@@ -183,6 +193,8 @@ class SanityCheck(BaseSQliteDB):
             epilogue=["DROP TABLE IF EXISTS temp"]
         )
 
+        self.logger.info("Done with Metadata Table Checks")
+
     # ==================================================================================================================
     # Checks for the Episode Table
     # ==================================================================================================================
@@ -191,6 +203,10 @@ class SanityCheck(BaseSQliteDB):
         """
         Check the episode table for dangling records
         """
+        self.logger.info("=" * 120)
+        self.logger.info("Performing Sanity Checks of the Episodes Table")
+        self.logger.info("=" * 120)
+
         # Checking for entries without a last_seen field.
         self._perform_check(stmt="SELECT * FROM episodes WHERE last_seen IS NULL",
                             on_failure="Found records with empty last_seen field in episodes table",
@@ -282,6 +298,8 @@ class SanityCheck(BaseSQliteDB):
             epilogue=["DROP TABLE IF EXISTS temp"]
         )
 
+        self.logger.info("Done with Episodes Table Checks")
+
     # ==================================================================================================================
     # Checks for the Stream Table
     # ==================================================================================================================
@@ -290,6 +308,10 @@ class SanityCheck(BaseSQliteDB):
         """
         Check the stream table for dangling records
         """
+        self.logger.info("=" * 120)
+        self.logger.info("Performing Sanity Checks of the Streams Table")
+        self.logger.info("=" * 120)
+
         # Checking for entries without a last_seen field.
         self._perform_check(stmt="SELECT * FROM streams WHERE last_seen IS NULL",
                             on_failure="Found records with empty last_seen field in streams table",
@@ -299,6 +321,8 @@ class SanityCheck(BaseSQliteDB):
                             on_failure="Found records with empty found field in streams table",
                             on_success="No records with empty found field found in streams table")
 
+        self.logger.info("Done with Streams Table Checks")
+
     # ==================================================================================================================
     # Checks for the Metadata_Episode_Assoz Table
     # ==================================================================================================================
@@ -307,6 +331,10 @@ class SanityCheck(BaseSQliteDB):
         """
         Check the assoz table for dangling records
         """
+        self.logger.info("=" * 120)
+        self.logger.info("Performing Sanity Checks of the Metadata_Episode_Assoz Table")
+        self.logger.info("=" * 120)
+
         # Find dangling records based on episode_key
         self._perform_check(stmt="SELECT key FROM metadata_episode_assoz "
                                  "WHERE metadata_episode_assoz.episode_key NOT IN (SELECT key FROM episodes)",
@@ -326,6 +354,8 @@ class SanityCheck(BaseSQliteDB):
                             on_success="No links to final record in metadata_episode_assoz tables",
                             on_failure="Found links to final record in metadata_episode_assoz tables")
 
+        self.logger.info("Done with Metadata_Episode_Assoz Table Checks")
+
     # ==================================================================================================================
     # Checks for the Episode_Stream_Assoz Table
     # ==================================================================================================================
@@ -334,6 +364,10 @@ class SanityCheck(BaseSQliteDB):
         """
         Check the assoz table for dangling records
         """
+        self.logger.info("=" * 120)
+        self.logger.info("Performing Sanity Checks of the Episode_Streams_Assoz Table")
+        self.logger.info("=" * 120)
+
         # Find dangling records based on episode_key
         self._perform_check(stmt="SELECT key FROM episode_stream_assoz "
                                  "WHERE episode_stream_assoz.episode_key NOT IN (SELECT key FROM episodes)",
@@ -351,6 +385,8 @@ class SanityCheck(BaseSQliteDB):
                                  "WHERE episode_key IN (SELECT key FROM episodes WHERE record_type = 2);",
                             on_success="No links to final record in episode_stream_assoz tables",
                             on_failure="Found links to final record in episode_stream_assoz tables")
+
+        self.logger.info("Done with Episode_Streams_Assoz Table Checks")
 
 if __name__ == "__main__":
     l = logging.getLogger("sanity_checker")
