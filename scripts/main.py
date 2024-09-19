@@ -20,7 +20,7 @@ def perform_index_of_sites(db: str, dt: datetime.datetime):
     eid.gen_parent()
     eid.cleanup()
     end = datetime.datetime.now()
-    print(f"required {(end - index_start).total_seconds()}s")
+    print(f"required {(end - index_start).total_seconds():.02f}s")
 
 
 def download_all_metadata(db, index_start: datetime.datetime, b64: bool = False):
@@ -35,7 +35,7 @@ def download_all_metadata(db, index_start: datetime.datetime, b64: bool = False)
     eid.deprecate(dt=index_start)
     eid.cleanup()
     end = datetime.datetime.now()
-    print(f"required {(end - start).total_seconds()}s")
+    print(f"required {(end - start).total_seconds():.02f}s")
 
 
 def download_all_stream_data(db: str, index_start: datetime.datetime, b64: bool = False):
@@ -54,7 +54,7 @@ def download_all_stream_data(db: str, index_start: datetime.datetime, b64: bool 
     bsl.deprecate(index_start)
     bsl.cleanup()
     end = datetime.datetime.now()
-    print(f"required {(end - start).total_seconds()}s")
+    print(f"required {(end - start).total_seconds():.02f}s")
 
 
 def sanity_check(db: str):
@@ -62,7 +62,7 @@ def sanity_check(db: str):
     start = datetime.datetime.now()
     sc.check_all()
     end = datetime.datetime.now()
-    print(f"required {(end - start).total_seconds()}s")
+    print(f"required {(end - start).total_seconds():.02f}s")
 
 if __name__ == "__main__":
     debug = True
