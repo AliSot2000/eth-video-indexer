@@ -670,7 +670,8 @@ class BetterStreamLoader(BaseSQliteDB):
         self.debug_execute(f"SELECT key FROM episodes "
                            f"WHERE URL = '{url}' "
                            f"AND json = '{conv_json_arg}'"
-                           f"AND found = '{now}'")
+                           f"AND found = '{now}'"
+                           f"AND (record_type IS NULL OR record_type = 0)")
 
         result = self.sq_cur.fetchone()
         assert result is not None, "Just inserted the bloody thing"
