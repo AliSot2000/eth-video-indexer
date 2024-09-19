@@ -397,5 +397,9 @@ if __name__ == "__main__":
     l.propagate = False
     path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites.db"
 
-    sc = SanityCheck(path)
-    sc.check_all()
+    sc1 = SanityCheck(path)
+    sc1.check_all()
+
+    path_b64 = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites_b64.db"
+    sc2 = SanityCheck(path_b64)
+    sc2.check_all()
