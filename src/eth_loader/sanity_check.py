@@ -1,11 +1,46 @@
 from eth_loader.base_sql import BaseSQliteDB
 import logging
+from typing import List
 
 
 class SanityCheck(BaseSQliteDB):
     def __init__(self, db_path: str):
         super().__init__(db_path)
         self.logger = logging.getLogger("sanity_checker")
+
+    def _perform_check(self, stmt: str, on_success: str, on_failure: str, preamble: List[str] = None, epilogue: List[str] = None):
+        """
+        Perform a single sanity check.
+
+        :param preamble: List of statements to execute before the main statement
+        :param stmt: The main statement to execute
+        :param epilogue: List of statements to execute after the main statement
+        :param on_success: Message to print if the check is successful
+        :param on_failure: Message to print if the check fails
+        """
+        # Execute the preamble
+        if preamble is not None:
+            for p in preamble:
+                self.debug_execute(p)
+
+        self.debug_execute(stmt)
+        rows = self.sq_cur.fetchall()
+
+        # Handling case when no offending records are found
+        if len(rows) == 0:
+            self.logger.info(on_success)
+
+        # Handling case when offending records were found.
+        else:
+            self.logger.warning(on_failure)
+            self.logger.debug("Printing the offending records")
+            for row in rows:
+                self.logger.debug(row)
+
+        # Execute the epilogue
+        if epilogue is not None:
+            for e in epilogue:
+                self.debug_execute(e)
 
     def check_all(self):
         """
