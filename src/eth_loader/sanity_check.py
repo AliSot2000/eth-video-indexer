@@ -399,7 +399,11 @@ if __name__ == "__main__":
 
     sc1 = SanityCheck(path)
     sc1.check_all()
+    # sc1.check_metadata_episode_assoz_table()
+    # sc1.check_episode_stream_assoz_table()
 
     path_b64 = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites_b64.db"
     sc2 = SanityCheck(path_b64)
     sc2.check_all()
+    # sc2.check_metadata_episode_assoz_table()
+    # sc2.check_episode_stream_assoz_table()
