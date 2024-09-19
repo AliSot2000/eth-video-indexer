@@ -54,6 +54,10 @@ class SanityCheck(BaseSQliteDB):
         self.check_metadata_episode_assoz_table()
         self.check_episode_stream_assoz_table()
 
+    # ==================================================================================================================
+    # Checks for the Site Table
+    # ==================================================================================================================
+
     def check_site_table(self):
         """
         Check the site table for dangling records
@@ -86,24 +90,36 @@ class SanityCheck(BaseSQliteDB):
         else:
             self.logger.info("No orphaned records found.")
 
+    # ==================================================================================================================
+    # Checks for the Metadata Table
+    # ==================================================================================================================
 
     def check_metadata_table(self):
         """
         Check the metadata table for dangling records
         """
         self.logger.info("No Sanity Checks for metadata table")
+    # ==================================================================================================================
+    # Checks for the Episode Table
+    # ==================================================================================================================
 
     def check_episode_table(self):
         """
         Check the episode table for dangling records
         """
         self.logger.info("No Sanity Checks for episode table")
+    # ==================================================================================================================
+    # Checks for the Stream Table
+    # ==================================================================================================================
 
     def check_stream_table(self):
         """
         Check the stream table for dangling records
         """
         self.logger.info("No Sanity Checks for stream table")
+    # ==================================================================================================================
+    # Checks for the Metadata_Episode_Assoz Table
+    # ==================================================================================================================
 
     def check_metadata_episode_assoz_table(self):
         """
@@ -125,6 +141,9 @@ class SanityCheck(BaseSQliteDB):
             self.logger.warning(f"Found {cnt} dangling metadata keys in metadata_episode_assoz")
         else:
             self.logger.info(f"Found no dangling metadata keys in metadata_episode_assoz")
+    # ==================================================================================================================
+    # Checks for the Episode_Stream_Assoz Table
+    # ==================================================================================================================
 
     def check_episode_stream_assoz_table(self):
         """
