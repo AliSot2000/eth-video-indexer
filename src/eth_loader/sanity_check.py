@@ -62,33 +62,25 @@ class SanityCheck(BaseSQliteDB):
         """
         Check the site table for dangling records
         """
-        # Checking for parents who are videos
-        self.debug_execute("SELECT COUNT(key) FROM sites WHERE parent IN (SELECT key FROM sites WHERE IS_VIDEO = 1)")
-        cnt = self.sq_cur.fetchone()[0]
-        if cnt > 0:
-            self.logger.warning(f"Found {cnt} mal-attributed records in the site table (parent is a video)")
-
-            self.logger.debug("Printing the offending records")
-
-            self.debug_execute("SELECT * FROM sites WHERE parent IN (SELECT key FROM sites WHERE IS_VIDEO = 1)")
-            for row in self.sq_cur.fetchall():
-                self.logger.debug(row)
-        else:
-            self.logger.info("No mal-attributed records in the site table")
+        # Check for parent is video
+        self._perform_check(stmt="SELECT * FROM sites WHERE parent IN (SELECT key FROM sites WHERE IS_VIDEO = 1)",
+                            on_failure="Found mal-attributed records in the site table (parent is a video)",
+                            on_success="No mal-attributed records in the site table")
 
         # Checking for entries without parents.
-        self.debug_execute("SELECT COUNT(key) FROM sites WHERE parent IS NULL")
-        cnt = self.sq_cur.fetchone()[0]
-        if cnt > 0:
-            self.logger.warning(f"Found {cnt} records who orphaned")
+        self._perform_check(stmt="SELECT * FROM sites WHERE parent IS NULL",
+                            on_failure="Found orphaned records in site table",
+                            on_success="No orphaned records in site table")
 
-            self.logger.debug("Printing the offending records")
+        # Checking for entries without a last_seen field.
+        self._perform_check(stmt="SELECT * FROM sites WHERE last_seen IS NULL",
+                            on_failure="Found records with empty last_seen field in site table",
+                            on_success="No records with empty last_seen field found in site table")
 
-            self.debug_execute("SELECT * FROM sites WHERE parent IS NULL")
-            for row in self.sq_cur.fetchall():
-                self.logger.debug(row)
-        else:
-            self.logger.info("No orphaned records found.")
+        # Checking for entries without a found field.
+        self._perform_check(stmt="SELECT * FROM sites WHERE found IS NULL",
+                            on_failure="Found records with empty found field in site table",
+                            on_success="No records with empty found field found in site table")
 
     # ==================================================================================================================
     # Checks for the Metadata Table
@@ -98,7 +90,99 @@ class SanityCheck(BaseSQliteDB):
         """
         Check the metadata table for dangling records
         """
-        self.logger.info("No Sanity Checks for metadata table")
+        # Checking for entries without a last_seen field.
+        self._perform_check(stmt="SELECT * FROM metadata WHERE last_seen IS NULL",
+                            on_failure="Found records with empty last_seen field in metadata table",
+                            on_success="No records with empty last_seen field found in metadata table")
+
+        # Check no initial
+        self._perform_check(stmt="SELECT url "
+                                 "FROM metadata "
+                                 "GROUP BY URL HAVING COUNT(*) > 1 "
+                                 "AND SUM(CASE metadata.record_type WHEN 0 THEN 1 ELSE 0 END) = 0;",
+                            on_success="No urls with no initial record found in metadata",
+                            on_failure="Found urls with no initial record in metadata")
+
+        # more than one initial
+        self._perform_check(stmt="SELECT url "
+                                 "FROM metadata "
+                                 "GROUP BY URL HAVING SUM (CASE metadata.record_type WHEN 0 THEN 1 ELSE 0 END) > 1;",
+                            on_success="No urls with more than one initial record found in metadata",
+                            on_failure="Found urls with more than one initial record in metadata")
+
+        # Diff but no final
+        self._perform_check(stmt="SELECT url "
+                                 "FROM metadata "
+                                 "GROUP BY URL "
+                                 "HAVING SUM (CASE metadata.record_type WHEN 1 THEN 1 ELSE 0 END) > 0 " # Has diff
+                                 "AND SUM (CASE metadata.record_type WHEN 2 THEN 1 ELSE 0 END) = 0;",
+                            on_success="No urls with diff and no final record found in metadata",
+                            on_failure="Found urls with diff and no final record in metadata")
+
+        # more than one final
+        self._perform_check(stmt="SELECT url "
+                                 "FROM metadata "
+                                 "GROUP BY URL HAVING SUM (CASE metadata.record_type WHEN 2 THEN 1 ELSE 0 END) > 1;",
+                            on_success="No urls with more than one final record found in metadata",
+                            on_failure="Found urls with more than one final record in metadata")
+
+        # no diff but more than two values per url
+        self._perform_check(stmt="SELECT url "
+                                 "FROM metadata "
+                                 "GROUP BY URL HAVING COUNT(*) > 1 "
+                                 "AND SUM (CASE metadata.record_type WHEN 1 THEN 1 ELSE 0 END) = 0;",
+                            on_success="No urls with no diff but more than one records found in metadata",
+                            on_failure="Found urls with no diff but more than one records in metadata")
+
+        # check final records aren't found
+        self._perform_check(stmt="SELECT key FROM metadata WHERE record_type = 2 AND found IS NOT NULL;",
+                            on_success="All final records have no found date in metadata table",
+                            on_failure="Found final records with a found date in metadata table")
+
+        # if there's exactly one entry for a given url, the type is initial not final
+        self._perform_check(stmt="SELECT URL FROM metadata WHERE record_type != 0 GROUP BY URL HAVING COUNT(*) = 1;",
+                            on_success="All single URLS have an initial record in metadata table",
+                            on_failure="Found single URLS have no initial record in metadata table")
+
+        # Check the non-deprecated records are either initial records or the newest diff record + the final record
+        self._perform_check(
+            preamble=[
+            # Cleanup - drop the temp table if it exists
+            "DROP TABLE IF EXISTS temp;",
+
+            # Get the correctly attributed records from diff records
+            "CREATE TABLE temp AS "
+            "WITH LatestRecord AS (SELECT URL, parent, MAX(DATETIME(found)) AS "
+            "                      latest_found FROM metadata WHERE record_type = 1 "
+            "                      GROUP BY URL, parent ) "
+            "SELECT t.key FROM metadata t "
+            "JOIN LatestRecord lr ON t.URL = lr.URL "
+            "                     AND t.found = lr.latest_found "
+            "                     AND t.parent = lr.parent "
+            "WHERE t.record_type = 1 AND deprecated = 0",
+
+            # Get the correctly attributed records initial records
+            "INSERT INTO temp SELECT key FROM metadata "
+            "WHERE deprecated = 0 "
+            "AND record_type = 0 "
+            "AND key IN (SELECT key FROM metadata GROUP BY parent, URL HAVING COUNT(*) = 1)",
+
+            # Get the correctly attributed final records
+            "INSERT INTO temp SELECT key FROM metadata "
+            "WHERE deprecated = 0 "
+            "AND record_type = 2 "
+            "AND URL IN (SELECT URL FROM metadata GROUP BY parent, URL HAVING COUNT(*) > 2) "
+            "AND parent IN (SELECT parent FROM metadata GROUP BY parent, URL HAVING COUNT(*) > 2)"
+        ],
+            stmt="SELECT URL, parent FROM metadata WHERE deprecated = 0 "
+                 "                                 AND key NOT IN (SELECT key FROM temp) ",
+            on_success="All deprecated entries are either singular initial or final and diff, with the "
+                       "diff being the newest diff record in metadata table",
+            on_failure="Found Entries that were not deprecated but not singular initial or final and diff, "
+                       "with the diff being the newest diff record in metadata table",
+            epilogue=["DROP TABLE IF EXISTS temp"]
+        )
+
     # ==================================================================================================================
     # Checks for the Episode Table
     # ==================================================================================================================
@@ -107,7 +191,97 @@ class SanityCheck(BaseSQliteDB):
         """
         Check the episode table for dangling records
         """
-        self.logger.info("No Sanity Checks for episode table")
+        # Checking for entries without a last_seen field.
+        self._perform_check(stmt="SELECT * FROM episodes WHERE last_seen IS NULL",
+                            on_failure="Found records with empty last_seen field in episodes table",
+                            on_success="No records with empty last_seen field found in episodes table")
+
+        # Check no initial
+        self._perform_check(stmt="SELECT url "
+                                 "FROM episodes "
+                                 "GROUP BY URL HAVING COUNT(*) > 1 "
+                                 "AND SUM(CASE episodes.record_type WHEN 0 THEN 1 ELSE 0 END) = 0;",
+                            on_success="No urls with no initial record found in episodes",
+                            on_failure="Found urls with no initial record in episodes")
+
+        # more than one initial
+        self._perform_check(stmt="SELECT url "
+                                 "FROM episodes "
+                                 "GROUP BY URL HAVING SUM (CASE episodes.record_type WHEN 0 THEN 1 ELSE 0 END) > 1;",
+                            on_success="No urls with more than one initial record found in episodes",
+                            on_failure="Found urls with more than one initial record in episodes")
+
+        # Diff but no final
+        self._perform_check(stmt="SELECT url "
+                                 "FROM episodes "
+                                 "GROUP BY URL "
+                                 "HAVING SUM (CASE episodes.record_type WHEN 1 THEN 1 ELSE 0 END) > 0 "  # Has diff
+                                 "AND SUM (CASE episodes.record_type WHEN 2 THEN 1 ELSE 0 END) = 0;",
+                            on_success="No urls with diff and no final record found in episodes",
+                            on_failure="Found urls with diff and no final record in episodes")
+
+        # more than one final
+        self._perform_check(stmt="SELECT url "
+                                 "FROM episodes "
+                                 "GROUP BY URL HAVING SUM (CASE episodes.record_type WHEN 2 THEN 1 ELSE 0 END) > 1;",
+                            on_success="No urls with more than one final record found in episodes",
+                            on_failure="Found urls with more than one final record in episodes")
+
+        # no diff but more than two values per url
+        self._perform_check(stmt="SELECT url "
+                                 "FROM episodes "
+                                 "GROUP BY URL HAVING COUNT(*) > 1 "
+                                 "AND SUM (CASE episodes.record_type WHEN 1 THEN 1 ELSE 0 END) = 0;",
+                            on_success="No urls with no diff but more than one records found in episodes",
+                            on_failure="Found urls with no diff but more than one records in episodes")
+
+        # check final records aren't found
+        self._perform_check(stmt="SELECT key FROM episodes WHERE record_type = 2 AND found IS NOT NULL;",
+                            on_success="All final records have no found date in episodes table",
+                            on_failure="Found final records with a found date in episodes table")
+
+        # if there's exactly one entry for a given url, the type is initial not final
+        self._perform_check(stmt="SELECT URL FROM episodes WHERE record_type != 0 GROUP BY URL HAVING COUNT(*) = 1;",
+                            on_success="All single URLS have an initial record in episodes table",
+                            on_failure="Found single URLS have no initial record in episodes table")
+
+        # Check the non-deprecated records are either initial records or the newest diff record + the final record
+        self._perform_check(
+            preamble=[
+                # Cleanup - drop the temp table if it exists
+                "DROP TABLE IF EXISTS temp",
+
+                # Get the correctly attributed records from diff records
+                "CREATE TABLE temp AS "
+                "WITH LatestRecord AS (SELECT URL, MAX(DATETIME(found)) AS "
+                "                      latest_found FROM episodes WHERE record_type = 1 "
+                "                      GROUP BY URL ) "
+                "SELECT t.key FROM episodes t "
+                "JOIN LatestRecord lr ON t.URL = lr.URL "
+                "                     AND t.found = lr.latest_found "
+                "WHERE t.record_type = 1 AND deprecated = 0",
+
+                # Get the correctly attributed records initial records
+                "INSERT INTO temp SELECT key FROM episodes "
+                "WHERE deprecated = 0 "
+                "AND record_type = 0 "
+                "AND key IN (SELECT key FROM episodes GROUP BY URL HAVING COUNT(*) = 1)",
+
+                # Get the correctly attributed final records
+                "INSERT INTO temp SELECT key FROM episodes "
+                "WHERE deprecated = 0 "
+                "AND record_type = 2 "
+                "AND URL IN (SELECT URL FROM episodes GROUP BY URL HAVING COUNT(*) > 2) "
+            ],
+            stmt="SELECT URL FROM episodes WHERE deprecated = 0 "
+                 "                                 AND key NOT IN (SELECT key FROM temp) ",
+            on_success="All deprecated entries are either singular initial or final and diff, with the "
+                       "diff being the newest diff record in episodes table",
+            on_failure="Found Entries that were not deprecated but not singular initial or final and "
+                       "diff, with the diff being the newest diff record in episodes table",
+            epilogue=["DROP TABLE IF EXISTS temp"]
+        )
+
     # ==================================================================================================================
     # Checks for the Stream Table
     # ==================================================================================================================
@@ -116,7 +290,15 @@ class SanityCheck(BaseSQliteDB):
         """
         Check the stream table for dangling records
         """
-        self.logger.info("No Sanity Checks for stream table")
+        # Checking for entries without a last_seen field.
+        self._perform_check(stmt="SELECT * FROM streams WHERE last_seen IS NULL",
+                            on_failure="Found records with empty last_seen field in streams table",
+                            on_success="No records with empty last_seen field found in streams table")
+
+        self._perform_check(stmt="SELECT * FROM streams WHERE found IS NULL",
+                            on_failure="Found records with empty found field in streams table",
+                            on_success="No records with empty found field found in streams table")
+
     # ==================================================================================================================
     # Checks for the Metadata_Episode_Assoz Table
     # ==================================================================================================================
@@ -133,14 +315,13 @@ class SanityCheck(BaseSQliteDB):
         else:
             self.logger.info(f"Found no dangling episode keys in metadata_episode_assoz")
 
-        # Search based on metadata_key
-        self.debug_execute("SELECT COUNT(key) FROM metadata_episode_assoz "
-                           "WHERE metadata_episode_assoz.metadata_key NOT IN (SELECT key FROM metadata)")
-        cnt = self.sq_cur.fetchone()[0]
-        if cnt > 0:
-            self.logger.warning(f"Found {cnt} dangling metadata keys in metadata_episode_assoz")
-        else:
-            self.logger.info(f"Found no dangling metadata keys in metadata_episode_assoz")
+        # Check no links to final records
+        self._perform_check(stmt="SELECT * FROM metadata_episode_assoz "
+                                 "WHERE metadata_key IN (SELECT key FROM metadata WHERE record_type = 2) "
+                                 "OR episode_key IN (SELECT key FROM episodes WHERE record_type = 2);",
+                            on_success="No links to final record in metadata_episode_assoz tables",
+                            on_failure="Found links to final record in metadata_episode_assoz tables")
+
     # ==================================================================================================================
     # Checks for the Episode_Stream_Assoz Table
     # ==================================================================================================================
