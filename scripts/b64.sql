@@ -101,5 +101,3 @@ SELECT COUNT(*) FROM (SELECT COUNT(*) FROM metadata GROUP BY URL, parent HAVING 
 
 SELECT URL, parent FROM (SELECT COUNT(*), * FROM metadata GROUP BY URL, parent HAVING COUNT(*) = 1);
 SELECT URL, parent FROM (SELECT COUNT(*), * FROM metadata GROUP BY URL, parent HAVING COUNT(*) > 1);
-
-SELECT * FROM metadata;
