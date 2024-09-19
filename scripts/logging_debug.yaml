@@ -86,3 +86,11 @@ loggers:
             - thread_file_handler
             - error_file_handler
         propagate: no
+
+    increment_builder:
+        level: DEBUG
+        handlers:
+            - console_info
+            - thread_file_handler
+            - error_file_handler
+        propagate: no
