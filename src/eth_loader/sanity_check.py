@@ -334,25 +334,23 @@ class SanityCheck(BaseSQliteDB):
         """
         Check the assoz table for dangling records
         """
-        self.debug_execute("SELECT COUNT(key) FROM episode_stream_assoz "
-                           "WHERE episode_stream_assoz.stream_key NOT IN (SELECT key FROM streams)")
-        cnt = self.sq_cur.fetchone()[0]
-        if cnt > 0:
-            self.logger.warning(f"Found {self.sq_cur.fetchone()[0]} dangling stream keys in episode_stream_assoz")
-        else:
-            self.logger.info(f"Found no dangling stream keys in episode_stream_assoz")
+        # Find dangling records based on episode_key
+        self._perform_check(stmt="SELECT key FROM episode_stream_assoz "
+                                 "WHERE episode_stream_assoz.episode_key NOT IN (SELECT key FROM episodes)",
+                            on_success="Found no dangling episode keys in episode_stream_assoz",
+                            on_failure="Found dangling episode keys in episode_stream_assoz")
 
-        # Search based on episode_key
-        self.debug_execute("SELECT COUNT(key) FROM episode_stream_assoz "
-                           "WHERE episode_stream_assoz.episode_key NOT IN (SELECT key FROM episodes)")
-        cnt = self.sq_cur.fetchone()[0]
-        if cnt > 0:
-            self.logger.warning(f"Found {self.sq_cur.fetchone()[0]} dangling episode keys in episode_stream_assoz")
-        else:
-            self.logger.info(f"Found no dangling episode keys in episode_stream_assoz")
+        # Find dangling records based on metadata_key
+        self._perform_check(stmt="SELECT key FROM episode_stream_assoz "
+                                 "WHERE episode_stream_assoz.stream_key NOT IN (SELECT key FROM streams)",
+                            on_success="Found no dangling stream keys in episode_stream_assoz",
+                            on_failure="Found dangling stream keys in episode_stream_assoz")
 
-    # TODO
-    #   - last_seen is not Null
+        # Check no links to final records
+        self._perform_check(stmt="SELECT * FROM episode_stream_assoz "
+                                 "WHERE episode_key IN (SELECT key FROM episodes WHERE record_type = 2);",
+                            on_success="No links to final record in episode_stream_assoz tables",
+                            on_failure="Found links to final record in episode_stream_assoz tables")
 
 if __name__ == "__main__":
     l = logging.getLogger("sanity_checker")
