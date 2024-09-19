@@ -33,7 +33,7 @@ class SanityCheck(BaseSQliteDB):
         # Handling case when offending records were found.
         else:
             self.logger.warning(on_failure)
-            self.logger.debug("Printing the offending records")
+            self.logger.debug(f"Printing the {len(rows)} offending records")
             for row in rows:
                 self.logger.debug(row)
 
