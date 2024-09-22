@@ -23,6 +23,9 @@ class BaseSQliteDB:
 
 
     def connect(self, db_path: str):
+        """
+        Connect to the database, set the path of the object and create a cursor
+        """
         self.db_path = os.path.abspath(db_path)
 
         self.sq_con = Connection(self.db_path)
@@ -43,6 +46,12 @@ class BaseSQliteDB:
             raise e
 
     def cleanup(self):
+        """
+        Actions performed:
+        - Commit the changes
+        - Close the connection
+        - clear the variables
+        """
         self.sq_con.commit()
         self.sq_con.close()
 
