@@ -225,7 +225,7 @@ class IncrementBuilder(BaseSQliteDB):
             assert False, "Queue not empty, should be empty when this function is called"
 
         # Get the rows
-        self.debug_execute(f"SELECT key FROM {tbl} WHERE record_type = 0 ORDER BY LENGTH(json) DESC")
+        self.debug_execute(f"SELECT key FROM {tbl} WHERE record_type IS NULL ORDER BY LENGTH(json) DESC")
         keys = [r[0] for r in self.sq_cur.fetchall()]
 
         # Update the number of processes
