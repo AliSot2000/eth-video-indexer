@@ -36,31 +36,11 @@ CREATE TABLE temp AS SELECT episodes.key AS key
                        AND datetime(metadata.last_seen) >= datetime('2024-09-10 00:00:00')
                        AND datetime(episodes.last_seen) >= datetime('2024-09-10 00:00:00');
 
-INSERT INTO temp SELECT episodes.key AS key FROM episodes
-                     WHERE episodes.record_type = 2
-                       AND datetime(episodes.last_seen) >= datetime('2024-09-10 00:00:00');
-
-SELECT COUNT(episodes.key) FROM episodes
-                     WHERE episodes.record_type = 2
-                       AND datetime(episodes.last_seen) >= datetime('2024-09-10 00:00:00');
-
-UPDATE episodes SET deprecated = 0 WHERE DATETIME(last_seen) >= datetime('2024-09-10 00:00:00') AND record_type = 2;;
-
-
-SELECT COUNT(metadata.key) FROM metadata
-                     WHERE metadata.record_type = 2
-                       AND datetime(metadata.last_seen) >= datetime('2024-09-10 00:00:00');
-
-UPDATE metadata SET deprecated = 0 WHERE DATETIME(last_seen) >= datetime('2024-09-10 00:00:00') AND record_type = 2;;
-
 SELECT * FROM episodes GROUP BY DATE(found);
 
 SELECT * FROM sqlite_master;
 
 SELECT found FROM metadata ORDER BY found DESC LIMIT 5;
-
-SELECT * FROM metadata WHERE URL IN (SELECT URL FROM metadata WHERE DATETIME(found) >= DATETIME('2024-09-10 00:00:00')) ORDER BY parent;
-SELECT * FROM metadata WHERE URL IN (SELECT URL FROM metadata WHERE DATETIME(found) >= DATETIME('2024-08-24 00:00:00')) ORDER BY parent;
 
 SELECT * FROM metadata WHERE URL = 'https://www.video.ethz.ch/speakers/introductory_lectures.series-metadata.json';
 
