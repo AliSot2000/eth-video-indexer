@@ -41,7 +41,6 @@ def retrieve_metadata(website_url: str, identifier: str, headers: dict, parent_i
         return {"url": url, "parent_id": parent_id, "status": -1, "content": None}
 
     content = None
-    # https://www.asdf.com/path?args
 
     if result.ok:
         content = result.content.decode("utf-8")
@@ -49,11 +48,7 @@ def retrieve_metadata(website_url: str, identifier: str, headers: dict, parent_i
         # INFO, also dequeue worker will warn
         logger.error(f"{identifier:.02} error {result.status_code}, {url}")
 
-    # only everything after .com or something
-    path = url.split("/", 3)[3]
-
     # remove get arguments
-    path = path.split("?")[0]
     logger.debug(f"{identifier} Done {url}")
 
     # conform json
