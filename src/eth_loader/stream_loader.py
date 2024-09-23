@@ -885,6 +885,8 @@ class BetterStreamLoader(BaseSQliteDB):
         """
         dts = dt.strftime("%Y-%m-%d %H:%M:%S")
 
+        self.debug_execute("DROP TABLE IF EXISTS temp")
+
         # create temporary table with all not deprecated episode entries
         self.debug_execute(f"CREATE TABLE temp AS SELECT episodes.key AS key "
                            f"FROM metadata JOIN metadata_episode_assoz ON metadata.key = metadata_episode_assoz.metadata_key "
@@ -921,6 +923,8 @@ class BetterStreamLoader(BaseSQliteDB):
         :return:
         """
         dts = dt.strftime("%Y-%m-%d %H:%M:%S")
+
+        self.debug_execute("DROP TABLE IF EXISTS temp")
 
         self.debug_execute(f"CREATE TABLE temp AS SELECT streams.key AS key "
                            f"FROM episodes JOIN episode_stream_assoz ON episodes.key = episode_stream_assoz.episode_key "
