@@ -2,6 +2,7 @@ import json
 import logging
 import multiprocessing as mp
 import os
+from datetime import datetime
 from typing import List
 import queue
 
@@ -27,8 +28,7 @@ def build_diff(_b64: bool, target: dict, candidate: dict, tbl: str):
     t = target
     c = candidate
     res = []
-    # Version from stream_loader
-    # ==================================================================================================================
+
     # Conglomerate the json
     tgt_json = aux.from_b64(t['json']) if _b64 else t['json']
     c_json = aux.from_b64(c['json_raw']) if _b64 else c['json_raw']
