@@ -307,7 +307,7 @@ class MetadataLoader(BaseSQliteDB):
         """
         # Prepare arguments for function
         now = self.start_dt.strftime("%Y-%m-%d %H:%M:%S")
-        key, deprecated = None, None
+        key = None
         json_hash = hash(json_arg)
         conv_json_arg = to_b64(json_arg) if self.ub64 else json_arg.replace("'", "''")
 
@@ -326,7 +326,11 @@ class MetadataLoader(BaseSQliteDB):
 
             # Check the json matches
             if json_db == json_arg:
-                key, deprecated = result["key"], result["deprecated"]
+                if result["deprecated"] == 1:
+                    self.logger.info(f"Reactivating deprecated non-json entry in metadata: {url}")
+                else:
+                    self.logger.debug(f"Found active non-json entry in metadata: {url}")
+                key = result["key"]
                 break
 
         # No match found, inserting
