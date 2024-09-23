@@ -223,11 +223,7 @@ class BetterStreamLoader(BaseSQliteDB):
                 content_default = content.replace("''", "'")
 
             # cannot process a html site. We skip this entry.
-            if "<!DOCTYPE html>" in content_default:
-                self.logger.error(f"Found an html site: {parent_url}")
-
-                row = self.sq_cur.fetchone()
-                continue
+            assert "<!DOCTYPE html>" not in content_default, "Found site not correctly labeled json site"
 
             # try to retrieve the json information. from the content.
             try:
