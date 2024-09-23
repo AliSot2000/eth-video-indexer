@@ -294,7 +294,7 @@ class IncrementBuilder(BaseSQliteDB):
 
             # Get the next candidate for the differential record
             self.debug_execute(f"SELECT key, json, record_type "
-                               f"FROM episodes WHERE URL = '{target['url']}' AND episodes.record_type IN (0, 1, 2) "
+                               f"FROM episodes WHERE URL = '{target['url']}' AND record_type IN (0, 1, 2) "
                                f"ORDER BY record_type DESC LIMIT 1")
 
             raw = self.sq_cur.fetchall()
@@ -318,7 +318,7 @@ class IncrementBuilder(BaseSQliteDB):
             # Get the information about the candidate
             self.debug_execute(f"SELECT key, json, record_type "
                                f"FROM metadata WHERE URL = '{target['url']}' AND parent = {target['parent']} "
-                               f"AND episodes.record_type IN (0, 1, 2)"
+                               f"AND record_type IN (0, 1, 2) "
                                f"ORDER BY record_type DESC LIMIT 1")
             raw = self.sq_cur.fetchall()
             assert len(raw) == 1, f"Expected one row, got {len(raw)}, for URL, parent"
