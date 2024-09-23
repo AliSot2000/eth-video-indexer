@@ -344,14 +344,17 @@ class IncrementBuilder(BaseSQliteDB):
         """
         For newly inserted episodes, build the differential records.
         """
-        self.debug_execute("SELECT key, found, URL, json_hash FROM episodes WHERE record_type IS NULL")
-        targets = [{"key": key, "found": found, "url": url, "json_hash": json_hash}
-                   for key, found, url, json_hash in self.sq_cur.fetchall()]
+        self.debug_execute("SELECT key FROM episodes WHERE record_type IS NULL")
+        keys = [res[0] for res in self.sq_cur.fetchall()]
 
-        self.logger.info(f"Building differential records for {len(targets)} entries in episodes")
+        self.logger.info(f"Building differential records for {len(keys)} entries in episodes")
 
-        for t in targets:
-            self.logger.debug(f"Processing new Record: {t['key']:07}, URL: {t['url']}")
+        for key in keys:
+            self.logger.debug(f"Processing new Record: {key:07}")
+
+            # Get the rows:
+            args = self._get_args(key, "episodes")
+            t = args["target"]
 
             # check the found matches
             if t["found"] != self.start_dt.strftime("%Y-%m-%d %H:%M:%S"):
@@ -415,30 +418,16 @@ class IncrementBuilder(BaseSQliteDB):
         """
         For newly inserted metadata, build the differential records.
         """
-        self.debug_execute("SELECT key, found, URL, parent, json_hash FROM metadata WHERE record_type IS NULL")
-        targets = [{"key": key, "found": found, "url": url, "parent": parent, "json_hash": json_hash}
-                   for key, found, url, parent, json_hash in self.sq_cur.fetchall()]
+        self.debug_execute("SELECT key FROM metadata WHERE record_type IS NULL")
+        keys = [res[0] for res in self.sq_cur.fetchall()]
 
-        self.logger.info(f"Found {len(targets)} new diff entries to process for metadata")
+        self.logger.info(f"Found {len(keys)} new diff entries to process for metadata")
 
-        for t in targets:
-            self.logger.debug(f"Processing new Record: {t['key']:07}, URL: {t['url']}")
+        for key in keys:
+            self.logger.debug(f"Processing new Record: {key:07}")
 
-            # check the found matches
-            if t["found"] != self.start_dt.strftime("%Y-%m-%d %H:%M:%S"):
-                self.logger.error(f"Entry with mismatching found date. Database not saved properly?, "
-                                  f"found {t['found']}")
-
-            # Get the next candidate for the differential record
-            self.debug_execute(f"SELECT key, json, record_type "
-                               f"FROM metadata WHERE URL = '{t['url']}' AND parent = {t['parent']} "
-                               f"ORDER BY record_type DESC LIMIT 1")
-
-            raw = self.sq_cur.fetchall()
-            assert len(raw) == 1, (f"Found no entries for URL: {t['url']} and parent {t['parent']}, "
-                                    f"only new diff entries are allowed to have record_type None,")
-
-            c_key, c_json_raw, c_record_type = raw[0]
+            args = self._get_args(key, "metadata")
+            t = args["target"]
 
             assert c_record_type != 1, "Found a differential record (1), fix SQL statement, 0 and 2 accepted"
 
