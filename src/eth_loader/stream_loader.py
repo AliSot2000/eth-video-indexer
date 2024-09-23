@@ -743,14 +743,14 @@ class BetterStreamLoader(BaseSQliteDB):
                            f"AND found = '{now}'"
                            f"AND (record_type IS NULL OR record_type = 0)")
 
-        result = self.sq_cur.fetchall()
-        assert len(results) == 1, f"Just inserted the bloody thing found {len(results)}"
+        res = self.sq_cur.fetchall()
+        assert len(res) == 1, f"Just inserted the bloody thing found {len(res)}"
 
         # Add entry into the assoz table
         self.debug_execute(f"INSERT OR IGNORE INTO metadata_episode_assoz (metadata_key, episode_key) "
-                           f"VALUES ({parent_id}, {result[0][0]})")
+                           f"VALUES ({parent_id}, {res[0][0]})")
 
-        return result[0][0]
+        return res[0][0]
 
     def link_episode_streams(self, episode_id: int, streams: List[int]):
         """
