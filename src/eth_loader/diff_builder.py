@@ -80,7 +80,9 @@ def diff_handler(worker_id: int, in_q: mp.Queue, out_q: mp.Queue, tbl: str, b64:
         """
         Handler function that is executed in multiple processes to perform the diff of the json.
         """
-        print(f"{worker_id:02}: Started")
+        logger = logging.getLogger("increment_builder")
+        local_logger = logging.getLogger("thread_handler")
+        local_logger.info(f"{worker_id:02}: Started")
 
         # timeout of 60s
         count = 0
@@ -101,13 +103,13 @@ def diff_handler(worker_id: int, in_q: mp.Queue, out_q: mp.Queue, tbl: str, b64:
             try:
                 stmts = build_diff(_b64=b64, target=data['target'], candidate=data['candidate'], tbl=tbl)
             except Exception as e:
-                print(f"{worker_id:02}: Error: {e}")
-                print(f"{worker_id:02}: Data: {data}")
+                logger.error(f"{worker_id:02}: Error: {e}", exc_info=e)
+                logger.debug(f"{worker_id:02}: Data: {data}")
                 continue
 
             out_q.put(stmts)
 
-        print(f"{worker_id:02}: exiting...")
+        local_logger.info(f"{worker_id:02}: exiting...")
 
 
 class IncrementBuilder(BaseSQliteDB):
