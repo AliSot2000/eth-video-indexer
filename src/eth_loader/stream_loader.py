@@ -695,6 +695,7 @@ class BetterStreamLoader(BaseSQliteDB):
         if len(results) != 0:
             assert len(results) == 1, "Update of the sql statement violates the assert - only one result expected"
             key, temp_json, deprecated, record_type = results[0]
+            diff_key = key
             json_db = aux.from_b64(temp_json) if self.ub64 else temp_json
 
             # Check the json matches
@@ -725,7 +726,7 @@ class BetterStreamLoader(BaseSQliteDB):
                 # has been the same all the time)
                 assert record_type in (0, 2), f"Record type is {record_type}, expected 0 or 2"
                 self.debug_execute(f"UPDATE episodes SET last_seen = '{now}', deprecated = 0 WHERE key = {key}")
-                return key
+                return diff_key
 
             # Else -> json is different, need to add something to the database. Don't update but insert for later diff
             # else:
