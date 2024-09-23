@@ -291,7 +291,7 @@ class BetterStreamLoader(BaseSQliteDB):
                                 "found TEXT, "
                                 "last_seen TEXT, "
                                 "json_hash TEXT, "
-                                "record_type INTEGER CHECK (episodes.record_type IN (0, 1, 2)))")
+                                "record_type INTEGER CHECK (episodes.record_type IN (0, 1, 2, 3)))")
 
             # Create index and assert they don't exist
             self.debug_execute("CREATE INDEX episodes_key_index ON episodes (key)")
