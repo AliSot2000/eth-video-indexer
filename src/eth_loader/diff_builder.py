@@ -296,6 +296,8 @@ class IncrementBuilder(BaseSQliteDB):
         """
         # Get the information about the target
         if tbl == "episodes":
+            self.logger.debug(f"Building diff for key: {key} in table {tbl}")
+
             self.debug_execute(f"SELECT json, URL, found, json_hash FROM episodes WHERE key = {key}")
             raw = self.sq_cur.fetchall()
             assert len(raw) == 1, f"Expected one row for key query, got {len(raw)} for URL"
