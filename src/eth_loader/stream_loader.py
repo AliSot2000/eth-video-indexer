@@ -590,6 +590,71 @@ class BetterStreamLoader(BaseSQliteDB):
             for url in e_url:
                 self.logger.error(url)
 
+    def insert_update_other_episodes(self, parent_id: int, url: str, json_str: str):
+        """
+        Insert anything else other than json episodes into the database.
+
+        :param parent_id: key of the parent entry. (Series in XXX table)
+        :param url: url of the episode that was downloaded
+        :param json_str: json string of the episode site
+        :return:
+        """
+        self.__processed_episodes += 1
+
+        # list of ids in streams table associated with current episode.
+        now = self.start_dt.strftime("%Y-%m-%d %H:%M:%S")
+        key = None
+        json_hash = hash(json_str)
+        conv_json_arg = aux.to_b64(json_str) if self.ub64 else json_str.replace("'", "''")
+
+        # check existence of initial and final record:
+        self.debug_execute(f"SELECT key, json, deprecated, record_type FROM episodes "
+                           f"WHERE URL = '{url}' AND episodes.record_type = 3 "
+                           f"ORDER BY found DESC")
+
+        raw = self.sq_cur.fetchall()
+        results = [{"key": res[0], "json": res[1], "deprecated": res[2]} for res in raw]
+
+        for result in results:
+            json_db = aux.from_b64(result["json"]) if self.ub64 else result["json"]
+
+            # Check the json matches
+            if json_db == json_str:
+                if result["deprecated"] == 1:
+                    self.logger.info(f"Reactivating deprecated non-json entry in metadata: {url}")
+                else:
+                    self.logger.debug(f"Found active non-json entry in metadata: {url}")
+                key = result["key"]
+                break
+
+                # No match found, inserting
+        if key is not None:
+            self.logger.debug(f"Updating existing entry to metadata: {url}")
+            self.debug_execute(f"UPDATE metadata SET last_seen = '{now}' WHERE key = {key}")
+            return
+
+        self.logger.debug(f"Inserting new entry to episodes: {url}")
+        # Found a new url, is initial so record type 0
+        self.debug_execute(
+            f"INSERT INTO metadata (URL, json, found, last_seen, record_type, json_hash) VALUES "
+            f"('{url}', '{conv_json_arg}', '{now}', '{now}', 3, '{json_hash}')")
+
+        # Get the key of the new record and add it to the assoz table
+        self.debug_execute(f"SELECT key FROM main.episodes "
+                           f"WHERE URL = '{url}' "
+                           f"AND json = '{conv_json_arg}' "
+                           f"AND found = '{now}' "
+                           f"AND last_seen = '{now}' "
+                           f"AND record_type = 3 "
+                           f"AND json_hash = '{json_hash}'")
+
+        raw = self.sq_cur.fetchall()
+        assert len(raw) == 1, f"Expected 1 result, got {len(raw)}"
+
+        key = raw[0][0]
+        self.debug_execute(f"INSERT OR IGNORE INTO metadata_episode_assoz (metadata_key, episode_key) "
+                           f"VALUES ({parent_id}, {key})")
+
     def insert_update_json_episodes(self, parent_id: int, url: str, json_str: str) -> int:
         """
         Given the parent_id (key), the url of the episode, the json_string associated with the episode and the content
