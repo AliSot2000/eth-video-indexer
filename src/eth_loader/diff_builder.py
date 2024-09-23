@@ -121,7 +121,7 @@ class IncrementBuilder(BaseSQliteDB):
     timeout: int
     __parallel: bool = True
 
-    def __init__(self, db_path: str, b64: bool, workers: int = None, timeout: int = 300):
+    def __init__(self, db_path: str, b64: bool, start_dt: datetime, workers: int = None, timeout: int = 300):
         """
         Initialize the class with the database path and the base64
 
@@ -129,10 +129,12 @@ class IncrementBuilder(BaseSQliteDB):
         :param b64: If the json is base64 encoded
         :param workers: Number of workers to use
         :param timeout: Timeout for ending draining pipeline
+        :param start_dt: Start date of the database
         """
         super().__init__(db_path=db_path)
         self.ub64 = b64
         self.logger = logging.getLogger("increment_builder")
+        self.start_dt = start_dt
 
         # Define number of workers
         if workers:
