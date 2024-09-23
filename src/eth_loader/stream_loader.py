@@ -49,7 +49,7 @@ def get_stream(website_url: str, identifier: str, headers: dict, cookies: bytes,
         return {"url": url, "status": -1, "content": None, "parent_id": parent_id}
 
     content = None
-    # https://www.asdf.com/path?args
+    is_json: bool = False
 
     if result.ok:
         content = result.content.decode("utf-8")
@@ -59,13 +59,14 @@ def get_stream(website_url: str, identifier: str, headers: dict, cookies: bytes,
     # conform json
     try:
         content = json.dumps(json.loads(content), sort_keys=True)
+        is_json = True
     except json.JSONDecodeError as e:
         logging.getLogger("stream_loader").error(f"{identifier:.02} Failed to decode json from {url}", exc_info=e)
         # keep the same content as before
     except Exception as e:
         logging.getLogger("stream_loader").error(f"{identifier:.02} Failed to decode json from {url}", exc_info=e)
 
-    return {"url": url, "status": result.status_code, "content": content, "parent_id": parent_id}
+    return {"url": url, "status": result.status_code, "content": content, "parent_id": parent_id, "is_json": is_json}
 
 
 def stream_download_handler(worker_nr: int, command_queue: mp.Queue, result_queue: mp.Queue):
