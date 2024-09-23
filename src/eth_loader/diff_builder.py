@@ -251,7 +251,6 @@ class IncrementBuilder(BaseSQliteDB):
                 assert type(stmt) == str, f"Expected str, got {type(stmt)}"
                 self.debug_execute(stmt)
 
-
         # Stop the workers
         self._send_stop()
 
