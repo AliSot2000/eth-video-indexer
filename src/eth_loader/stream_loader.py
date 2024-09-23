@@ -202,13 +202,16 @@ class BetterStreamLoader(BaseSQliteDB):
         self.verify_args_table()
 
         # select first entry
-        self.debug_execute("SELECT key, json, URL FROM metadata WHERE deprecated = 0 AND record_type IN (0, 2)")
+        self.debug_execute("SELECT key, json, URL, record_type, last_seen, parent FROM metadata "
+                           "WHERE deprecated = 0 AND record_type IN (0, 2)")
         row = self.sq_cur.fetchone()
 
         while row is not None:
-            parent_id = row[0]
+            parent_key = row[0]
             content = row[1]
             parent_url = row[2]
+            record_type = row[3]
+            parent = row[5]
 
             # parent url without file extension
             strip_url = parent_url.replace(".html", "").replace(".series-metadata.json", "")
@@ -237,6 +240,17 @@ class BetterStreamLoader(BaseSQliteDB):
 
             # continue with the dict
             result: dict
+
+            # In cases where the record_type is 2, we need to link against it's corresponding diff entry.
+            if record_type == 2:
+                self.debug_execute(f"SELECT key FROM metadata "
+                                   f"WHERE URL = '{parent_url}' "
+                                   f"AND record_type = 1 "
+                                   f"AND parent = {parent} "
+                                   f"ORDER BY found DESC LIMIT 1")
+                raw = self.sq_cur.fetchall()
+                assert len(raw) == 1, f"Expected 1 result, got {len(raw)}"
+                parent_key = raw[0][0]
 
             # verify existence of episodes key
             if result.get("episodes") is not None:
