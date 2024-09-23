@@ -296,7 +296,7 @@ class MetadataLoader(BaseSQliteDB):
             for url in e_url:
                 self.logger.error(url)
 
-    def insert_update_db(self, parent_id: int, url: str, json_arg: str):
+    def insert_update_json_db(self, parent_id: int, url: str, json_arg: str):
         """
         Insert into db if new, update if exists and check deprecation status.
 
