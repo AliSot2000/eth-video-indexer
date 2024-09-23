@@ -16,12 +16,14 @@ from eth_loader.base_sql import BaseSQliteDB
 def build_diff(_b64: bool, target: dict, candidate: dict, tbl: str):
     # Asserts about the table
     assert tbl in ["episodes", "metadata"], f"Table {tbl} not recognized"
+    assert set(target.keys()) == {'json', 'parent', 'url', 'found', 'json_hash', 'key'}
 
     # Asserts about the target
     if tbl == "episodes":
-        assert set(target.keys()) == {'json', 'url', 'found', 'json_hash', 'key'}
+        assert target['parent'] is None, "Parent must be None for episodes"
     else:
-        assert set(target.keys()) == {'json', 'parent', 'url', 'found', 'json_hash', 'key'}
+        assert target['parent'] is not None, "Parent must not be None for metadata"
+
 
     assert set(candidate.keys()) == {'json_raw', 'record_type', 'key'}
 
