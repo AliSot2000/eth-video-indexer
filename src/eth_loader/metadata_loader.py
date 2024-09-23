@@ -50,17 +50,19 @@ def retrieve_metadata(website_url: str, identifier: str, headers: dict, parent_i
 
     # remove get arguments
     logger.debug(f"{identifier} Done {url}")
+    is_json = False
 
     # conform json
     try:
         content = json.dumps(json.loads(content), sort_keys=True)
+        is_json = True
     except json.JSONDecodeError as e:
         logger.error(f"{identifier:.02} Failed to decode json from {url}", exc_info=e)
         # keep the same content as before
     except Exception as e:
         logger.error(f"{identifier:.02} Failed to decode json from {url}", exc_info=e)
 
-    return {"url": url, "parent_id": parent_id, "status": result.status_code, "content": content}
+    return {"url": url, "parent_id": parent_id, "status": result.status_code, "content": content, "is_json": is_json}
 
 
 def metadata_download_handler(worker_nr: int, command_queue: mp.Queue, result_queue: mp.Queue):
