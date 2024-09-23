@@ -484,6 +484,32 @@ class IncrementBuilder(BaseSQliteDB):
             self.debug_execute(f"UPDATE metadata "
                                f"SET json = '{diff_json_out}', record_type = 1 WHERE key = {t['key']}")
 
+
+
+    def perform_diff(self, target_json: str, candidate_json: str) -> Tuple[str, str]:
+        """
+        Perform the diff between the target json string and the candidate json string
+
+        :param target_json: The target json string
+        :param candidate_json: The candidate json string
+
+        return: Tuple of the target json string and the diff json string
+        """
+        tgt_json = aux.from_b64(target_json) if self.ub64 else target_json
+        c_json = aux.from_b64(candidate_json) if self.ub64 else candidate_json
+
+        # Compute the diff
+        json_diff = jd.diff(c_json, tgt_json, load=True, dump=True)
+
+        # Regularize Json
+        reg_json_diff = json.dumps(json.loads(json_diff), sort_keys=True)
+
+        # Back convert to matching format
+        diff_json_out = aux.to_b64(reg_json_diff) if self.ub64 else reg_json_diff.replace("'", "''")
+        tgt_json_out = aux.to_b64(tgt_json) if self.ub64 else tgt_json.replace("'", "''")
+        return tgt_json_out, diff_json_out
+
+
 if __name__ == "__main__":
     path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites_b64.db"
     b64 = True
