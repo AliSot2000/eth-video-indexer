@@ -108,6 +108,7 @@ class SanityCheck(BaseSQliteDB):
         # Check no initial
         self._perform_check(stmt="SELECT url "
                                  "FROM metadata "
+                                 "WHERE record_type IN (0, 1, 2) " # INFO need to exclude non-json records
                                  "GROUP BY URL HAVING COUNT(*) > 1 "
                                  "AND SUM(CASE metadata.record_type WHEN 0 THEN 1 ELSE 0 END) = 0;",
                             on_success="No urls with no initial record found in metadata",
@@ -150,7 +151,7 @@ class SanityCheck(BaseSQliteDB):
                             on_failure="Found final records with a found date in metadata table")
 
         # if there's exactly one entry for a given url, the type is initial not final
-        self._perform_check(stmt="SELECT URL FROM metadata WHERE record_type != 0 GROUP BY URL HAVING COUNT(*) = 1;",
+        self._perform_check(stmt="SELECT URL FROM metadata WHERE record_type IN (1, 2) GROUP BY URL HAVING COUNT(*) = 1;",
                             on_success="All single URLS have an initial record in metadata table",
                             on_failure="Found single URLS have no initial record in metadata table")
 
@@ -182,7 +183,14 @@ class SanityCheck(BaseSQliteDB):
             "WHERE deprecated = 0 "
             "AND record_type = 2 "
             "AND URL IN (SELECT URL FROM metadata GROUP BY parent, URL HAVING COUNT(*) > 2) "
-            "AND parent IN (SELECT parent FROM metadata GROUP BY parent, URL HAVING COUNT(*) > 2)"
+            "AND parent IN (SELECT parent FROM metadata GROUP BY parent, URL HAVING COUNT(*) > 2)",
+                
+            # Get correctly attributed non-json records
+            "INSERT INTO temp SELECT key FROM metadata "
+            "WHERE deprecated = 0 "
+            "AND record_type = 3 "
+            "AND URL IN (SELECT URL FROM metadata WHERE deprecated = 0 GROUP BY parent, URL HAVING COUNT(*) = 1) "
+            "AND parent IN (SELECT parent FROM metadata WHERE deprecated = 0 GROUP BY parent, URL HAVING COUNT(*) = 1)"
         ],
             stmt="SELECT URL, parent FROM metadata WHERE deprecated = 0 "
                  "                                 AND key NOT IN (SELECT key FROM temp) ",
@@ -215,6 +223,7 @@ class SanityCheck(BaseSQliteDB):
         # Check no initial
         self._perform_check(stmt="SELECT url "
                                  "FROM episodes "
+                                 "WHERE record_type IN (0, 1, 2) "  # INFO need to exclude non-json records
                                  "GROUP BY URL HAVING COUNT(*) > 1 "
                                  "AND SUM(CASE episodes.record_type WHEN 0 THEN 1 ELSE 0 END) = 0;",
                             on_success="No urls with no initial record found in episodes",
@@ -256,8 +265,9 @@ class SanityCheck(BaseSQliteDB):
                             on_success="All final records have no found date in episodes table",
                             on_failure="Found final records with a found date in episodes table")
 
-        # if there's exactly one entry for a given url, the type is initial not final
-        self._perform_check(stmt="SELECT URL FROM episodes WHERE record_type != 0 GROUP BY URL HAVING COUNT(*) = 1;",
+        # if there's exactly one json entry for a given url, the type is initial not final
+        self._perform_check(stmt="SELECT URL FROM episodes WHERE record_type IN (1, 2) "
+                                 "GROUP BY URL HAVING COUNT(*) = 1;",
                             on_success="All single URLS have an initial record in episodes table",
                             on_failure="Found single URLS have no initial record in episodes table")
 
@@ -287,7 +297,13 @@ class SanityCheck(BaseSQliteDB):
                 "INSERT INTO temp SELECT key FROM episodes "
                 "WHERE deprecated = 0 "
                 "AND record_type = 2 "
-                "AND URL IN (SELECT URL FROM episodes GROUP BY URL HAVING COUNT(*) > 2) "
+                "AND URL IN (SELECT URL FROM episodes GROUP BY URL HAVING COUNT(*) > 2) ",
+
+                # Get correctly attributed non-json records
+                "INSERT INTO temp SELECT key FROM episodes "
+                "WHERE deprecated = 0 "
+                "AND record_type = 3 "
+                "AND URL IN (SELECT URL FROM episodes WHERE deprecated = 0 GROUP BY URL HAVING COUNT(*) = 1) "
             ],
             stmt="SELECT URL FROM episodes WHERE deprecated = 0 "
                  "                                 AND key NOT IN (SELECT key FROM temp) ",
