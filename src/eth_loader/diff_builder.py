@@ -361,23 +361,8 @@ class IncrementBuilder(BaseSQliteDB):
                 self.logger.error(f"Entry with mismatching found date. Database not saved properly?, "
                                   f"found {t['found']}")
 
-            # Get the next candidate for the differential record
-            self.debug_execute(f"SELECT key, json, record_type "
-                               f"FROM episodes WHERE URL = '{t['url']}' "
-                               f"ORDER BY record_type DESC LIMIT 1")
-
-            raw = self.sq_cur.fetchall()
-            assert len(raw) == 1, (f"Found no entries for URL: {t['url']}, "
-                                   f"only new diff entries are allowed to have record_type None")
-
-            c_key, c_json_raw, c_record_type = raw[0]
-
-            assert c_record_type != 1, "Found a differential record (1), fix SQL statement, 0 and 2 accepted"
-
-            # Get the json from the target
-            self.debug_execute(f"SELECT json FROM episodes WHERE key = {t['key']}")
-            raw = self.sq_cur.fetchone()
-            assert raw is not None, f"Database inconsistency, couldn't find json for key, given key{t['key']}"
+            c = args["candidate"]
+            assert c['record_type'] != 1, "Found a differential record (1), fix SQL statement, 0 and 2 accepted"
 
             # Conglomerate the json
             tgt_json = aux.from_b64(raw[0]) if self.ub64 else raw[0]
@@ -394,7 +379,7 @@ class IncrementBuilder(BaseSQliteDB):
             tgt_json_out = aux.to_b64(tgt_json) if self.ub64 else tgt_json.replace("'", "''")
 
             # Case 1: record_type 0, compute diff, and add a new final record, store diff in new incremental (now null)
-            if c_record_type == 0:
+            if c['record_type'] == 0:
                 # INFO: Don't add an entry in the found column as this needs to be empty per definition of the
                 #   final record.
                 self.debug_execute(f"INSERT INTO episodes "
@@ -404,11 +389,11 @@ class IncrementBuilder(BaseSQliteDB):
             # Case 2: compute diff between final and target, store diff in new incremental, update null to incremental
             # store new json in final, update final
             else:
-                assert c_record_type == 2, f"Record type is {c_record_type}, expected 2"
+                assert c['record_type'] == 2, f"Record type is {c['record_type']}, expected 2"
 
                 # Update the final record with the new json
                 self.debug_execute(f"UPDATE episodes SET json = '{tgt_json_out}', last_seen = '{t['found']}', "
-                                   f"json_hash = '{t['json_hash']}' WHERE key = {c_key}")
+                                   f"json_hash = '{t['json_hash']}' WHERE key = {c['key']}")
 
             # Update the null record to incremental and store the diff in place of the full json
             self.debug_execute(f"UPDATE episodes "
@@ -429,12 +414,8 @@ class IncrementBuilder(BaseSQliteDB):
             args = self._get_args(key, "metadata")
             t = args["target"]
 
-            assert c_record_type != 1, "Found a differential record (1), fix SQL statement, 0 and 2 accepted"
-
-            # Get the json from the target
-            self.debug_execute(f"SELECT json FROM metadata WHERE key = {t['key']}")
-            raw = self.sq_cur.fetchone()
-            assert raw is not None, f"Database inconsistency, couldn't find json for key, given key{t['key']}"
+            c = args["candidate"]
+            assert c['record_type'] != 1, "Found a differential record (1), fix SQL statement, 0 and 2 accepted"
 
             # Conglomerate the json
             tgt_json = aux.from_b64(raw[0]) if self.ub64 else raw[0]
@@ -451,7 +432,7 @@ class IncrementBuilder(BaseSQliteDB):
             tgt_json_out = aux.to_b64(tgt_json) if self.ub64 else tgt_json.replace("'", "''")
 
             # Case 1: record_type 0, compute diff, and add a new final record
-            if c_record_type == 0:
+            if c['record_type'] == 0:
                 # INFO: Don't add an entry in the found column as this needs to be empty per definition of the
                 #   final record.
                 self.debug_execute(f"INSERT INTO metadata "
@@ -462,12 +443,12 @@ class IncrementBuilder(BaseSQliteDB):
             # Case 2: compute diff between final and target, store diff in incremental,
             # store new json in final, update final
             else:
-                assert c_record_type == 2, f"Record type is {c_record_type}, expected 2"
+                assert c['record_type'] == 2, f"Record type is {c['record_type']}, expected 2"
 
 
                 # Update the final record with the new json
                 self.debug_execute(f"UPDATE metadata SET json = '{tgt_json_out}', last_seen = '{t['found']}', "
-                                   f"json_hash = '{t['json_hash']}' WHERE key = {c_key}")
+                                   f"json_hash = '{t['json_hash']}' WHERE key = {c['key']}")
 
             # Update the null record to incremental and store the diff in place of the full json
             self.debug_execute(f"UPDATE metadata "
