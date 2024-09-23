@@ -271,7 +271,12 @@ class MetadataLoader(BaseSQliteDB):
                     url = res["url"]
 
                     if res["status"] == 200:
-                        self.insert_update_db(parent_id=parent_id, url=url, json_arg=res["content"])
+                        if res["is_json"]:
+                            self.insert_update_json_db(parent_id=parent_id, url=url,
+                                              json_arg=res["content"])
+                        else:
+                            self.insert_update_other_db(parent_id=parent_id, url=url,
+                                              json_arg=res["content"])
                     else:
                         self.logger.error(f"Failed to download {url} with status code {res['status']}")
                         e_url.append(url)
