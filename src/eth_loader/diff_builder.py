@@ -3,7 +3,7 @@ import logging
 import multiprocessing as mp
 import os
 from datetime import datetime
-from typing import List
+from typing import List, Tuple
 import queue
 
 import time
