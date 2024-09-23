@@ -328,6 +328,12 @@ class IncrementBuilder(BaseSQliteDB):
 
         # Fetch the candidate information and return
         candidate = {"key": raw[0][0], "json_raw": raw[0][1], "record_type": raw[0][2]}
+
+        # Printing information about mismatching start_dt
+        if target["found"] != self.start_dt.strftime("%Y-%m-%d %H:%M:%S"):
+            self.logger.error(f"Entry with mismatching found date. Database not saved properly?, "
+                              f"found {target['found']}")
+
         return {"target": target, "candidate": candidate}
 
     # ==================================================================================================================
