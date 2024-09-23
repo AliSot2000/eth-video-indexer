@@ -296,6 +296,52 @@ class MetadataLoader(BaseSQliteDB):
             for url in e_url:
                 self.logger.error(url)
 
+    def insert_update_other_db(self, parent_id: int, url: str, json_arg: str):
+        """
+        Insert into db if new, update if exists and check deprecation status.
+
+        :param parent_id: id of the parent site in the sites table
+        :param url: url of the metadata
+        :param json_arg: json stored at metadata url (is already properly encoded for the db)
+        :return:
+        """
+        # Prepare arguments for function
+        now = self.start_dt.strftime("%Y-%m-%d %H:%M:%S")
+        key, deprecated = None, None
+        json_hash = hash(json_arg)
+        conv_json_arg = to_b64(json_arg) if self.ub64 else json_arg.replace("'", "''")
+
+        # check existence of initial and final record:
+        self.debug_execute(f"SELECT key, json, deprecated FROM metadata "
+                           f"WHERE parent = {parent_id} AND URL = '{url}' AND record_type = 3 "
+                           f"ORDER BY found DESC")
+
+        # Get the results for the non-json entries
+        raw = self.sq_cur.fetchall()
+        results = [{"key": res[0], "json": res[1], "deprecated": res[2]} for res in raw]
+
+        # Check for a match
+        for result in results:
+            json_db = from_b64(result["json"]) if self.ub64 else result["json"]
+
+            # Check the json matches
+            if json_db == json_arg:
+                key, deprecated = result["key"], result["deprecated"]
+                break
+
+        # No match found, inserting
+        if key is None:
+            self.logger.debug(f"Inserting new entry to metadata: {url}")
+            # Found a new url, is initial so record type 0
+            self.debug_execute(
+                f"INSERT INTO metadata (parent, URL, json, found, last_seen, record_type, json_hash) VALUES "
+                f"({parent_id}, '{url}', '{conv_json_arg}', '{now}', '{now}', 3, '{json_hash}')")
+
+        # Match found, updating last_seen
+        else:
+            self.logger.debug(f"Updating existing entry to metadata: {url}")
+            self.debug_execute(f"UPDATE metadata SET last_seen = '{now}' WHERE key = {key}")
+
     def insert_update_json_db(self, parent_id: int, url: str, json_arg: str):
         """
         Insert into db if new, update if exists and check deprecation status.
