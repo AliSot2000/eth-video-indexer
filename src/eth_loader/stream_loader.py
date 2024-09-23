@@ -229,7 +229,7 @@ class BetterStreamLoader(BaseSQliteDB):
             try:
                 result = json.loads(content_default)
             except json.JSONDecodeError as e:
-                self.logger.exception(f"Json Decode error with key: {parent_id}, url: {parent_url}", e)
+                self.logger.exception(f"Json Decode error with key: {parent_key}, url: {parent_url}", e)
 
                 row = self.sq_cur.fetchone()
                 continue
