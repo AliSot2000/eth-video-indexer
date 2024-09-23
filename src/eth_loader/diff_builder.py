@@ -365,18 +365,7 @@ class IncrementBuilder(BaseSQliteDB):
             assert c['record_type'] != 1, "Found a differential record (1), fix SQL statement, 0 and 2 accepted"
 
             # Conglomerate the json
-            tgt_json = aux.from_b64(raw[0]) if self.ub64 else raw[0]
-            c_json = aux.from_b64(c_json_raw) if self.ub64 else c_json_raw
-
-            # Compute the diff
-            json_diff = jd.diff(c_json, tgt_json, load=True, dump=True)
-
-            # Regularize Json
-            reg_json_diff = json.dumps(json.loads(json_diff), sort_keys=True)
-
-            # Back convert to matching format
-            diff_json_out = aux.to_b64(reg_json_diff) if self.ub64 else reg_json_diff.replace("'", "''")
-            tgt_json_out = aux.to_b64(tgt_json) if self.ub64 else tgt_json.replace("'", "''")
+            tgt_json_out, diff_json_out = self.perform_diff(target_json=t['json'], candidate_json=c['json_raw'])
 
             # Case 1: record_type 0, compute diff, and add a new final record, store diff in new incremental (now null)
             if c['record_type'] == 0:
@@ -418,18 +407,7 @@ class IncrementBuilder(BaseSQliteDB):
             assert c['record_type'] != 1, "Found a differential record (1), fix SQL statement, 0 and 2 accepted"
 
             # Conglomerate the json
-            tgt_json = aux.from_b64(raw[0]) if self.ub64 else raw[0]
-            c_json = aux.from_b64(c_json_raw) if self.ub64 else c_json_raw
-
-            # Compute the diff
-            json_diff = jd.diff(c_json, tgt_json, load=True, dump=True)
-
-            # Regularize Json
-            reg_json_diff = json.dumps(json.loads(json_diff), sort_keys=True)
-
-            # Back convert to matching format
-            diff_json_out = aux.to_b64(reg_json_diff) if self.ub64 else reg_json_diff.replace("'", "''")
-            tgt_json_out = aux.to_b64(tgt_json) if self.ub64 else tgt_json.replace("'", "''")
+            tgt_json_out, diff_json_out = self.perform_diff(target_json=t['json'], candidate_json=c['json_raw'])
 
             # Case 1: record_type 0, compute diff, and add a new final record
             if c['record_type'] == 0:
