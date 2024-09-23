@@ -264,7 +264,7 @@ class BetterStreamLoader(BaseSQliteDB):
                     # episode url with file extension
                     ep_url = f"{strip_url}/{ep_id}.series-metadata.json"
 
-                    self.download_list.append(EpisodeEntry(parent_id=parent_id, series_url=parent_url,
+                    self.download_list.append(EpisodeEntry(parent_id=parent_key, series_url=parent_url,
                                                            episode_url=ep_url))
 
             else:
