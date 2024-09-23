@@ -5,11 +5,28 @@ from eth_loader.metadata_loader import MetadataLoader
 from eth_loader.sanity_check import SanityCheck
 from eth_loader.site_indexer import ETHSiteIndexer
 from eth_loader.stream_loader import BetterStreamLoader
+from eth_loader.diff_builder import IncrementBuilder
 from logs import setup_logging
 from scripts.secrets import user_name, password, spec_login
 
 workers = 10
 
+def build_metadata_increment(db: str, b64: bool, start_dt: datetime.datetime):
+    start = datetime.datetime.now()
+    icb = IncrementBuilder(db_path=db, b64=b64, start_dt=start_dt)
+    icb.build_increment_metadata()
+    icb.cleanup()
+    end = datetime.datetime.now()
+    print(f"required {(end - start).total_seconds():.02f}s")
+
+
+def build_episode_increment(db: str, b64: bool, start_dt: datetime.datetime):
+    start = datetime.datetime.now()
+    icb = IncrementBuilder(db_path=db, b64=b64, start_dt=start_dt)
+    icb.build_increment_episodes()
+    icb.cleanup()
+    end = datetime.datetime.now()
+    print(f"required {(end - start).total_seconds():.02f}s")
 
 def perform_index_of_sites(db: str, dt: datetime.datetime):
     global workers
@@ -29,9 +46,7 @@ def download_all_metadata(db, index_start: datetime.datetime, b64: bool = False)
     print("Started")
     print(index_start)
     eid = MetadataLoader(db, use_base64=b64, start_dt=index_start)
-    eid.build_diff()
     eid.download(index_start, workers)
-    eid.build_diff()
     eid.deprecate(dt=index_start)
     eid.cleanup()
     end = datetime.datetime.now()
@@ -48,9 +63,7 @@ def download_all_stream_data(db: str, index_start: datetime.datetime, b64: bool 
                              spec_login=spec_login,
                              use_base64=b64,
                              start_dt=index_start)
-    bsl.build_diff()
     bsl.initiator(workers=workers)
-    bsl.build_diff()
     bsl.deprecate(index_start)
     bsl.cleanup()
     end = datetime.datetime.now()
@@ -64,6 +77,19 @@ def sanity_check(db: str):
     end = datetime.datetime.now()
     print(f"required {(end - start).total_seconds():.02f}s")
 
+def full_run(db_path: str, index_start: datetime.datetime, b64: bool):
+    perform_index_of_sites(db_path, index_start)
+
+    build_metadata_increment(db_path, b64=b64, start_dt=index_start)
+    download_all_metadata(db_path, index_start, b64=b64)
+    build_metadata_increment(db_path, b64=b64, start_dt=index_start)
+
+    build_episode_increment(db_path, b64=b64, start_dt=index_start)
+    download_all_stream_data(db_path, index_start, b64=b64)
+    build_episode_increment(db_path, b64=b64, start_dt=index_start)
+
+    sanity_check(db_path)
+
 if __name__ == "__main__":
     debug = True
     if debug:
@@ -76,22 +102,16 @@ if __name__ == "__main__":
         print("PRODUCTION")
 
     global_start = datetime.datetime.now()
-    # global_start = datetime.datetime(2024, 9, 10, 0, 0, 0)
+    # global_start = datetime.datetime(2024, 9, 23, 0, 0, 0)
     is_b64 = True
-    both = True
+    both = False
     if is_b64 or both:
         path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites_b64.db"
-        perform_index_of_sites(path, global_start)
-        download_all_metadata(path, global_start, b64=True)
-        download_all_stream_data(path, global_start, b64=True)
-        sanity_check(path)
+        full_run(path, global_start, b64=True)
 
     if not is_b64 or both:
         path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites.db"
-        perform_index_of_sites(path, global_start)
-        download_all_metadata(path, global_start, b64=False)
-        download_all_stream_data(path, global_start, b64=False)
-        sanity_check(path)
+        full_run(path, global_start, b64=False)
 
     global_end = datetime.datetime.now()
     print(f"Overall Time for complete indexing: {(global_end - global_start).total_seconds():.02f}")
