@@ -105,6 +105,7 @@ def diff_handler(worker_id: int, in_q: mp.Queue, out_q: mp.Queue, tbl: str, b64:
             except Exception as e:
                 logger.error(f"{worker_id:02}: Error: {e}", exc_info=e)
                 logger.debug(f"{worker_id:02}: Data: {data}")
+                out_q.put([])
                 continue
 
             out_q.put(stmts)
@@ -243,8 +244,16 @@ class IncrementBuilder(BaseSQliteDB):
         # Start the workers with filled queue
         self._start_workers(tbl=tbl)
 
-        while len(keys) > 0:
-            res = self.result_queue.get(block=True)
+        count = 0
+        while len(keys) > 0 and count < self.timeout:
+            try:
+                res = self.result_queue.get(block=False)
+                count = 0
+            except queue.Empty:
+                time.sleep(1)
+                count += 1
+                continue
+
             assert type(res) == list, f"Expected list, got {type(res)}"
 
             # Add a new argument
