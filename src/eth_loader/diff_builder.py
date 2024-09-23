@@ -237,6 +237,8 @@ class IncrementBuilder(BaseSQliteDB):
         if len(keys) < self.task_count:
             self.task_count = len(keys)
 
+        self.logger.info(f"Building differential records for {len(keys)} entries in {tbl}")
+
         # Prefill queue
         for x in range(self.task_count):
             self.cmd_queue.put(self._get_args(keys.pop(0), tbl))
