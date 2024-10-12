@@ -591,8 +591,6 @@ class BetterStreamLoader(BaseSQliteDB):
             else:
                 time.sleep(1)
                 ctr += 1
-        self.logger.info(f"Downloaded {self.__processed_episodes} episodes.")
-        self.logger.info(f"Found {self.__processed_streams} streams.")
         self.logger.info(f"Encountered {len(e_url)} errors.")
 
         if len(e_url) > 0:
