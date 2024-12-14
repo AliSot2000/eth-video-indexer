@@ -256,6 +256,7 @@ class IncrementBuilder(BaseSQliteDB):
                 count += 1
                 continue
 
+            # INFO: We want to check for type list not an instance of list.
             assert type(res) == list, f"Expected list, got {type(res)}"
 
             # Add a new argument
@@ -263,6 +264,7 @@ class IncrementBuilder(BaseSQliteDB):
 
             # Execute Statements for results
             for stmt in res:
+                # INFO: We want to check for type list not an instance of list.
                 assert type(stmt) == str, f"Expected str, got {type(stmt)}"
                 self.debug_execute(stmt)
 
