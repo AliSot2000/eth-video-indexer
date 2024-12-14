@@ -80,3 +80,15 @@ SELECT URL, parent FROM (SELECT COUNT(*), * FROM metadata GROUP BY URL, parent H
 SELECT URL, parent FROM (SELECT COUNT(*), * FROM metadata GROUP BY URL, parent HAVING COUNT(*) > 1);
 
 SELECT * FROM metadata WHERE DATETIME(found) > DATETIME('2024-09-24 00:00:00') AND record_type = 1;
+SELECT * FROM sites WHERE URL LIKE '%lectures/d-infk/2024%';
+SELECT * FROM main.metadata WHERE URL LIKE 'https://video.ethz.ch/lectures/d-infk/2024/autumn/252-0206-00L%';
+
+-- SELECT * FROM metadata WHERE parent = 6582;
+SELECT * FROM metadata WHERE parent = 6527;
+
+UPDATE metadata SET deprecated = 0;
+UPDATE metadata SET deprecated = 1 WHERE datetime(last_seen) < datetime('2024-12-14 00:00:00');
+
+SELECT * FROM metadata_episode_assoz AS m JOIN episodes AS e ON m.episode_key = e.key WHERE m.metadata_key IN (10805, 11029, 11512, 11241);
+
+SELECT * FROM episodes WHERE datetime(found) > datetime('2024-09-24 00:00:00');
