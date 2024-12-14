@@ -435,13 +435,17 @@ class MetadataLoader(BaseSQliteDB):
         :param dt: limit before which a site is deemed to be deprecated.
         :return:
         """
+        # Un-deprecate everything first
+        self.logger.info("Undeprecating all entries")
+        self.debug_execute("UPDATE metadata SET deprecated = 0")
+
         dts = dt.strftime("%Y-%m-%d %H:%M:%S")
         self.debug_execute(f"SELECT COUNT(key) FROM metadata "
-                           f"WHERE datetime(last_seen) < datetime('{dts}') AND deprecated = 0")
+                           f"WHERE datetime(last_seen) < datetime('{dts}')")
         count = self.sq_cur.fetchone()[0]
 
         self.debug_execute(f"UPDATE metadata SET deprecated = 1 "
-                           f"WHERE datetime(last_seen) < datetime('{dts}') AND deprecated = 0")
+                           f"WHERE datetime(last_seen) < datetime('{dts}')")
 
         self.sq_con.commit()
-        self.logger.info(f"Deprecated {count} entries")
+        self.logger.info(f"Set {count} entries to deprecated")
