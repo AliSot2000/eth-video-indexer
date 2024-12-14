@@ -145,6 +145,7 @@ class MetadataLoader(BaseSQliteDB):
         # Need to check >= since we're now using the same datetime for consistency.
         self.debug_execute(f"SELECT key, url FROM sites WHERE IS_VIDEO=1 AND datetime(last_seen) >= datetime('{dts}')")
         self.urls = self.sq_cur.fetchall()
+        self.logger.info(f"Retrieved {len(self.urls)} urls for metadata download")
 
     def verify_args_table(self):
         """
