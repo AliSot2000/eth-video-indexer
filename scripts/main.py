@@ -109,10 +109,12 @@ def full_run(db_path: str, index_start: datetime.datetime, b64: bool):
     build_metadata_increment(db_path, b64=b64, start_dt=index_start)
     download_all_metadata(db_path, index_start, b64=b64)
     build_metadata_increment(db_path, b64=b64, start_dt=index_start)
+    perform_deprecate_metadata(db_path, index_start, b64=b64)
 
     build_episode_increment(db_path, b64=b64, start_dt=index_start)
     download_all_stream_data(db_path, index_start, b64=b64)
     build_episode_increment(db_path, b64=b64, start_dt=index_start)
+    perform_deprecate_episodes(db_path, index_start, b64=b64)
 
     sanity_check(db_path)
 
