@@ -78,3 +78,5 @@ SELECT COUNT(*) FROM (SELECT COUNT(*) FROM metadata GROUP BY URL, parent HAVING 
 
 SELECT URL, parent FROM (SELECT COUNT(*), * FROM metadata GROUP BY URL, parent HAVING COUNT(*) = 1);
 SELECT URL, parent FROM (SELECT COUNT(*), * FROM metadata GROUP BY URL, parent HAVING COUNT(*) > 1);
+
+SELECT * FROM metadata WHERE DATETIME(found) > DATETIME('2024-09-24 00:00:00') AND record_type = 1;
