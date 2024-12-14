@@ -1,6 +1,5 @@
 SELECT * FROM episodes WHERE URL LIKE '%.mp4';
-SELECT COUNT(*) FROM episodes WHERE URL LIKE '%.mp4' -- 41643
-
+SELECT COUNT(*) FROM episodes WHERE URL LIKE '%.mp4';
 
 ALTER TABLE metadata DROP COLUMN record_type;
 ALTER TABLE episodes DROP COLUMN record_type;
