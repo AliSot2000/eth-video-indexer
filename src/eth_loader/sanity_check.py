@@ -303,6 +303,8 @@ class SanityCheck(BaseSQliteDB):
                 "INSERT INTO temp SELECT key FROM episodes "
                 "WHERE deprecated = 0 "
                 "AND record_type = 3 "
+                # INFO: We're only trying to capture the correctly attributed records, so the ones which have exactly 
+                #   one entry non-deprecated record for a given non-json entry.
                 "AND URL IN (SELECT URL FROM episodes WHERE deprecated = 0 GROUP BY URL HAVING COUNT(*) = 1) "
             ],
             stmt="SELECT URL FROM episodes WHERE deprecated = 0 "
