@@ -91,7 +91,6 @@ def download_all_stream_data(db: str, index_start: datetime.datetime, b64: bool 
                              use_base64=b64,
                              start_dt=index_start)
     bsl.initiator(workers=workers)
-    bsl.deprecate(index_start)
     bsl.cleanup()
     end = datetime.datetime.now()
     print(f"required {(end - start).total_seconds():.02f}s")
