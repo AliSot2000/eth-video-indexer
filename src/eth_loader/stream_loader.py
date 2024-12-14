@@ -204,9 +204,12 @@ class BetterStreamLoader(BaseSQliteDB):
         # select first entry
         self.debug_execute("SELECT key, json, URL, record_type, last_seen, parent FROM metadata "
                            "WHERE deprecated = 0 AND record_type IN (0, 2)")
-        row = self.sq_cur.fetchone()
 
-        while row is not None:
+        # TODO use two cursors
+        # Switched to fetchall because we're using the curser further down
+        rows = self.sq_cur.fetchall()
+
+        for row in rows:
             parent_key = row[0]
             content = row[1]
             parent_url = row[2]
@@ -231,7 +234,8 @@ class BetterStreamLoader(BaseSQliteDB):
             except json.JSONDecodeError as e:
                 self.logger.exception(f"Json Decode error with key: {parent_key}, url: {parent_url}", e)
 
-                row = self.sq_cur.fetchone()
+                # Can be used again later, needs update
+                # row = self.sq_cur.fetchone()
                 continue
 
             # continue with the dict
@@ -270,7 +274,8 @@ class BetterStreamLoader(BaseSQliteDB):
             else:
                 self.logger.warning(f"No episodes found {parent_url}")
 
-            row = self.sq_cur.fetchone()
+            # Can be used again later, needs update
+            # row = self.sq_cur.fetchone()
 
     def verify_args_table(self):
         """
