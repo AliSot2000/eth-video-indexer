@@ -53,6 +53,33 @@ def download_all_metadata(db, index_start: datetime.datetime, b64: bool = False)
     print(f"required {(end - start).total_seconds():.02f}s")
 
 
+def perform_deprecate_metadata(db: str, dt: datetime.datetime, b64: bool = False):
+    global workers
+    start = datetime.datetime.now()
+    print("Started")
+    eid = MetadataLoader(db, use_base64=b64, start_dt=dt)
+    eid.deprecate(dt=dt)
+    eid.cleanup()
+    end = datetime.datetime.now()
+    print(f"required {(end - start).total_seconds():.02f}s")
+
+
+def perform_deprecate_episodes(db: str, dt: datetime.datetime, b64: bool = False):
+    global workers
+    start = datetime.datetime.now()
+    print("Started")
+    print("Started")
+    bsl = BetterStreamLoader(db=db,
+                             user_name=user_name,
+                             password=password,
+                             spec_login=spec_login,
+                             use_base64=b64,
+                             start_dt=dt)
+    bsl.deprecate(dt)
+    bsl.cleanup()
+    end = datetime.datetime.now()
+    print(f"required {(end - start).total_seconds():.02f}s")
+
 def download_all_stream_data(db: str, index_start: datetime.datetime, b64: bool = False):
     global workers
     start = datetime.datetime.now()
