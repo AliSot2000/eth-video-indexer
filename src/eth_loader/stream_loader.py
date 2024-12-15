@@ -899,6 +899,12 @@ class BetterStreamLoader(BaseSQliteDB):
         """
         dts = dt.strftime("%Y-%m-%d %H:%M:%S")
 
+        self.debug_execute("SELECT COUNT(*) FROM main.episodes WHERE deprecated = 1")
+        old_count = self.sq_cur.fetchone()[0]
+        self.logger.info(f"Previous count of deprecated episodes: {old_count}")
+
+        # Preamble, reset the deprecated flags of the episodes
+        self.debug_execute("UPDATE episodes SET deprecated = 0 WHERE deprecated = 1")
         self.debug_execute("DROP TABLE IF EXISTS temp")
 
         # create temporary table with all not deprecated episode entries
@@ -909,6 +915,7 @@ class BetterStreamLoader(BaseSQliteDB):
                            f"AND datetime(metadata.last_seen) >= datetime('{dts}') "
                            f"AND datetime(episodes.last_seen) >= datetime('{dts}')")
 
+        # Add final records to temp table
         self.debug_execute(f"INSERT INTO temp "
                            f"SELECT episodes.key AS key FROM episodes "
                            f"WHERE episodes.record_type = 2 AND datetime(episodes.last_seen) >= datetime('{dts}')")
@@ -923,9 +930,11 @@ class BetterStreamLoader(BaseSQliteDB):
         self.debug_execute(f"SELECT COUNT(DISTINCT key) FROM episodes "
                            f"WHERE key NOT IN (SELECT temp.key FROM temp) AND deprecated = 0")
         count = self.sq_cur.fetchone()[0]
+
         self.debug_execute("UPDATE episodes SET deprecated = 1 "
                            "WHERE key NOT IN (SELECT temp.key FROM temp) AND deprecated = 0")
-        self.logger.info(f"Deprecated {count} episodes")
+
+        self.logger.info(f"Marked {count} episodes as deprecated")
         self.debug_execute("DROP TABLE temp")
         self.sq_con.commit()
 
@@ -937,6 +946,12 @@ class BetterStreamLoader(BaseSQliteDB):
         :return:
         """
         dts = dt.strftime("%Y-%m-%d %H:%M:%S")
+
+        # Preamble
+        self.debug_execute("UPDATE streams SET deprecated = 0 WHERE deprecated = 1")
+        self.debug_execute("SELECT COUNT(*) FROM streams WHERE deprecated = 1")
+        old_count = self.sq_cur.fetchone()[0]
+        self.logger.info(f"Previous count of deprecated streams: {old_count}")
 
         self.debug_execute("DROP TABLE IF EXISTS temp")
 
@@ -952,6 +967,7 @@ class BetterStreamLoader(BaseSQliteDB):
         count = self.sq_cur.fetchone()[0]
         self.debug_execute("UPDATE streams SET deprecated = 1 "
                            "WHERE streams.key NOT IN (SELECT key FROM temp) AND deprecated = 0")
-        self.logger.info(f"Deprecated {count} streams")
+
+        self.logger.info(f"Marked {count} streams as deprecated")
         self.debug_execute("DROP TABLE temp")
         self.sq_con.commit()
