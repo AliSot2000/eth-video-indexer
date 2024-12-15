@@ -247,6 +247,9 @@ class IncrementBuilder(BaseSQliteDB):
         self._start_workers(tbl=tbl)
 
         count = 0
+        progress = 0
+        rep_progress = 0
+
         while len(keys) > 0 and count < self.timeout:
             try:
                 res = self.result_queue.get(block=False)
@@ -267,6 +270,13 @@ class IncrementBuilder(BaseSQliteDB):
                 # INFO: We want to check for type list not an instance of list.
                 assert type(stmt) == str, f"Expected str, got {type(stmt)}"
                 self.debug_execute(stmt)
+
+            progress += 1
+
+            # Logging of progress
+            if progress - rep_progress > 100:
+                self.logger.info(f"Done with {progress} entries")
+                rep_progress = progress
 
         # Stop the workers
         self._send_stop()
