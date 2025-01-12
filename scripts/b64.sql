@@ -90,5 +90,22 @@ UPDATE metadata SET deprecated = 0;
 UPDATE metadata SET deprecated = 1 WHERE datetime(last_seen) < datetime('2024-12-14 00:00:00');
 
 SELECT * FROM metadata_episode_assoz AS m JOIN episodes AS e ON m.episode_key = e.key WHERE m.metadata_key IN (10805, 11029, 11512, 11241);
+SELECT * FROM metadata_episode_assoz AS m JOIN episodes AS e ON m.episode_key = e.key WHERE m.metadata_key IN
+                                                                                        (13125, 13336, 11512, 13832);
 
 SELECT * FROM episodes WHERE datetime(found) > datetime('2024-09-24 00:00:00');
+
+SELECT * FROM episodes WHERE record_type = 1 AND datetime(found) > datetime('2024-12-14 00:00:00');
+
+SELECT key, json, URL, record_type, last_seen, parent FROM metadata WHERE deprecated = 0 AND record_type IN (0, 2) AND key in (SELECT key FROM metadata WHERE parent = 6527);
+
+
+SELECT * FROM sites WHERE key = 96;
+SELECT * FROM sites WHERE parent = 96;
+SELECT * FROM sites WHERE parent = 6297;
+SELECT * FROM sites WHERE URL = 'https://www.video.ethz.ch/speakers/qsit.html';
+
+UPDATE sites SET parent = 6297 WHERE parent = 96;
+-- new qsit parent 6297
+
+SELECT * FROM sites ORDER BY found DESC;
