@@ -68,7 +68,6 @@ def perform_deprecate_episodes(db: str, dt: datetime.datetime, b64: bool = False
     global workers
     start = datetime.datetime.now()
     print("Started")
-    print("Started")
     bsl = BetterStreamLoader(db=db,
                              user_name=user_name,
                              password=password,
