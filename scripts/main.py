@@ -117,6 +117,7 @@ def full_run(db_path: str, index_start: datetime.datetime, b64: bool):
 
     sanity_check(db_path)
 
+
 if __name__ == "__main__":
     debug = True
     if debug:
