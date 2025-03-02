@@ -1,6 +1,8 @@
-from eth_loader.base_sql import BaseSQliteDB
 import logging
+import sys
 from typing import List
+
+from eth_loader.base_sql import BaseSQliteDB
 
 
 class SanityCheck(BaseSQliteDB):
@@ -468,7 +470,10 @@ if __name__ == "__main__":
     path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites.db"
 
     sc1 = SanityCheck(path)
-    sc1.check_all()
+    if sc1.check_all():
+        print(f"WARNING: At least one sanity check didn't pass", file=sys.stderr)
+    else:
+        print(f"INFO: All Sanity Checks Passed", file=sys.stderr)
     # sc1.check_metadata_episode_assoz_table()
     # sc1.check_episode_stream_assoz_table()
 
