@@ -1,0 +1,2 @@
+- Make episodes table depend on metadata
+- Perform Head Request on the video files for more info.
