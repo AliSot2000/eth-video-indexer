@@ -479,6 +479,9 @@ if __name__ == "__main__":
 
     path_b64 = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites_b64.db"
     sc2 = SanityCheck(path_b64)
-    sc2.check_all()
+    if sc2.check_all():
+        print(f"WARNING: At least one sanity check didn't pass", file=sys.stderr)
+    else:
+        print(f"INFO: All Sanity Checks Passed", file=sys.stderr)
     # sc2.check_metadata_episode_assoz_table()
     # sc2.check_episode_stream_assoz_table()
