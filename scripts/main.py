@@ -1,11 +1,12 @@
 import datetime
 import os.path
+import sys
 
+from eth_loader.diff_builder import IncrementBuilder
 from eth_loader.metadata_loader import MetadataLoader
 from eth_loader.sanity_check import SanityCheck
 from eth_loader.site_indexer import ETHSiteIndexer
 from eth_loader.stream_loader import BetterStreamLoader
-from eth_loader.diff_builder import IncrementBuilder
 from logs import setup_logging
 from scripts.secrets import user_name, password, spec_login
 
@@ -115,11 +116,13 @@ def full_run(db_path: str, index_start: datetime.datetime, b64: bool):
     build_episode_increment(db_path, b64=b64, start_dt=index_start)
     perform_deprecate_episodes(db_path, index_start, b64=b64)
 
-    sanity_check(db_path)
-
+    if sanity_check(db_path):
+        print(f"At least one Sanity Check Failed", file=sys.stderr)
+    else:
+        print(f"All Sanity Checks passed", file=sys.stderr)
 
 if __name__ == "__main__":
-    debug = True
+    debug = False
     if debug:
         debug_path = os.path.join(os.path.dirname(__file__), "logging_debug.yaml")
         setup_logging(default_path=debug_path)
@@ -131,8 +134,9 @@ if __name__ == "__main__":
 
     global_start = datetime.datetime.now()
     # global_start = datetime.datetime(2024, 9, 23, 0, 0, 0)
-    is_b64 = True
-    both = False
+
+    is_b64 = False
+    both = True
     if is_b64 or both:
         path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites_b64.db"
         full_run(path, global_start, b64=True)
