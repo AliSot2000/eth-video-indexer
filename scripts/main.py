@@ -1,6 +1,7 @@
 import datetime
 import os.path
 import sys
+import shutil
 
 from eth_loader.diff_builder import IncrementBuilder
 from eth_loader.metadata_loader import MetadataLoader
@@ -121,6 +122,7 @@ def full_run(db_path: str, index_start: datetime.datetime, b64: bool):
     else:
         print(f"All Sanity Checks passed", file=sys.stderr)
 
+
 if __name__ == "__main__":
     debug = False
     if debug:
@@ -137,12 +139,27 @@ if __name__ == "__main__":
 
     is_b64 = False
     both = True
+    make_backup: bool = True
+
     if is_b64 or both:
+        backup_path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites_b64.db.bak"
         path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites_b64.db"
+        if make_backup:
+            print("Making Backup of Database...")
+            shutil.copy2(path, backup_path)
+            print("Backup Done")
+
+
         full_run(path, global_start, b64=True)
 
     if not is_b64 or both:
+        backup_path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites.db.bak"
         path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites.db"
+        if make_backup:
+            print("Making Backup of Database...")
+            shutil.copy2(path, backup_path)
+            print("Backup Done")
+
         full_run(path, global_start, b64=False)
 
     global_end = datetime.datetime.now()
