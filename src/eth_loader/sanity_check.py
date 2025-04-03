@@ -56,6 +56,8 @@ class SanityCheck(BaseSQliteDB):
     def check_all(self) -> bool:
         """
         Run all the checks
+
+        :returns: True if an issue was detected.
         """
         res = self.check_site_table()
         res = res or self.check_metadata_table()
