@@ -100,12 +100,14 @@ def download_all_stream_data(db: str, index_start: datetime.datetime, b64: bool 
     print(f"required {(end - start).total_seconds():.02f}s")
 
 
-def sanity_check(db: str):
+def sanity_check(db: str) -> bool:
     sc = SanityCheck(db)
     start = datetime.datetime.now()
-    sc.check_all()
+    res = sc.check_all()
     end = datetime.datetime.now()
     print(f"required {(end - start).total_seconds():.02f}s")
+    return res
+
 
 def full_run(db_path: str, index_start: datetime.datetime, b64: bool):
     perform_index_of_sites(db_path, index_start)
