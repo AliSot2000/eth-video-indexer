@@ -11,6 +11,7 @@ from eth_loader.stream_loader import BetterStreamLoader
 from logs import setup_logging
 from scripts.secrets import user_name, password, spec_login
 
+
 workers = 10
 
 def build_metadata_increment(db: str, b64: bool, start_dt: datetime.datetime):
@@ -29,6 +30,7 @@ def build_episode_increment(db: str, b64: bool, start_dt: datetime.datetime):
     icb.cleanup()
     end = datetime.datetime.now()
     print(f"required {(end - start).total_seconds():.02f}s")
+
 
 def perform_index_of_sites(db: str, dt: datetime.datetime):
     global workers
@@ -80,6 +82,7 @@ def perform_deprecate_episodes(db: str, dt: datetime.datetime, b64: bool = False
     bsl.cleanup()
     end = datetime.datetime.now()
     print(f"required {(end - start).total_seconds():.02f}s")
+
 
 def download_all_stream_data(db: str, index_start: datetime.datetime, b64: bool = False):
     global workers
