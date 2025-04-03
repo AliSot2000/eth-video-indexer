@@ -144,17 +144,18 @@ if __name__ == "__main__":
     if is_b64 or both:
         backup_path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites_b64.db.bak"
         path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites_b64.db"
+
         if make_backup:
             print("Making Backup of Database...")
             shutil.copy2(path, backup_path)
             print("Backup Done")
-
 
         full_run(path, global_start, b64=True)
 
     if not is_b64 or both:
         backup_path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites.db.bak"
         path = "/home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/scripts/seq_sites.db"
+
         if make_backup:
             print("Making Backup of Database...")
             shutil.copy2(path, backup_path)
