@@ -22,6 +22,7 @@ handlers:
         level: DEBUG
         formatter: standard
         filename: /home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/logs/debug.log
+        # filename: /home/oicunt/eth-video-indexer/logs/debug.log
         encoding: utf8
         mode: w
 
@@ -30,6 +31,7 @@ handlers:
         level: ERROR
         formatter: error
         filename: /home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/logs/errors.log
+        # filename: /home/oicunt/eth-video-indexer/logs/errors.log
         encoding: utf8
         mode: a
 
@@ -38,6 +40,7 @@ handlers:
         level: DEBUG
         formatter: standard
         filename: /home/alisot2000/Documents/01_ReposNCode/eth-video-indexer/logs/threads.log
+        # filename: /home/oicunt/eth-video-indexer/logs/threads.log
         encoding: utf8
         mode: a
 root:
